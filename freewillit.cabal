@@ -1,8 +1,10 @@
+-- This file has been generated from package.yaml by hpack version 0.15.0.
+--
+-- see: https://github.com/sol/hpack
+
 name:                freewillit
 version:             0.1.0.0
--- synopsis:
--- description:
-homepage:            https://github.com/githubuser/freewillit#readme
+homepage:            https://github.com/githubuser/alksjdhflaksjhdf#readme
 license:             BSD3
 license-file:        LICENSE
 author:              Author name here
@@ -10,36 +12,32 @@ maintainer:          example@example.com
 copyright:           2017 Author name here
 category:            Web
 build-type:          Simple
-extra-source-files:  README.md
-cabal-version:       >=1.10
+cabal-version:       >= 1.10
 
 library
-  hs-source-dirs:      src
-  exposed-modules:     Lib
-  build-depends:       base >= 4.7 && < 5
-                     , aeson
-                     , servant-server
-                     , wai
-                     , warp
-  default-language:    Haskell2010
+  hs-source-dirs:
+      src
+  exposed-modules:
+      Lib
+  other-modules:
+      Paths_freewillit
+  build-depends:
+      base >= 4.7 && < 5
+    , aeson
+    , servant-server
+    , wai
+    , warp
+  default-language: Haskell2010
 
-executable freewillit-exe
-  hs-source-dirs:      app
-  main-is:             Main.hs
-  ghc-options:         -threaded -rtsopts -with-rtsopts=-N
-  build-depends:       base
-                     , freewillit
-  default-language:    Haskell2010
-
-test-suite freewillit-test
-  type:                exitcode-stdio-1.0
-  hs-source-dirs:      test
-  main-is:             Spec.hs
-  build-depends:       base
-                     , freewillit
-  ghc-options:         -threaded -rtsopts -with-rtsopts=-N
-  default-language:    Haskell2010
-
-source-repository head
-  type:     git
-  location: https://github.com/githubuser/freewillit
+executable freewillit
+  hs-source-dirs:
+      app
+  main-is: Main.hs
+  build-depends:
+      base >= 4.7 && < 5
+    , aeson
+    , servant-server
+    , wai
+    , warp
+    , freewillit
+  default-language: Haskell2010
