@@ -1,26 +1,38 @@
-{-# LANGUAGE DataKinds       #-}
+{-# LANGUAGE DataKinds #-}
 {-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE TypeOperators   #-}
+{-# LANGUAGE QuasiQuotes #-}
+{-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE FlexibleContexts #-}
 
 module Lib
     ( startApp
     ) where
 
-import Data.Aeson
-import Data.Aeson.TH
 import Network.Wai
 import Network.Wai.Handler.Warp
 import Servant
 
-data User = User
-  { userId        :: Int
-  , userFirstName :: String
-  , userLastName  :: String
-  } deriving (Eq, Show)
+import API
+import Util
 
-$(deriveJSON defaultOptions ''User)
+{-
 
-type API = "users" :> Get '[JSON] [User]
+TODO:
+
+* Clean up redirection
+* Implement Site-Map
+  - Signup
+  - Signin
+  - Signout
+  - Name Choice
+  - Extend Choice
+  - View Choice
+  - Make Choice
+* Write tests
+* Deploy
+
+-}
 
 startApp :: IO ()
 startApp = run 8080 app
@@ -32,9 +44,10 @@ api :: Proxy API
 api = Proxy
 
 server :: Server API
-server = return users
+server = return users :<|> redirectTo "/users"
 
 users :: [User]
 users = [ User 1 "Isaac" "Newton"
         , User 2 "Albert" "Einstein"
+        , User 3 "Richard" "Feynman"
         ]

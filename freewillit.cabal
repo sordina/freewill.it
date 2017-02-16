@@ -14,12 +14,17 @@ category:            Web
 build-type:          Simple
 cabal-version:       >= 1.10
 
+extra-source-files:
+    README.md
+
 library
   hs-source-dirs:
       src
   exposed-modules:
       Lib
   other-modules:
+      API
+      Util
       Paths_freewillit
   build-depends:
       base >= 4.7 && < 5
@@ -27,6 +32,10 @@ library
     , servant-server
     , wai
     , warp
+    , wai-util
+    , bytestring
+    , http-types
+    , mtl
   default-language: Haskell2010
 
 executable freewillit
@@ -39,5 +48,9 @@ executable freewillit
     , servant-server
     , wai
     , warp
+    , wai-util
+    , bytestring
+    , http-types
+    , mtl
     , freewillit
   default-language: Haskell2010

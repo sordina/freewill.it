@@ -15,6 +15,10 @@ dependencies:
   - servant-server
   - wai
   - warp
+  - wai-util
+  - bytestring
+  - http-types
+  - mtl
 
 library:
   source-dirs: src
