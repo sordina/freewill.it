@@ -16,22 +16,9 @@ import Servant
 import API
 import Util
 
-{-
-
-TODO:
-
-* Clean up redirection
-* Implement Site-Map
-  - Signup
-  - Signin
-  - Signout
-  - Name Choice
-  - Extend Choice
-  - View Choice
-  - Make Choice
-* Write tests
-* Deploy
-
+{- TODO
+   * Write tests
+   * Deploy
 -}
 
 startApp :: IO ()
@@ -44,7 +31,19 @@ api :: Proxy API
 api = Proxy
 
 server :: Server API
-server = return users :<|> redirectTo "/users"
+server = return users -- users
+    :<|> return users -- signup
+    :<|> return users -- signin
+    :<|> return users -- signout
+    :<|> name         -- name
+    :<|> return users -- extend
+    :<|> return users -- view
+    :<|> return users -- make
+    :<|> redirectTo "/users"
+
+-- Ex: curl -v -L -XPOST -H "Content-Type: application/json" --data '"lol"' http://localhost:8080/name | jq .
+name :: Monad m => t -> m [User]
+name _ = return users
 
 users :: [User]
 users = [ User 1 "Isaac" "Newton"

@@ -19,6 +19,7 @@ dependencies:
   - bytestring
   - http-types
   - mtl
+  - ghc-prim
 
 library:
   source-dirs: src
