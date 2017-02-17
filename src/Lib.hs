@@ -6,26 +6,17 @@
 {-# LANGUAGE FlexibleContexts #-}
 
 module Lib
-    ( startApp
+    ( api
+    , help
+    , server
+    , API
     ) where
 
-import Network.Wai
-import Network.Wai.Handler.Warp
+import Data.Text
 import Servant
 
 import API
 import Util
-
-{- TODO
-   * Write tests
-   * Deploy
--}
-
-startApp :: IO ()
-startApp = run 8080 app
-
-app :: Application
-app = serve api server
 
 api :: Proxy API
 api = Proxy
@@ -50,3 +41,6 @@ users = [ User 1 "Isaac" "Newton"
         , User 2 "Albert" "Einstein"
         , User 3 "Richard" "Feynman"
         ]
+
+help :: IO ()
+help = putStrLn $ Data.Text.unpack $ layout  (Proxy :: Proxy API)

@@ -4,23 +4,26 @@
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE DeriveGeneric #-}
 
 module API where
 
 import Data.Aeson
 import Data.Aeson.TH
 import Servant
+import Data.Swagger
+import GHC.Generics
 import Util
 
 data User = User
   { userId        :: Int
   , userFirstName :: String
   , userLastName  :: String
-  } deriving (Eq, Show)
+  } deriving (Eq, Show, Generic)
+
+instance ToSchema User
 
 $(deriveJSON defaultOptions ''User)
-
--- type Redirect = (Verb 'GET 301) '[JSON] (Headers '[Header "Location" String] ())
 
 type API = "users"   :> Get  '[JSON] [User]
       :<|> "signup"  :> Post '[JSON] [User]

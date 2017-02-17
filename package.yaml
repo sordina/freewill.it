@@ -20,10 +20,13 @@ dependencies:
   - http-types
   - mtl
   - ghc-prim
+  - servant-swagger
+  - swagger2
+  - text
 
 library:
   source-dirs: src
-  exposed-modules: Lib
+  exposed-modules: ['API','Lib','Swag']
 
 executables:
   freewillit:
