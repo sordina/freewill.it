@@ -20,8 +20,7 @@ api :: Proxy API
 api = Proxy
 
 server :: Server API
-server = return users -- users
-    :<|> return users -- signup
+server = return users -- signup
     :<|> return users -- signin
     :<|> return users -- signout
     :<|> name         -- name

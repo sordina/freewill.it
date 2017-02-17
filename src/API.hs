@@ -26,14 +26,13 @@ instance ToSchema User
 
 $(deriveJSON defaultOptions ''User)
 
-type API = "users"   :> Get  '[JSON] [User]
-      :<|> "signup"  :> Post '[JSON] [User]
+type API = "signup"  :> Post '[JSON] [User]
       :<|> "signin"  :> Post '[JSON] [User]
       :<|> "signout" :> Post '[JSON] [User]
       :<|> "name"    :> ReqBody '[JSON, PlainText] String :> Post '[JSON] [User]
-      :<|> "extend"  :> Post '[JSON] [User]
+      :<|> "add"     :> Post '[JSON] [User]
       :<|> "view"    :> Get  '[JSON] [User]
-      :<|> "make"    :> Post '[JSON] [User]
+      :<|> "choose"  :> Post '[JSON] [User]
       :<|> Redirect "users"
 
 help :: IO ()
