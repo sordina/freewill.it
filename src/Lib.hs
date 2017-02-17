@@ -7,12 +7,10 @@
 
 module Lib
     ( api
-    , help
     , server
     , API
     ) where
 
-import Data.Text
 import Servant
 
 import API
@@ -41,6 +39,3 @@ users = [ User 1 "Isaac" "Newton"
         , User 2 "Albert" "Einstein"
         , User 3 "Richard" "Feynman"
         ]
-
-help :: IO ()
-help = putStrLn $ Data.Text.unpack $ layout  (Proxy :: Proxy API)

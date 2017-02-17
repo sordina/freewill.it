@@ -10,6 +10,7 @@ module API where
 
 import Data.Aeson
 import Data.Aeson.TH
+import Data.Text (unpack)
 import Servant
 import Data.Swagger
 import GHC.Generics
@@ -34,3 +35,6 @@ type API = "users"   :> Get  '[JSON] [User]
       :<|> "view"    :> Get  '[JSON] [User]
       :<|> "make"    :> Post '[JSON] [User]
       :<|> Redirect "users"
+
+help :: IO ()
+help = putStrLn $ Data.Text.unpack $ layout  (Proxy :: Proxy API)
