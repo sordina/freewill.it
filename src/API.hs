@@ -33,7 +33,7 @@ type API = "signup"  :> Post '[JSON] [User]
       :<|> "add"     :> Post '[JSON] [User]
       :<|> "view"    :> Get  '[JSON] [User]
       :<|> "choose"  :> Post '[JSON] [User]
-      :<|> Redirect "users"
+      :<|> Redirect "view"
 
 help :: IO ()
 help = putStrLn $ Data.Text.unpack $ layout  (Proxy :: Proxy API)
