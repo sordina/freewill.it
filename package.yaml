@@ -23,6 +23,7 @@ dependencies:
   - servant-swagger
   - swagger2
   - text
+  - lens
 
 library:
   source-dirs: src

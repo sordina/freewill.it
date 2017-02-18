@@ -8,6 +8,7 @@
 {-# LANGUAGE TypeFamilies          #-}
 {-# LANGUAGE ScopedTypeVariables   #-}
 {-# LANGUAGE DeriveGeneric         #-}
+{-# LANGUAGE OverloadedStrings     #-}
 
 module RedirectTo ( RedirectTo ) where
 
@@ -18,11 +19,19 @@ import Servant
 import GHC.Generics
 import Data.Typeable
 import Servant.Swagger
-
-instance (HasSwagger sub) => HasSwagger (RedirectTo a :> sub) where
-  toSwagger _ = toSwagger (Proxy :: Proxy sub)
+import Data.Swagger
+import Data.Text
+import Data.Function ((&))
+import Control.Lens ((.~))
+import Data.Monoid ((<>))
 
 data RedirectTo (sym :: Symbol) deriving (Typeable, Generic)
+
+instance (HasSwagger sub, KnownSymbol a) => HasSwagger (RedirectTo a :> sub) where
+  toSwagger _ = toSwagger (Proxy :: Proxy sub)
+              & info.description .~ (Just ("Redirects to " <> pack path) :: Maybe Text)
+    where
+    path = symbolVal (Proxy :: Proxy a)
 
 instance (KnownSymbol sym, HasServer api context)
       => HasServer (RedirectTo sym :> api) context where

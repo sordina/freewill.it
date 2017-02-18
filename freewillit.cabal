@@ -42,6 +42,7 @@ library
     , servant-swagger
     , swagger2
     , text
+    , lens
   default-language: Haskell2010
 
 executable freewillit
@@ -62,5 +63,6 @@ executable freewillit
     , servant-swagger
     , swagger2
     , text
+    , lens
     , freewillit
   default-language: Haskell2010
