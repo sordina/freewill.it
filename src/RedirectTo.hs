@@ -9,6 +9,7 @@
 {-# LANGUAGE ScopedTypeVariables   #-}
 {-# LANGUAGE DeriveGeneric         #-}
 {-# LANGUAGE OverloadedStrings     #-}
+{-# LANGUAGE FlexibleContexts      #-}
 
 module RedirectTo ( RedirectTo ) where
 
@@ -23,15 +24,15 @@ import Data.Swagger
 import Data.Text
 import Data.Function ((&))
 import Control.Lens ((.~))
-import Data.Monoid ((<>))
 
 data RedirectTo (sym :: Symbol) deriving (Typeable, Generic)
 
+setDescription :: (HasDescription a (Maybe Text), HasInfo t a) => String -> t -> t
+setDescription s = info.description .~ Just (pack s)
+
 instance (HasSwagger sub, KnownSymbol a) => HasSwagger (RedirectTo a :> sub) where
   toSwagger _ = toSwagger (Proxy :: Proxy sub)
-              & info.description .~ (Just ("Redirects to " <> pack path) :: Maybe Text)
-    where
-    path = symbolVal (Proxy :: Proxy a)
+              & setDescription ("Redirects to " ++ symbolVal (Proxy :: Proxy a))
 
 instance (KnownSymbol sym, HasServer api context)
       => HasServer (RedirectTo sym :> api) context where
