@@ -27,7 +27,7 @@ server = return users -- signup
     :<|> return users -- extend
     :<|> return users -- view
     :<|> return users -- make
-    :<|> redirectTo "/signin"
+    :<|> redirectTo   -- Send the user to /view
 
 -- Ex: curl -v -L -XPOST -H "Content-Type: application/json" --data '"lol"' http://localhost:8080/name | jq .
 name :: Monad m => t -> m [User]

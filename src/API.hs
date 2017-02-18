@@ -12,7 +12,7 @@ import Data.Aeson
 import Data.Aeson.TH
 import Data.Text (unpack)
 import Servant
-import Data.Swagger
+import Data.Swagger (ToSchema)
 import GHC.Generics
 import Util
 
@@ -36,4 +36,4 @@ type API = "signup"  :> Post '[JSON] [User]
       :<|> Redirect "view"
 
 help :: IO ()
-help = putStrLn $ Data.Text.unpack $ layout  (Proxy :: Proxy API)
+help = putStrLn $ Data.Text.unpack $ layout (Proxy :: Proxy API)
