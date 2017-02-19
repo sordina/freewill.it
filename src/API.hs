@@ -5,6 +5,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE InstanceSigs #-}
 
 module API where
 
@@ -14,6 +15,8 @@ import Data.Text (unpack)
 import Servant
 import Data.Swagger (ToSchema)
 import GHC.Generics
+import Data.Text (Text())
+import Control.Arrow
 import Util
 
 data User = User
@@ -23,13 +26,17 @@ data User = User
   } deriving (Eq, Show, Generic)
 
 instance ToSchema User
+instance FromFormUrlEncoded User
+  where
+  fromFormUrlEncoded :: [(Text, Text)] -> Either String User
+  fromFormUrlEncoded = resultToEither . fromJSON . object . map (second String)
 
 $(deriveJSON defaultOptions ''User)
 
 type API = "signup"  :> Post '[JSON] [User]
       :<|> "signin"  :> Post '[JSON] [User]
       :<|> "signout" :> Post '[JSON] [User]
-      :<|> "name"    :> ReqBody '[JSON, PlainText] String :> Post '[JSON] [User]
+      :<|> "name"    :> ReqBody '[JSON, FormUrlEncoded] User :> Post '[JSON] [User]
       :<|> "add"     :> Post '[JSON] [User]
       :<|> "view"    :> Get  '[JSON] [User]
       :<|> "choose"  :> Post '[JSON] [User]

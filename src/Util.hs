@@ -10,15 +10,14 @@ import Control.Monad.Error.Class
 import Data.ByteString.Char8
 import Servant
 import GHC.Types
+import Data.Aeson
 import RedirectTo
-
--- import GHC.TypeLits
--- import Data.ByteString.Char8 as C
--- redirectToUsers :: Server Redirect
--- redirectToUsers = return $ addHeader "/users" ()
-
 
 type Redirect (a :: Symbol) = RedirectTo a :> Get '[PlainText] NoContent
 
 redirectTo :: MonadError ServantErr m => String -> m a
 redirectTo location = throwError $ err302 { errHeaders = [("Location", pack location)] }
+
+resultToEither :: Result b -> Either String b
+resultToEither (Error   e) = Left e
+resultToEither (Success r) = Right r

@@ -27,7 +27,7 @@ import Control.Lens ((.~))
 
 data RedirectTo (sym :: Symbol) deriving (Typeable, Generic)
 
-setDescription :: (HasDescription a (Maybe Text), HasInfo t a) => String -> t -> t
+setDescription :: String -> Swagger -> Swagger
 setDescription s = info.description .~ Just (pack s)
 
 instance (HasSwagger sub, KnownSymbol a) => HasSwagger (RedirectTo a :> sub) where
