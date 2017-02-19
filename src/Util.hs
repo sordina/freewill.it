@@ -7,7 +7,9 @@
 module Util where
 
 import Control.Monad.Error.Class
-import Data.ByteString.Char8
+import Data.ByteString.Char8 hiding (map)
+import Data.Text (Text())
+import Control.Arrow (second)
 import Servant
 import GHC.Types
 import Data.Aeson
@@ -21,3 +23,6 @@ redirectTo location = throwError $ err302 { errHeaders = [("Location", pack loca
 resultToEither :: Result b -> Either String b
 resultToEither (Error   e) = Left e
 resultToEither (Success r) = Right r
+
+tryJsonFromFormParams :: FromJSON a => [(Text, Text)] -> Either String a
+tryJsonFromFormParams = resultToEither . fromJSON . object . map (second String)

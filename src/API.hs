@@ -15,8 +15,6 @@ import Data.Text (unpack)
 import Servant
 import Data.Swagger (ToSchema)
 import GHC.Generics
-import Data.Text (Text())
-import Control.Arrow
 import Util
 
 data User = User
@@ -26,10 +24,7 @@ data User = User
   } deriving (Eq, Show, Generic)
 
 instance ToSchema User
-instance FromFormUrlEncoded User
-  where
-  fromFormUrlEncoded :: [(Text, Text)] -> Either String User
-  fromFormUrlEncoded = resultToEither . fromJSON . object . map (second String)
+instance FromFormUrlEncoded User where fromFormUrlEncoded = tryJsonFromFormParams
 
 $(deriveJSON defaultOptions ''User)
 
