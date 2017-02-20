@@ -24,7 +24,12 @@ data User = User
   } deriving (Eq, Show, Generic)
 
 instance ToSchema User
-instance FromFormUrlEncoded User where fromFormUrlEncoded = tryJsonFromFormParams
+
+instance FromFormUrlEncoded User where
+  fromFormUrlEncoded inputs =
+    User <$> lkup inputs "ID"
+         <*> grab inputs "FirstName"
+         <*> grab inputs "LastName"
 
 $(deriveJSON defaultOptions ''User)
 

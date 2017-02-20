@@ -24,6 +24,7 @@ dependencies:
   - swagger2
   - text
   - lens
+  - safe
 
 library:
   source-dirs: src
