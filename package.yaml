@@ -34,4 +34,6 @@ executables:
   freewillit:
     source-dirs: app
     main: Main.hs
-    dependencies: freewillit
+    dependencies:
+      - freewillit
+      - optparse-generic
