@@ -18,4 +18,4 @@ apiWithSpec :: Proxy App
 apiWithSpec = Proxy
 
 serverWithSpec :: Server App
-serverWithSpec = return (toSwagger api) :<|> server
+serverWithSpec = return (toSwagger api) :<|> server initialAppState

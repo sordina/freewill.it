@@ -15,6 +15,7 @@ import Data.Text (unpack)
 import Servant
 import Data.Swagger (ToSchema)
 import GHC.Generics
+import Control.Monad.Trans.Reader
 import Util
 
 data User = User
@@ -33,19 +34,28 @@ data Option = Option
   , optionName :: String
   } deriving (Eq, Show, Generic)
 
+data Decision = Decision
+  { decision :: Option
+  } deriving (Eq, Show, Generic)
+
 instance ToSchema User
 instance ToSchema Choice
 instance ToSchema Option
+instance ToSchema Decision
 
 $(deriveJSON defaultOptions ''User)
 $(deriveJSON defaultOptions ''Choice)
 $(deriveJSON defaultOptions ''Option)
+$(deriveJSON defaultOptions ''Decision)
 
 data AppState = AS {
-    options :: [Option]
-  , choices :: [Choice]
-  , users   :: [User]
+    options   :: [Option  ]
+  , choices   :: [Choice  ]
+  , decisions :: [Decision]
+  , users     :: [User    ]
   } deriving (Eq, Show, Generic)
+
+type AppHandler = ReaderT AppState Handler
 
 type ID = Integer
 
@@ -57,16 +67,19 @@ instance FromFormUrlEncoded User where
 
 -- ReqBody '[JSON, FormUrlEncoded] String -- For reference
 --
-type AuthAPI = "signup"  :> Post '[JSON] [User] -- TODO
-          :<|> "signin"  :> Post '[JSON] [User] -- TODO
-          :<|> "signout" :> Post '[JSON] [User] -- TODO
+type AuthAPI = "signup"  :> Post '[JSON] [User]
+          :<|> "signin"  :> Post '[JSON] [User]
+          :<|> "signout" :> Post '[JSON] [User]
+          :<|> "users"   :> Get  '[JSON] [User]
 
-type ChoiceAPI = "choice"  :> ReqBody '[JSON] Choice                                      :> Post '[JSON] Choice
-            :<|> "choice"  :> Capture "choiceId" ID :> "view"                             :> Get '[JSON] (Choice, [Option])
-            :<|> "choice"  :> Capture "choiceId" ID :> "add"    :> ReqBody '[JSON] Option :> Post '[JSON] Option
-            :<|> "choice"  :> Capture "choiceId" ID :> "choose" :> ReqBody '[JSON] ID     :> Post '[JSON] Option
+type ChoiceCapture = Capture "choiceId" ID
 
-type API = AuthAPI :<|> ChoiceAPI :<|> Redirect "view"
+type ChoiceAPI = "choice" :> ReqBody '[JSON] Choice    :> Post '[JSON] Choice
+            :<|> "choice" :> ChoiceCapture :> "view"   :> Get  '[JSON] (Choice, [Option], Maybe Decision)
+            :<|> "choice" :> ChoiceCapture :> "add"    :> ReqBody '[JSON] Option :> Post '[JSON] Option
+            :<|> "choice" :> ChoiceCapture :> "choose" :> ReqBody '[JSON] ID     :> Post '[JSON] Option
+
+type API = AuthAPI :<|> ChoiceAPI :<|> Redirect "users"
 
 help :: IO ()
 help = putStrLn $ Data.Text.unpack $ layout (Proxy :: Proxy API)

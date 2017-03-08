@@ -25,6 +25,7 @@ dependencies:
   - text
   - lens
   - safe
+  - transformers
 
 library:
   source-dirs: src
