@@ -9,7 +9,8 @@ import Data.Maybe
 
 import qualified Swag as S
 
-data Options = Options { port :: Maybe Int }
+data Options = Options { port :: Maybe Int
+                       }
   deriving (Eq, Ord, Show, Generic)
 
 instance ParseRecord Options
