@@ -16,8 +16,10 @@ import Servant
 
 import API
 import Util
+import Safe
 import Control.Monad.IO.Class (liftIO, MonadIO)
 import Control.Monad.Reader.Class
+import qualified Control.Concurrent.STM.TVar as T
 
 api :: Proxy API
 api = Proxy
@@ -27,7 +29,7 @@ api = Proxy
 -- Is it even on Hackage yet?
 -- Eh... Who cares!
 --
-server :: AppState -> Server API
+server :: T.TVar AppState -> Server API
 server as = enter (runReaderTNat as) authServer
        :<|> enter (runReaderTNat as) choiceServer
        :<|> redirectTo
@@ -50,12 +52,12 @@ name c = do
   liftIO $ print c
   return c
 
-view :: (MonadIO m, MonadReader AppState m) => Integer -> m (Choice, [Option], Maybe Decision)
+view :: (MonadIO m, MonadReader (T.TVar AppState) m) => Integer -> m (Choice, [Option], Maybe Decision)
 view cid = do
   liftIO $ print cid
-  x <- ask
-  -- AS {options = [], choices = [], decisions = [], users = []}
-  return (mockChoice, options x ++ [mockOption1, mockOption2], Just mockDecision)
+  ast <- ask
+  as  <- liftIO $ T.readTVarIO ast
+  return (head $ choices as, options as, headMay $ decisions as)
 
 add :: Monad m => t -> t1 -> m Option
 add _choiceId _body = return mockOption1
@@ -82,4 +84,4 @@ mockUsers = [ User (Just 1) "Isaac" "Newton"
             ]
 
 initialAppState :: AppState
-initialAppState = AS [mockOption1] [] [] []
+initialAppState = AS [mockOption1, mockOption2] [mockChoice] [mockDecision] mockUsers

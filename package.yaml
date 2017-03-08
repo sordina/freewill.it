@@ -26,6 +26,7 @@ dependencies:
   - lens
   - safe
   - transformers
+  - stm
 
 library:
   source-dirs: src

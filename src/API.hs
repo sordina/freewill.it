@@ -17,6 +17,7 @@ import Data.Swagger (ToSchema)
 import GHC.Generics
 import Control.Monad.Trans.Reader
 import Util
+import qualified Control.Concurrent.STM.TVar as T
 
 data User = User
   { userId        :: Maybe Int
@@ -55,7 +56,7 @@ data AppState = AS {
   , users     :: [User    ]
   } deriving (Eq, Show, Generic)
 
-type AppHandler = ReaderT AppState Handler
+type AppHandler = ReaderT (T.TVar AppState) Handler
 
 type ID = Integer
 

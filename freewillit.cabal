@@ -45,6 +45,7 @@ library
     , lens
     , safe
     , transformers
+    , stm
   default-language: Haskell2010
 
 executable freewillit
@@ -68,6 +69,7 @@ executable freewillit
     , lens
     , safe
     , transformers
+    , stm
     , freewillit
     , optparse-generic
   default-language: Haskell2010
