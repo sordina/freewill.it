@@ -15,10 +15,11 @@ module Lib
 import Servant
 
 import API
+import MemDB
 import Util
-import Safe
 import Control.Monad.IO.Class (liftIO, MonadIO)
 import Control.Monad.Reader.Class
+import Control.Monad.Except
 import qualified Control.Concurrent.STM.TVar as T
 
 api :: Proxy API
@@ -52,13 +53,6 @@ name c = do
   liftIO $ print c
   return c
 
-view :: (MonadIO m, MonadReader (T.TVar AppState) m) => Integer -> m (Choice, [Option], Maybe Decision)
-view cid = do
-  liftIO $ print cid
-  ast <- ask
-  as  <- liftIO $ T.readTVarIO ast
-  return (head $ choices as, options as, headMay $ decisions as)
-
 add :: Monad m => t -> t1 -> m Option
 add _choiceId _body = return mockOption1
 
@@ -69,13 +63,13 @@ mockChoice :: Choice
 mockChoice = Choice (Just 1) "What size thing should I eat?"
 
 mockOption1 :: Option
-mockOption1 = Option (Just 1) "Something bigger than my own head"
+mockOption1 = Option 1 (Just 1) "Something bigger than my own head"
 
 mockOption2 :: Option
-mockOption2 = Option (Just 2) "Something reasonable"
+mockOption2 = Option 1 (Just 2) "Something reasonable"
 
 mockDecision :: Decision
-mockDecision = Decision mockOption2
+mockDecision = Decision 1 (Just 1) mockOption2
 
 mockUsers :: [User]
 mockUsers = [ User (Just 1) "Isaac" "Newton"

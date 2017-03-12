@@ -25,6 +25,7 @@ library
       Lib
       Swag
   other-modules:
+      MemDB
       RedirectTo
       Util
       Paths_freewillit

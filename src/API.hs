@@ -19,24 +19,29 @@ import Control.Monad.Trans.Reader
 import Util
 import qualified Control.Concurrent.STM.TVar as T
 
+type ID = Integer
+
 data User = User
-  { userId        :: Maybe Int
+  { userId        :: Maybe ID
   , userFirstName :: String
   , userLastName  :: String
   } deriving (Eq, Show, Generic)
 
 data Choice = Choice
-  { choiceId   :: Maybe Int
+  { choiceId   :: Maybe ID
   , choiceName :: String
   } deriving (Eq, Show, Generic)
 
 data Option = Option
-  { optionId   :: Maybe Int
+  { optionChoiceId :: ID
+  , optionId :: Maybe ID
   , optionName :: String
   } deriving (Eq, Show, Generic)
 
 data Decision = Decision
-  { decision :: Option
+  { decisionChoiceId :: ID
+  , decisionId :: Maybe ID
+  , decision :: Option
   } deriving (Eq, Show, Generic)
 
 instance ToSchema User
@@ -57,8 +62,6 @@ data AppState = AS {
   } deriving (Eq, Show, Generic)
 
 type AppHandler = ReaderT (T.TVar AppState) Handler
-
-type ID = Integer
 
 instance FromFormUrlEncoded User where
   fromFormUrlEncoded inputs =
