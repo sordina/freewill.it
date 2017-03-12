@@ -78,12 +78,13 @@ type AuthAPI = "signup"  :> Post '[JSON] [User]
 
 type ChoiceCapture = Capture "choiceId" ID
 
-type ChoiceAPI = "choice" :> ReqBody '[JSON] Choice    :> Post '[JSON] Choice
-            :<|> "choice" :> ChoiceCapture :> "view"   :> Get  '[JSON] (Choice, [Option], Maybe Decision)
-            :<|> "choice" :> ChoiceCapture :> "add"    :> ReqBody '[JSON] Option :> Post '[JSON] Option
-            :<|> "choice" :> ChoiceCapture :> "choose" :> ReqBody '[JSON] ID     :> Post '[JSON] Option
+type ChoiceAPI = Get     '[JSON] [Choice]
+            :<|> ReqBody '[JSON] Choice    :> Post '[JSON] Choice
+            :<|> ChoiceCapture             :> Get  '[JSON] (Choice, [Option], Maybe Decision)
+            :<|> ChoiceCapture :> "add"    :> ReqBody '[JSON] Option :> Post '[JSON] Option
+            :<|> ChoiceCapture :> "choose" :> ReqBody '[JSON] ID     :> Post '[JSON] Option
 
-type API = AuthAPI :<|> ChoiceAPI :<|> Redirect "users"
+type API = AuthAPI :<|> ("choices" :> ChoiceAPI) :<|> Redirect "users"
 
 help :: IO ()
 help = putStrLn $ Data.Text.unpack $ layout (Proxy :: Proxy API)

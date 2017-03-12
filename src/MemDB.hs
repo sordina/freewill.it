@@ -6,9 +6,11 @@ import API
 import Data.List
 import Servant
 import qualified Control.Concurrent.STM.TVar as T
+import qualified Control.Concurrent.STM as T
 import Control.Monad.IO.Class (liftIO, MonadIO)
 import Control.Monad.Reader.Class
 import Control.Monad.Except
+import Data.Bool
 
 getThing :: (x -> Maybe ID) -> ID -> [x] -> Maybe x
 getThing f oid = find ((== Just oid) . f)
@@ -44,3 +46,65 @@ view cid = do
   let os = getOptionsByChoiceId  cid $ options as
       d  = getDecisionByChoiceId cid $ decisions as
   return (c, os, d)
+
+name :: (MonadReader (T.TVar AppState) m, MonadIO m)
+     => Choice -> m Choice
+name cdata = do
+  ast <- ask
+  liftIO $ T.atomically $ do
+    as <- T.readTVar ast
+    let cs  = choices as
+        cid = fromIntegral $ length cs
+        c   = cdata { choiceId = Just cid }
+    T.writeTVar ast $ as { choices = c : cs }
+    return c
+
+add :: (MonadReader (T.TVar AppState) m, MonadIO m, MonadError ServantErr m)
+     => ID -> Option -> m Option
+add cid' odata = do
+  -- Verify that choice referenced exists
+  let cid = optionChoiceId odata
+  ast    <- ask
+  as'    <- liftIO $ T.readTVarIO ast
+  _      <- tryMaybe ("Couldn't find choice " ++ show cid) $ getChoiceById cid $ choices as'
+  _      <- tryMaybe ("choiceId " ++ show cid ++ " doesn't match choiceId " ++ show cid') (bool Nothing (Just ()) (cid == cid'))
+  liftIO $ T.atomically $ do
+    as <- T.readTVar ast
+    let os  = options as
+        oid = fromIntegral $ length os
+        o   = odata { optionId = Just oid }
+    T.writeTVar ast $ as { options = o : os }
+    return o
+
+choose :: Monad m => t -> t1 -> m Option
+choose _choiceId _body = return mockOption2
+
+list :: (MonadReader (T.TVar AppState) m, MonadIO m)
+     => m [Choice]
+list = do
+  ast <- ask
+  as  <- liftIO $ T.readTVarIO ast
+  return $ choices as
+
+-- Mocks
+
+mockChoice :: Choice
+mockChoice = Choice (Just 0) "What size thing should I eat?"
+
+mockOption1 :: Option
+mockOption1 = Option 0 (Just 1) "Something bigger than my own head"
+
+mockOption2 :: Option
+mockOption2 = Option 0 (Just 2) "Something reasonable"
+
+mockDecision :: Decision
+mockDecision = Decision 0 (Just 1) mockOption2
+
+mockUsers :: [User]
+mockUsers = [ User (Just 0) "Isaac" "Newton"
+            , User (Just 1) "Albert" "Einstein"
+            , User (Just 2) "Richard" "Feynman"
+            ]
+
+initialAppState :: AppState
+initialAppState = AS [mockOption1, mockOption2] [mockChoice] [mockDecision] mockUsers
