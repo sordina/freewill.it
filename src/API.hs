@@ -82,7 +82,7 @@ type ChoiceAPI = Get     '[JSON] [Choice]
             :<|> ReqBody '[JSON] Choice    :> Post '[JSON] Choice
             :<|> ChoiceCapture             :> Get  '[JSON] (Choice, [Option], Maybe Decision)
             :<|> ChoiceCapture :> "add"    :> ReqBody '[JSON] Option :> Post '[JSON] Option
-            :<|> ChoiceCapture :> "choose" :> ReqBody '[JSON] ID     :> Post '[JSON] Option
+            :<|> ChoiceCapture :> "choose" :> ReqBody '[JSON] ID     :> Post '[JSON] Decision
 
 type API = AuthAPI :<|> ("choices" :> ChoiceAPI) :<|> Redirect "users"
 

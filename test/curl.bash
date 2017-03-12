@@ -10,9 +10,11 @@ choiceId=$(
   )
 
 echo "Adding Option"
-curl -s -XPOST -H "Content-Type: application/json" \
+optionId=$(
+  curl -s -XPOST -H "Content-Type: application/json" \
   --data "{\"optionChoiceId\":$choiceId, \"optionName\": \"No icecream will make me fat\"}" \
-  http://localhost:8080/choices/$choiceId/add | jq .
+  http://localhost:8080/choices/$choiceId/add | jq -r .optionId
+  )
 
 echo "Adding Second Option"
 curl -s -XPOST -H "Content-Type: application/json" \
@@ -24,3 +26,8 @@ curl -s http://localhost:8080/choices | jq .
 
 echo "Choice Info"
 curl -s http://localhost:8080/choices/$choiceId | jq .
+
+echo "Deciding on option $optionId"
+curl -v -XPOST -H "Content-Type: application/json" \
+  --data "$optionId" \
+  http://localhost:8080/choices/$choiceId/choose | jq .

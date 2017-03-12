@@ -10,7 +10,6 @@ import qualified Control.Concurrent.STM as T
 import Control.Monad.IO.Class (liftIO, MonadIO)
 import Control.Monad.Reader.Class
 import Control.Monad.Except
-import Data.Bool
 
 getThing :: (x -> Maybe ID) -> ID -> [x] -> Maybe x
 getThing f oid = find ((== Just oid) . f)
@@ -37,6 +36,10 @@ tryMaybe :: MonadError ServantErr m => String -> Maybe a -> m a
 tryMaybe _ (Just x) = return x
 tryMaybe s Nothing  = throwError (err404 {errReasonPhrase = "Not Found: " ++ s})
 
+tryBool :: MonadError ServantErr m => String -> Bool -> m ()
+tryBool _ True  = return ()
+tryBool s False = throwError (err404 {errReasonPhrase = "Not Found: " ++ s})
+
 view :: (MonadReader (T.TVar AppState) m, MonadIO m, MonadError ServantErr m)
      => ID -> m (Choice, [Option], Maybe Decision)
 view cid = do
@@ -54,7 +57,7 @@ name cdata = do
   liftIO $ T.atomically $ do
     as <- T.readTVar ast
     let cs  = choices as
-        cid = fromIntegral $ length cs
+        cid = newId cs
         c   = cdata { choiceId = Just cid }
     T.writeTVar ast $ as { choices = c : cs }
     return c
@@ -64,20 +67,33 @@ add :: (MonadReader (T.TVar AppState) m, MonadIO m, MonadError ServantErr m)
 add cid' odata = do
   -- Verify that choice referenced exists
   let cid = optionChoiceId odata
+      msg = "choiceId " ++ show cid ++ " doesn't match choiceId " ++ show cid' ++ "... Try checking the JSON and route."
   ast    <- ask
   as'    <- liftIO $ T.readTVarIO ast
   _      <- tryMaybe ("Couldn't find choice " ++ show cid) $ getChoiceById cid $ choices as'
-  _      <- tryMaybe ("choiceId " ++ show cid ++ " doesn't match choiceId " ++ show cid') (bool Nothing (Just ()) (cid == cid'))
+  _      <- tryBool msg (cid == cid')
   liftIO $ T.atomically $ do
     as <- T.readTVar ast
     let os  = options as
-        oid = fromIntegral $ length os
+        oid = newId os
         o   = odata { optionId = Just oid }
     T.writeTVar ast $ as { options = o : os }
     return o
 
-choose :: Monad m => t -> t1 -> m Option
-choose _choiceId _body = return mockOption2
+choose :: (MonadReader (T.TVar AppState) m, MonadIO m, MonadError ServantErr m)
+     => ID -> ID -> m Decision
+choose cid oid = do
+  ast    <- ask
+  as'    <- liftIO $ T.readTVarIO ast
+  _      <- tryMaybe ("Couldn't find choice " ++ show cid) $ getChoiceById cid $ choices as'
+  o      <- tryMaybe ("Couldn't find option " ++ show oid) $ getOptionById oid $ options as'
+  liftIO $ T.atomically $ do
+    as <- T.readTVar ast
+    let ds  = decisions as
+        did = newId ds
+        d   = Decision cid (Just did) o
+    T.writeTVar ast $ as { decisions = d : ds }
+    return d
 
 list :: (MonadReader (T.TVar AppState) m, MonadIO m)
      => m [Choice]
