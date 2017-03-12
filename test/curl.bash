@@ -21,13 +21,13 @@ curl -s -XPOST -H "Content-Type: application/json" \
   --data "{\"optionChoiceId\":$choiceId, \"optionName\": \"Yes icecream is delicious\"}" \
   http://localhost:8080/choices/$choiceId/add | jq .
 
+echo "Deciding on option $optionId"
+curl -v -XPOST -H "Content-Type: application/json" \
+  --data "$optionId" \
+  http://localhost:8080/choices/$choiceId/choose | jq .
+
 echo "Choices"
 curl -s http://localhost:8080/choices | jq .
 
 echo "Choice Info"
 curl -s http://localhost:8080/choices/$choiceId | jq .
-
-echo "Deciding on option $optionId"
-curl -v -XPOST -H "Content-Type: application/json" \
-  --data "$optionId" \
-  http://localhost:8080/choices/$choiceId/choose | jq .
