@@ -14,8 +14,9 @@ dependencies:
   - aeson
   - servant-server
   - wai
-  - warp
+  - wai-cors
   - wai-util
+  - warp
   - bytestring
   - http-types
   - mtl

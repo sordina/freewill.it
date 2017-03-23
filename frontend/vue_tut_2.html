@@ -1,0 +1,39 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <script type="application/javascript" src="./vue.js"></script>
+  </head>
+  <body>
+    <div id="app">
+      <app-nav v-bind:count="count" v-bind:x="x"></app-nav>
+    </div>
+    <div id="app-nav">
+      <h1>lol</h1>
+      {{ count }} = {{ x }}
+      <app-funky></app-funky>
+      <app-nav v-for="x in [2,300]" v-if="count > 1" v-bind:x="x+8" v-bind:count="count - 1"></app-nav>
+    </div>
+    <div id="app-funky">
+      <h2>haha</h2>
+    </div>
+    <script>
+      function ge(name) {
+        return document.getElementById(name);
+      }
+      function comp(name,props) {
+        var domE = ge(name);
+        props.template = domE.outerHTML;
+        Vue.component(name, props);
+        domE.style.display='none';
+      }
+      comp('app-nav', { props:['count','x'] });
+      comp('app-funky',{});
+
+      var app = new Vue({
+        el: '#app',
+        data: { count: 3, x: 5 }
+      })
+
+    </script>
+  </body>
+</html>

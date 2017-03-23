@@ -31,3 +31,11 @@ curl -s http://localhost:8080/choices | jq .
 
 echo "Choice Info"
 curl -s http://localhost:8080/choices/$choiceId | jq .
+
+echo "Extensions"
+
+echo "Swagger API Spec"
+curl -s http://localhost:8080/swagger.json | jq .
+
+echo "Vanilla JS"
+curl -s http://localhost:8080/vanilla.js

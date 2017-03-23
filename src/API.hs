@@ -49,10 +49,10 @@ instance ToSchema Choice
 instance ToSchema Option
 instance ToSchema Decision
 
-$(deriveJSON defaultOptions ''User)
-$(deriveJSON defaultOptions ''Choice)
-$(deriveJSON defaultOptions ''Option)
-$(deriveJSON defaultOptions ''Decision)
+deriveJSON defaultOptions ''User
+deriveJSON defaultOptions ''Choice
+deriveJSON defaultOptions ''Option
+deriveJSON defaultOptions ''Decision
 
 data AppState = AS {
     options   :: [Option  ]
