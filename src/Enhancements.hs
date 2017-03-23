@@ -13,13 +13,14 @@ import Data.Text
 import Data.Swagger (Swagger(..) )
 import Control.Concurrent.STM.TVar (TVar())
 import Network.Wai.Middleware.Cors
+import Network.Wai.Middleware.RequestLogger
 
 type App       = VanillaJS :<|> Swag :<|> API
 type Swag      = "swagger.json" :> Get '[JSON]      Swagger
 type VanillaJS = "vanilla.js"   :> Get '[PlainText] Text
 
 app :: (TVar AppState) -> Application
-app as = simpleCors $ serve apiWithSpec (serverWithSpec as)
+app as = logStdoutDev $ simpleCors $ serve apiWithSpec (serverWithSpec as)
 
 apiWithSpec :: Proxy App
 apiWithSpec = Proxy

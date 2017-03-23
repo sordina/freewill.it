@@ -16,6 +16,7 @@ dependencies:
   - wai
   - wai-cors
   - wai-util
+  - wai-extra
   - warp
   - bytestring
   - http-types

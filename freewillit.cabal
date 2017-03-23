@@ -36,6 +36,7 @@ library
     , wai
     , wai-cors
     , wai-util
+    , wai-extra
     , warp
     , bytestring
     , http-types
@@ -63,6 +64,7 @@ executable freewillit
     , wai
     , wai-cors
     , wai-util
+    , wai-extra
     , warp
     , bytestring
     , http-types

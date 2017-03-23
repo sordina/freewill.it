@@ -9,11 +9,11 @@
     <div id="app">
       <table>
         <tr>
-          <td><choices-list v-bind:choices="choices"></choices-list></td>
+          <td><choices-list :choices="choices"></choices-list></td>
           <td>
-            <choice-info  v-bind:choice="choice[0]"
-                          v-bind:options="choice[1]"
-                          v-bind:decision="choice[2]"></choice-info>
+            <choice-info :choice="choice[0]"
+                         :options="choice[1]"
+                         :decision="choice[2]"></choice-info>
           </td>
         </tr>
       </table>
@@ -22,12 +22,12 @@
       <h2>Choices</h2>
       <ul>
         <li v-for="choice in choices">
-          <choice-item v-bind:choice="choice"></choice-item>
+          <choice-item :choice="choice"></choice-item>
         </li>
       </ul>
     </div>
     <div id="choice-item">
-      <div v-on:click="clickChoice"> {{choice.choiceId}}: <strong>{{choice.choiceName}}</strong> </div>
+      <div @click="clickChoice"> <strong>{{choice.choiceName}}</strong> </div>
     </div>
     <div id="choice-info">
       <h2>{{choice.choiceName}}</h2>
@@ -39,13 +39,13 @@
       <p>{{decision.decision.optionName}}</p>
     </div>
     <script>
-      initialChoices = 
-        [{"choiceId":3,"choiceName":"Should I get a icecream?"},{"choiceId":2,"choiceName":"Should I get a icecream?"},{"choiceId":1,"choiceName":"Should I get a icecream?"},{"choiceId":0,"choiceName":"What size thing should I eat?"}];
+      initialChoices = [];
+        // [{"choiceId":3,"choiceName":"Should I get a icecream?"},{"choiceId":2,"choiceName":"Should I get a icecream?"},{"choiceId":1,"choiceName":"Should I get a icecream?"},{"choiceId":0,"choiceName":"What size thing should I eat?"}];
 
-      initialChoice = 
-        [{"choiceId":0,"choiceName":"What size thing should I eat?"}
-        ,[{"optionChoiceId":0,"optionId":1,"optionName":"Something bigger than my own head"},{"optionChoiceId":0,"optionId":2,"optionName":"Something reasonable"}]
-        ,{"decisionChoiceId":0,"decisionId":1,"decision":{"optionChoiceId":0,"optionId":2,"optionName":"Something reasonable"}}];
+      initialChoice = [];
+        // [{"choiceId":0,"choiceName":"What size thing should I eat?"}
+        // ,[{"optionChoiceId":0,"optionId":1,"optionName":"Something bigger than my own head"},{"optionChoiceId":0,"optionId":2,"optionName":"Something reasonable"}]
+        // ,{"decisionChoiceId":0,"decisionId":1,"decision":{"optionChoiceId":0,"optionId":2,"optionName":"Something reasonable"}}];
 
       function ge(name) {
         return document.getElementById(name);
