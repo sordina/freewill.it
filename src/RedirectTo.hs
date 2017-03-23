@@ -22,6 +22,7 @@ import Data.Typeable
 import Servant.Swagger
 import Data.Swagger
 import Data.Text
+import Servant.Foreign.Internal
 import Data.Function ((&))
 import Control.Lens ((.~))
 
@@ -34,6 +35,7 @@ instance (HasSwagger sub, KnownSymbol a) => HasSwagger (RedirectTo a :> sub) whe
   toSwagger _ = toSwagger (Proxy :: Proxy sub)
               & setDescription ("Redirects to " ++ symbolVal (Proxy :: Proxy a))
 
+-- For implementation
 instance (KnownSymbol sym, HasServer api context)
       => HasServer (RedirectTo sym :> api) context where
 
@@ -42,3 +44,11 @@ instance (KnownSymbol sym, HasServer api context)
   route Proxy context subserver = route (Proxy :: Proxy api) context (passToServer subserver mheader)
     where
     mheader _ = symbolVal (Proxy :: Proxy sym)
+
+-- For js serialization, etc.
+instance HasForeign lang ftype api
+      => HasForeign lang ftype (RedirectTo sym :> api) where
+
+  type Foreign ftype (RedirectTo sym :> api) = Foreign ftype api
+
+  foreignFor lang ftype Proxy = foreignFor lang ftype (Proxy :: Proxy api)

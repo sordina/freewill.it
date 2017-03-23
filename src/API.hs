@@ -84,7 +84,9 @@ type ChoiceAPI = Get     '[JSON] [Choice]
             :<|> ChoiceCapture :> "add"    :> ReqBody '[JSON] Option :> Post '[JSON] Option
             :<|> ChoiceCapture :> "choose" :> ReqBody '[JSON] ID     :> Post '[JSON] Decision
 
-type API = AuthAPI :<|> ("choices" :> ChoiceAPI) :<|> Redirect "users"
+type API = AuthAPI
+      :<|> ("choices" :> ChoiceAPI)
+      :<|> Redirect "users"
 
 help :: IO ()
 help = putStrLn $ Data.Text.unpack $ layout (Proxy :: Proxy API)

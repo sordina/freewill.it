@@ -21,6 +21,8 @@ dependencies:
   - mtl
   - ghc-prim
   - servant-swagger
+  - servant-foreign
+  - servant-js
   - swagger2
   - text
   - lens
@@ -30,7 +32,7 @@ dependencies:
 
 library:
   source-dirs: src
-  exposed-modules: ['API','Lib','Swag']
+  exposed-modules: ['API','Lib','Enhancements']
 
 executables:
   freewillit:

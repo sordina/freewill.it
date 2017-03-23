@@ -16,7 +16,7 @@ import qualified Data.Text as T
 import qualified Data.ByteString.Char8 as C
 import RedirectTo
 
-type Redirect (a :: Symbol) = RedirectTo a :> Get '[PlainText] NoContent
+type Redirect (a :: Symbol) = RedirectTo a :> Get '[JSON] NoContent
 
 redirectTo :: MonadError ServantErr m => String -> m a
 redirectTo location = throwError $ err302 { errHeaders = [("Location", C.pack location)] }

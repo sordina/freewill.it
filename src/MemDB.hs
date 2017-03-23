@@ -40,16 +40,6 @@ tryBool :: MonadError ServantErr m => String -> Bool -> m ()
 tryBool _ True  = return ()
 tryBool s False = throwError (err404 {errReasonPhrase = "Not Found: " ++ s})
 
-view :: (MonadReader (T.TVar AppState) m, MonadIO m, MonadError ServantErr m)
-     => ID -> m (Choice, [Option], Maybe Decision)
-view cid = do
-  ast <- ask
-  as  <- liftIO $ T.readTVarIO ast
-  c   <- tryMaybe ("Couldn't find choice " ++ show cid) $ getChoiceById cid $ choices as
-  let os = getOptionsByChoiceId  cid $ options as
-      d  = getDecisionByChoiceId cid $ decisions as
-  return (c, os, d)
-
 name :: (MonadReader (T.TVar AppState) m, MonadIO m)
      => Choice -> m Choice
 name cdata = do
@@ -61,6 +51,16 @@ name cdata = do
         c   = cdata { choiceId = Just cid }
     T.writeTVar ast $ as { choices = c : cs }
     return c
+
+view :: (MonadReader (T.TVar AppState) m, MonadIO m, MonadError ServantErr m)
+     => ID -> m (Choice, [Option], Maybe Decision)
+view cid = do
+  ast <- ask
+  as  <- liftIO $ T.readTVarIO ast
+  c   <- tryMaybe ("Couldn't find choice " ++ show cid) $ getChoiceById cid $ choices as
+  let os = getOptionsByChoiceId  cid $ options as
+      d  = getDecisionByChoiceId cid $ decisions as
+  return (c, os, d)
 
 add :: (MonadReader (T.TVar AppState) m, MonadIO m, MonadError ServantErr m)
      => ID -> Option -> m Option

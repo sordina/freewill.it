@@ -23,7 +23,7 @@ library
   exposed-modules:
       API
       Lib
-      Swag
+      Enhancements
   other-modules:
       MemDB
       RedirectTo
@@ -41,6 +41,8 @@ library
     , mtl
     , ghc-prim
     , servant-swagger
+    , servant-foreign
+    , servant-js
     , swagger2
     , text
     , lens
@@ -65,6 +67,8 @@ executable freewillit
     , mtl
     , ghc-prim
     , servant-swagger
+    , servant-foreign
+    , servant-js
     , swagger2
     , text
     , lens
