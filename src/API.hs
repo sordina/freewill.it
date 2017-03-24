@@ -44,15 +44,23 @@ data Decision = Decision
   , decision :: Option
   } deriving (Eq, Show, Generic)
 
+data ChoiceAPIData = CAD {
+  theChoice :: Choice
+  , theOptions :: [Option]
+  , theDecision :: Maybe Decision
+  } deriving (Eq, Show, Generic)
+
 instance ToSchema User
 instance ToSchema Choice
 instance ToSchema Option
 instance ToSchema Decision
+instance ToSchema ChoiceAPIData
 
 deriveJSON defaultOptions ''User
 deriveJSON defaultOptions ''Choice
 deriveJSON defaultOptions ''Option
 deriveJSON defaultOptions ''Decision
+deriveJSON defaultOptions ''ChoiceAPIData
 
 data AppState = AS {
     options   :: [Option  ]
@@ -80,7 +88,7 @@ type ChoiceCapture = Capture "choiceId" ID
 
 type ChoiceAPI = Get     '[JSON] [Choice]
             :<|> ReqBody '[JSON] Choice    :> Post '[JSON] Choice
-            :<|> ChoiceCapture             :> Get  '[JSON] (Choice, [Option], Maybe Decision)
+            :<|> ChoiceCapture             :> Get  '[JSON] ChoiceAPIData
             :<|> ChoiceCapture :> "add"    :> ReqBody '[JSON] Option :> Post '[JSON] Option
             :<|> ChoiceCapture :> "choose" :> ReqBody '[JSON] ID     :> Post '[JSON] Decision
 

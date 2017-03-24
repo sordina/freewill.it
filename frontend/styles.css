@@ -19,3 +19,7 @@ td:first-child {
 	vertical-align: top;
 	border-right: 1px solid black;
 }
+
+td:first-child strong {
+	cursor: pointer;
+}

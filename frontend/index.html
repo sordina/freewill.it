@@ -12,9 +12,9 @@
         <tr>
           <td><choices-list :choices="choices"></choices-list></td>
           <td>
-            <choice-info :choice="choice[0]"
-                         :options="choice[1]"
-                         :decision="choice[2]"></choice-info>
+            <choice-info :choice="choice.theChoice"
+                         :options="choice.theOptions"
+                         :decision="choice.theDecision"></choice-info>
           </td>
         </tr>
       </table>
@@ -37,7 +37,7 @@
 
     <script type="text/x-template" id="choice-info">
       <div>
-        <h2>{{choice.choiceName}}</h2>
+        <h2>{{choice.choiceName}} - {{choice.choiceDate}}</h2>
         <h3>Options</h3>
         <ul>
           <li v-for="option in options">{{option.optionName}}</li>
@@ -72,8 +72,6 @@
       })
 
       getChoices(function(cs){
-        console.log("Fetched Choices")
-        console.log(cs);
         app.choices = cs;
       })
 

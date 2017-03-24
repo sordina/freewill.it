@@ -53,14 +53,14 @@ name cdata = do
     return c
 
 view :: (MonadReader (T.TVar AppState) m, MonadIO m, MonadError ServantErr m)
-     => ID -> m (Choice, [Option], Maybe Decision)
+     => ID -> m ChoiceAPIData
 view cid = do
   ast <- ask
   as  <- liftIO $ T.readTVarIO ast
   c   <- tryMaybe ("Couldn't find choice " ++ show cid) $ getChoiceById cid $ choices as
   let os = getOptionsByChoiceId  cid $ options as
       d  = getDecisionByChoiceId cid $ decisions as
-  return (c, os, d)
+  return $ CAD c os d
 
 add :: (MonadReader (T.TVar AppState) m, MonadIO m, MonadError ServantErr m)
      => ID -> Option -> m Option
