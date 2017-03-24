@@ -16,7 +16,6 @@ import Servant
 
 import API
 import MemDB
-import Util
 import qualified Control.Concurrent.STM.TVar as T
 
 api :: Proxy API
@@ -30,7 +29,6 @@ api = Proxy
 server :: T.TVar AppState -> Server API
 server as = enter (runReaderTNat as) authServer
        :<|> enter (runReaderTNat as) choiceServer
-       :<|> redirectTo
 
 authServer :: ServerT AuthAPI AppHandler
 authServer = return mockUsers

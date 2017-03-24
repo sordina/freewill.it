@@ -2,7 +2,7 @@
 <html>
   <head>
     <script type="application/javascript" src="./vue.js"></script>
-    <script type="application/javascript" src="./vanilla.js"></script>
+    <script type="application/javascript" src="http://localhost:8080/vanilla.js"></script>
     <link rel="stylesheet" href="./styles.css" type="text/css" />
   </head>
   <body>
@@ -12,7 +12,8 @@
         <tr>
           <td><choices-list :choices="choices"></choices-list></td>
           <td>
-            <choice-info :choice="choice.theChoice"
+            <choice-info v-if="choice"
+                         :choice="choice.theChoice"
                          :options="choice.theOptions"
                          :decision="choice.theDecision"></choice-info>
           </td>
@@ -49,7 +50,7 @@
 
     <script>
       initialChoices = [];
-      initialChoice = [];
+      initialChoice = null;
 
       function comp(name, props) {
         props.template = '#' + name;

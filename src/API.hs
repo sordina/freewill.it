@@ -94,7 +94,6 @@ type ChoiceAPI = Get     '[JSON] [Choice]
 
 type API = AuthAPI
       :<|> ("choices" :> ChoiceAPI)
-      :<|> Redirect "users"
 
 help :: IO ()
 help = putStrLn $ Data.Text.unpack $ layout (Proxy :: Proxy API)
