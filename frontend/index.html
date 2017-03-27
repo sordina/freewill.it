@@ -25,57 +25,39 @@
       <div>
         <h2>Choices</h2>
         <ul>
-          <li v-for="choice in choices">
-            <choice-item :choice="choice"></choice-item>
-          </li>
+          <choice-item v-for="choice in revChoices" :choice="choice"></choice-item>
+          <li>
+            <input placeholder="New Choice..."
+                   v-model="choiceName"
+                   @keyup.enter="newChoice" /> </li>
         </ul>
       </div>
     </script>
 
     <script type="text/x-template" id="choice-item">
-      <div @click="clickChoice"> <strong>{{choice.choiceName}}</strong> </div>
+      <li @click="clickChoice"> <strong>{{choice.choiceName}}</strong> </li>
     </script>
 
     <script type="text/x-template" id="choice-info">
       <div>
-        <h2>{{choice.choiceName}} - {{choice.choiceDate}}</h2>
+        <h2>{{choice.choiceName}}</h2>
         <h3>Options</h3>
         <ul>
-          <li v-for="option in options">{{option.optionName}}</li>
+          <option-item v-for="option in revOptions" :option="option"></option-item>
+          <li>
+            <input placeholder="New Option..."
+                   v-model="optionName"
+                   @keyup.enter="newOption" /> </li>
         </ul>
         <h3>Decision</h3>
-        <p>{{decision.decision.optionName}}</p>
+        <p v-if="decision">{{decision.decision.optionName}}</p>
       </div>
     </script>
 
-    <script>
-      initialChoices = [];
-      initialChoice = null;
-
-      function comp(name, props) {
-        props.template = '#' + name;
-        Vue.component(name, props);
-      }
-
-      function getChoice() {
-        getChoicesByChoiceId(this.choice.choiceId, function(x){
-          app.choice = x;
-        })
-      }
-
-      comp('choices-list', { props:['choices'] });
-      comp('choice-item',  { props:['choice'], methods: { clickChoice: getChoice } });
-      comp('choice-info',  { props:['choice', 'options', 'decision'] });
-
-      var app = new Vue({
-        el: '#app',
-        data: { choices: initialChoices, choice: initialChoice }
-      })
-
-      getChoices(function(cs){
-        app.choices = cs;
-      })
-
+    <script type="text/x-template" id="option-item">
+      <li @click="clickOption"> <strong>{{option.optionName}}</strong> </li>
     </script>
+
+    <script type="application/javascript" src="./app.js"></script>
   </body>
 </html>
