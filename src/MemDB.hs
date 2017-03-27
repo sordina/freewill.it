@@ -10,6 +10,7 @@ import qualified Control.Concurrent.STM as T
 import Control.Monad.IO.Class (liftIO, MonadIO)
 import Control.Monad.Reader.Class
 import Control.Monad.Except
+import Data.Maybe
 
 getThing :: (x -> Maybe ID) -> ID -> [x] -> Maybe x
 getThing f oid = find ((== Just oid) . f)
@@ -72,6 +73,11 @@ add cid' odata = do
   as'    <- liftIO $ T.readTVarIO ast
   _      <- tryMaybe ("Couldn't find choice " ++ show cid) $ getChoiceById cid $ choices as'
   _      <- tryBool msg (cid == cid')
+
+  -- Can't deliberate after choice
+  let exD = getDecisionByChoiceId cid $ decisions as'
+  when (isJust exD) $ throwError (err403 {errReasonPhrase = "Already made a decision for this choice!"})
+
   liftIO $ T.atomically $ do
     as <- T.readTVar ast
     let os  = options as
@@ -87,6 +93,11 @@ choose cid oid = do
   as'    <- liftIO $ T.readTVarIO ast
   _      <- tryMaybe ("Couldn't find choice " ++ show cid) $ getChoiceById cid $ choices as'
   o      <- tryMaybe ("Couldn't find option " ++ show oid) $ getOptionById oid $ options as'
+
+  -- Can't rechoose
+  let exD = getDecisionByChoiceId cid $ decisions as'
+  when (isJust exD) $ throwError (err403 {errReasonPhrase = "Already made a decision for this choice!"})
+
   liftIO $ T.atomically $ do
     as <- T.readTVar ast
     let ds  = decisions as
