@@ -25,7 +25,9 @@ library
       Lib
       Enhancements
   other-modules:
-      MemDB
+      DB.MemDB
+      DB.MockDB
+      DB.PostgresDB
       RedirectTo
       Util
       Paths_freewillit

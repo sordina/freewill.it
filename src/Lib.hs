@@ -15,7 +15,7 @@ module Lib
 import Servant
 
 import API
-import MemDB
+import DB.MemDB
 import qualified Control.Concurrent.STM.TVar as T
 
 api :: Proxy API
@@ -35,6 +35,8 @@ authServer = return mockUsers
         :<|> return mockUsers
         :<|> return mockUsers
         :<|> return mockUsers
+  where
+  AS _ _ _ mockUsers = initialAppState
 
 choiceServer :: ServerT ChoiceAPI AppHandler
 choiceServer = list

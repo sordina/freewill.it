@@ -1,6 +1,6 @@
 {-# LANGUAGE FlexibleContexts #-}
 
-module MemDB where
+module DB.MemDB where
 
 import API
 import Data.List
