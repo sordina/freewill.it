@@ -11,7 +11,9 @@ function getChoice() {
 }
 
 function getChoice_(o,i) {
-  getChoicesByChoiceId(i, function(x){ o.choice = x; });
+  getChoicesByChoiceId(i,
+    function(x){ o.choice = x; },
+    function(x){ app.errors.push("Couldn't fetch choice " + i); });
 }
 
 function newChoice() {

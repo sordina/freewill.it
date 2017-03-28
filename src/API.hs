@@ -16,7 +16,6 @@ import Servant
 import Data.Swagger (ToSchema)
 import GHC.Generics
 import Control.Monad.Trans.Reader
-import Util
 import qualified Control.Concurrent.STM.TVar as T
 
 type ID = Integer
@@ -71,11 +70,13 @@ data AppState = AS {
 
 type AppHandler = ReaderT (T.TVar AppState) Handler
 
-instance FromFormUrlEncoded User where
+{-
+instance FormUrlEncoded User where
   fromFormUrlEncoded inputs =
     User <$> lkup inputs "ID"
          <*> grab inputs "FirstName"
          <*> grab inputs "LastName"
+-}
 
 -- ReqBody '[JSON, FormUrlEncoded] String -- For reference
 --

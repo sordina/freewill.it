@@ -45,7 +45,7 @@ input {
 .errors {
 	padding-right: 2em;
 	text-align: right;
-	width: 50%;
+	width: 25%;
 	position: absolute;
 	bottom: 0;
 	right: 0;
@@ -54,4 +54,10 @@ input {
 
 .errors li {
 	list-style: none;
+}
+
+.error {
+	margin: 1em 0 0 1em;
+	padding: 1em;
+	background: #fcc;
 }
