@@ -4,7 +4,7 @@ h1 {
 	font-size: 500%;
 }
 
-h1 a {
+a {
 	text-decoration: none;
 	color: #EA3333;
 }
@@ -22,11 +22,11 @@ table {
 
 td {
 	padding: 1em;
+	vertical-align: top;
 }
 
 td:first-child {
 	width: 30%;
-	vertical-align: top;
 	border-right: 1px solid black;
 }
 
@@ -34,6 +34,24 @@ td:first-child {
 	cursor: pointer;
 }
 
+.router-link-active {
+	font-weight: bold;
+}
+
 input {
 	border: 0;
+}
+
+.errors {
+	padding-right: 2em;
+	text-align: right;
+	width: 50%;
+	position: absolute;
+	bottom: 0;
+	right: 0;
+	font-size: 50%;
+}
+
+.errors li {
+	list-style: none;
 }

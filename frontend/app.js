@@ -10,6 +10,10 @@ function getChoice() {
   })
 }
 
+function getChoice_(o,i) {
+  getChoicesByChoiceId(i, function(x){ o.choice = x; });
+}
+
 function newChoice() {
   postChoices( {choiceName: this.choiceName}, function(choiceResponse) {
     getChoices_()
@@ -26,23 +30,25 @@ function newOption() {
       getChoice.call({choice: {choiceId: choiceId}})
     }) }
 
-// data Decision = Decision
-//   { decisionChoiceId :: ID
-//   , decisionId :: Maybe ID
-//   , decision :: Option
-//   } deriving (Eq, Show, Generic)
-
 function decide() {
   var choiceId = this.option.optionChoiceId;
   var option   = this.option;
-  console.log(choiceId);
-  console.log(option);
   postChoicesByChoiceIdChoose(
     choiceId,
     option.optionId,
     function() {
       getChoice.call({choice: {choiceId: choiceId}})
     })}
+
+function removeAllErrors() {
+  app.errors = [];
+}
+
+function getChoices_() {
+  getChoices(function(cs){
+    app.choices = cs;
+  })
+}
 
 comp('choices-list', { props:    ['choices', 'choiceName'],
                        methods:  { newChoice: newChoice },
@@ -58,15 +64,31 @@ comp('choice-info',  { props:    ['choice', 'options', 'decision', 'optionName']
 comp('option-item',  { props:    ['option'],
                        methods:  { clickOption: decide } });
 
-var app = new Vue({
-  el: '#app',
-  data: { choices: [], choice: null }
-})
+comp('errors',       { props:    ['errors'],
+                       methods:  { removeAllErrors: removeAllErrors } });
 
-function getChoices_() {
-  getChoices(function(cs){
-    app.choices = cs;
-  })
+comp('router',       { props:    ['choice'] });
+
+comp('error-item',   { props:    ['error'] });
+
+var routerComponent = {
+  name:     "RouterTemplate",
+  props:    [ 'choice' ],
+  created:  function() { this.fetchData() },
+  watch:    { '$route': 'fetchData' },
+  methods:  { fetchData: function() { getChoice_(this.$router.app, this.$route.params.id); } },
+  template: '<router :choice="choice"></router>'
 }
+
+var router = new VueRouter({
+  routes: [ { path: '/',            component: { props: ['choice'], template: '<p> <em> Click on or create a choice... </em> </p>' } },
+            { path: '/choices/:id', component: routerComponent } ]
+});
+
+var app = new Vue({
+  el:     '#app',
+  router: router,
+  data:   { choices: [], choice: null, errors: [] }
+});
 
 getChoices_();

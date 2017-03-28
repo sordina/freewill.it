@@ -2,25 +2,20 @@
 <html>
   <head>
     <script type="application/javascript" src="./vue.js"></script>
+    <script type="application/javascript" src="./vue-router.js"></script>
     <script type="application/javascript" src="http://localhost:8080/vanilla.js"></script>
     <link rel="stylesheet" href="./styles.css" type="text/css" />
   </head>
   <body>
-
     <h1> <a href="/"><em>freewill.it</em></a> </h1>
-
     <div id="app">
       <table>
         <tr>
           <td><choices-list :choices="choices"></choices-list></td>
-          <td>
-            <choice-info v-if="choice"
-                         :choice="choice.theChoice"
-                         :options="choice.theOptions"
-                         :decision="choice.theDecision"></choice-info>
-          </td>
+          <td><router-view :choice="choice"></router-view></td>
         </tr>
       </table>
+      <errors :errors="errors"></errors>
     </div>
 
     <script type="text/x-template" id="choices-list">
@@ -37,7 +32,7 @@
     </script>
 
     <script type="text/x-template" id="choice-item">
-      <li @click="clickChoice"> <strong class="link">{{choice.choiceName}}</strong> </li>
+      <li><router-link :to="'/choices/' + choice.choiceId">{{choice.choiceName}}</router-link></li>
     </script>
 
     <script type="text/x-template" id="choice-info">
@@ -66,6 +61,20 @@
 
     <script type="text/x-template" id="option-item">
       <li @click="clickOption"> <strong class="link">{{option.optionName}}</strong> </li>
+    </script>
+
+    <script type="text/x-template" id="router">
+      <choice-info v-if="choice" :choice="choice.theChoice" :options="choice.theOptions" :decision="choice.theDecision"></choice-info>
+      <p v-else><em>Loading Choice...</em></p>
+    </script>
+
+    <script type="text/x-template" id="errors">
+      <div class="errors">
+        <ul>
+          <li v-for="error in errors"> <strong class="link">{{ error }}</strong> </li>
+        </ul>
+        <p @click="removeAllErrors" v-if="errors[0]" class="link"> Remove All Errors... </p>
+      </div>
     </script>
 
     <script type="application/javascript" src="./app.js"></script>
