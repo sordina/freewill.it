@@ -69,8 +69,6 @@ comp('errors',       { props:    ['errors'],
 
 comp('router',       { props:    ['choice'] });
 
-comp('error-item',   { props:    ['error'] });
-
 var routerComponent = {
   name:     "RouterTemplate",
   props:    [ 'choice' ],
