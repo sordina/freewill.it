@@ -49,15 +49,16 @@ input {
 	position: absolute;
 	bottom: 0;
 	right: 0;
-	font-size: 50%;
+	font-size: 70%;
 }
 
 .errors li {
 	list-style: none;
+	border-radius: 0.8em;
 }
 
 .error {
-	margin: 1em 0 0 1em;
-	padding: 1em;
+	margin: 0.5em 0 0 0;
+	padding: 0.5em;
 	background: #fcc;
 }

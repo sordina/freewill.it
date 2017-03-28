@@ -115,23 +115,23 @@ list = do
 
 -- Mocks
 
-mockChoice :: Choice
-mockChoice = Choice (Just 0) "What size thing should I eat?"
-
-mockOption1 :: Option
-mockOption1 = Option 0 (Just 1) "Something bigger than my own head"
-
-mockOption2 :: Option
-mockOption2 = Option 0 (Just 2) "Something reasonable"
-
-mockDecision :: Decision
-mockDecision = Decision 0 (Just 1) mockOption2
-
-mockUsers :: [User]
-mockUsers = [ User (Just 0) "Isaac" "Newton"
-            , User (Just 1) "Albert" "Einstein"
-            , User (Just 2) "Richard" "Feynman"
-            ]
-
 initialAppState :: AppState
 initialAppState = AS [mockOption1, mockOption2] [mockChoice] [mockDecision] mockUsers
+  where
+  mockChoice :: Choice
+  mockChoice = Choice (Just 0) "What size thing should I eat?"
+
+  mockOption1 :: Option
+  mockOption1 = Option 0 (Just 1) "Something bigger than my own head"
+
+  mockOption2 :: Option
+  mockOption2 = Option 0 (Just 2) "Something reasonable"
+
+  mockDecision :: Decision
+  mockDecision = Decision 0 (Just 1) mockOption2
+
+  mockUsers :: [User]
+  mockUsers = [ User (Just 0) "Isaac" "Newton"
+              , User (Just 1) "Albert" "Einstein"
+              , User (Just 2) "Richard" "Feynman"
+              ]
