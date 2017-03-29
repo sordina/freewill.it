@@ -16,6 +16,7 @@ import Servant
 import Data.Swagger (ToSchema)
 import GHC.Generics
 import Control.Monad.Trans.Reader
+import Database.PostgreSQL.Simple
 import qualified Control.Concurrent.STM.TVar as T
 
 type ID = Integer
@@ -54,6 +55,9 @@ instance ToSchema Choice
 instance ToSchema Option
 instance ToSchema Decision
 instance ToSchema ChoiceAPIData
+
+instance FromRow Choice
+instance FromRow Option
 
 deriveJSON defaultOptions ''User
 deriveJSON defaultOptions ''Choice

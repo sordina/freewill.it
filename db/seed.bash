@@ -1,1 +1,1 @@
-migrate
+migrate.sh freewill

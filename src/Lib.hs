@@ -21,11 +21,6 @@ import qualified Control.Concurrent.STM.TVar as T
 api :: Proxy API
 api = Proxy
 
--- Type level construction is not associative... :(
--- Could maybe try that named routes thingo.
--- Is it even on Hackage yet?
--- Eh... Who cares!
---
 server :: T.TVar AppState -> Server API
 server as = enter (runReaderTNat as) authServer
        :<|> enter (runReaderTNat as) choiceServer

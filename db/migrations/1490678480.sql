@@ -20,6 +20,7 @@ create table options(
 
 create table decisions(
 	decisionid       integer primary key,
-	userid           integer references users (userid),
-	decisionchoiceid integer references choices (choiceid)
+	userid           integer references users   (userid),
+	decisionchoiceid integer references choices (choiceid),
+	decision         integer references options (optionid)
 );
