@@ -31,6 +31,7 @@ dependencies:
   - safe
   - transformers
   - stm
+  - postgresql-simple
 
 library:
   source-dirs: src

@@ -25,6 +25,7 @@ library
       Lib
       Enhancements
   other-modules:
+      DB.Class
       DB.MemDB
       DB.MockDB
       DB.PostgresDB
@@ -53,6 +54,7 @@ library
     , safe
     , transformers
     , stm
+    , postgresql-simple
   default-language: Haskell2010
 
 executable freewillit
@@ -81,6 +83,7 @@ executable freewillit
     , safe
     , transformers
     , stm
+    , postgresql-simple
     , freewillit
     , optparse-generic
   default-language: Haskell2010

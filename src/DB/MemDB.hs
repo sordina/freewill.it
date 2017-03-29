@@ -1,4 +1,8 @@
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE InstanceSigs #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module DB.MemDB where
 
@@ -11,6 +15,7 @@ import Control.Monad.IO.Class (liftIO, MonadIO)
 import Control.Monad.Reader.Class
 import Control.Monad.Except
 import Data.Maybe
+import qualified DB.Class as DBC
 
 getThing :: (x -> Maybe ID) -> ID -> [x] -> Maybe x
 getThing f oid = find ((== Just oid) . f)
@@ -135,3 +140,27 @@ initialAppState = AS [mockOption1, mockOption2] [mockChoice] [mockDecision] mock
               , User (Just 1) "Albert" "Einstein"
               , User (Just 2) "Richard" "Feynman"
               ]
+
+-- DB.Class Instance
+
+data MemDBConnection m = MDBC -- Data context is implicit in reader...
+
+instance (MonadReader (T.TVar AppState) m, MonadIO m, MonadError ServantErr m)
+      => DBC.View (MemDBConnection (m x)) m where
+  view :: (MemDBConnection (m x)) -> ID -> m ChoiceAPIData
+  view MDBC i = view i
+
+instance (MonadReader (T.TVar AppState) m, MonadIO m, MonadError ServantErr m)
+      => DBC.Add (MemDBConnection (m x)) m where
+  add :: (MemDBConnection (m x)) -> ID -> Option -> m Option
+  add MDBC i o = add i o
+
+instance (MonadReader (T.TVar AppState) m, MonadIO m, MonadError ServantErr m)
+      => DBC.Choose (MemDBConnection (m x)) m where
+  choose :: (MemDBConnection (m x)) -> ID -> ID -> m Decision
+  choose MDBC c o = choose c o
+
+instance (MonadReader (T.TVar AppState) m, MonadIO m)
+      => DBC.List (MemDBConnection (m x)) m where
+  list :: (MemDBConnection (m x)) -> m [Choice]
+  list MDBC = list

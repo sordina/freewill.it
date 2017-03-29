@@ -33,19 +33,19 @@ data Choice = Choice
 
 data Option = Option
   { optionChoiceId :: ID
-  , optionId :: Maybe ID
-  , optionName :: String
+  , optionId       :: Maybe ID
+  , optionName     :: String
   } deriving (Eq, Show, Generic)
 
 data Decision = Decision
   { decisionChoiceId :: ID
-  , decisionId :: Maybe ID
-  , decision :: Option
+  , decisionId       :: Maybe ID
+  , decision         :: Option
   } deriving (Eq, Show, Generic)
 
-data ChoiceAPIData = CAD {
-  theChoice :: Choice
-  , theOptions :: [Option]
+data ChoiceAPIData = CAD
+  { theChoice   :: Choice
+  , theOptions  :: [Option]
   , theDecision :: Maybe Decision
   } deriving (Eq, Show, Generic)
 
@@ -68,6 +68,7 @@ data AppState = AS {
   , users     :: [User    ]
   } deriving (Eq, Show, Generic)
 
+-- type Handler = ExceptT ServantErr IO
 type AppHandler = ReaderT (T.TVar AppState) Handler
 
 {-
