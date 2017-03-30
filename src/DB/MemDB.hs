@@ -145,6 +145,11 @@ initialAppState = AS [mockOption1, mockOption2] [mockChoice] [mockDecision] mock
 
 data MemDBConnection m = MDBC -- Data context is implicit in reader...
 
+instance (MonadReader (T.TVar AppState) m, MonadIO m)
+      => DBC.Name (MemDBConnection (m x)) m where
+  name :: (MemDBConnection (m x)) -> Choice -> m Choice
+  name MDBC = name
+
 instance (MonadReader (T.TVar AppState) m, MonadIO m, MonadError ServantErr m)
       => DBC.View (MemDBConnection (m x)) m where
   view :: (MemDBConnection (m x)) -> ID -> m ChoiceAPIData

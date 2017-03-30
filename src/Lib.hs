@@ -15,7 +15,8 @@ module Lib
 import Servant
 
 import API
-import DB.MemDB
+import DB.Class
+import DB.MemDB (initialAppState, MemDBConnection(..))
 import qualified Control.Concurrent.STM.TVar as T
 
 api :: Proxy API
@@ -34,8 +35,11 @@ authServer = return mockUsers
   AS _ _ _ mockUsers = initialAppState
 
 choiceServer :: ServerT ChoiceAPI AppHandler
-choiceServer = list
-          :<|> name
-          :<|> view
-          :<|> add
-          :<|> choose
+choiceServer = list   m
+          :<|> name   m
+          :<|> view   m
+          :<|> add    m
+          :<|> choose m
+  where
+  m :: MemDBConnection (AppHandler x)
+  m = MDBC -- Hard-Coded for now, but passed in by Reader later...

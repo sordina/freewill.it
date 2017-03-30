@@ -6,6 +6,9 @@ module DB.Class where
 
 import API
 
+class Name x m | x -> m where
+  name :: x -> Choice -> m Choice
+
 class View x m | x -> m where
   view :: x -> ID -> m ChoiceAPIData
 
