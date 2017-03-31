@@ -35,11 +35,11 @@ authServer = return mockUsers
   AS _ _ _ mockUsers = initialAppState
 
 choiceServer :: ServerT ChoiceAPI AppHandler
-choiceServer = list   m
-          :<|> name   m
-          :<|> view   m
-          :<|> add    m
-          :<|> choose m
+choiceServer = list   db
+          :<|> name   db
+          :<|> view   db
+          :<|> add    db
+          :<|> choose db
   where
-  m :: MemDBConnection (AppHandler x)
-  m = MDBC -- Hard-Coded for now, but passed in by Reader later...
+  db :: MemDBConnection (AppHandler x)
+  db = MDBC -- Hard-Coded for now, but passed in by Reader later...

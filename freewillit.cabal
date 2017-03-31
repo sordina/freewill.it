@@ -29,6 +29,7 @@ library
       DB.MemDB
       DB.MockDB
       DB.PostgresDB
+      Network.Wai.Middleware.Options
       RedirectTo
       Util
       Paths_freewillit

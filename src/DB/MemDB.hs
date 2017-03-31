@@ -4,7 +4,9 @@
 {-# LANGUAGE InstanceSigs #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module DB.MemDB where
+module DB.MemDB
+  ( MemDBConnection(..), initialAppState )
+  where
 
 import API
 import Data.List
@@ -15,7 +17,61 @@ import Control.Monad.IO.Class (liftIO, MonadIO)
 import Control.Monad.Reader.Class
 import Control.Monad.Except
 import Data.Maybe
-import qualified DB.Class as DBC
+import qualified DB.Class as DBClass
+
+-- DB.Class Instance
+
+data MemDBConnection m = MDBC -- Data context is implicit in reader...
+
+instance (MonadReader (T.TVar AppState) m, MonadIO m)
+      => DBClass.Name (MemDBConnection (m x)) m where
+  name :: (MemDBConnection (m x)) -> Choice -> m Choice
+  name MDBC = name
+
+instance (MonadReader (T.TVar AppState) m, MonadIO m, MonadError ServantErr m)
+      => DBClass.View (MemDBConnection (m x)) m where
+  view :: (MemDBConnection (m x)) -> ID -> m ChoiceAPIData
+  view MDBC i = view i
+
+instance (MonadReader (T.TVar AppState) m, MonadIO m, MonadError ServantErr m)
+      => DBClass.Add (MemDBConnection (m x)) m where
+  add :: (MemDBConnection (m x)) -> ID -> Option -> m Option
+  add MDBC i o = add i o
+
+instance (MonadReader (T.TVar AppState) m, MonadIO m, MonadError ServantErr m)
+      => DBClass.Choose (MemDBConnection (m x)) m where
+  choose :: (MemDBConnection (m x)) -> ID -> ID -> m Decision
+  choose MDBC c o = choose c o
+
+instance (MonadReader (T.TVar AppState) m, MonadIO m)
+      => DBClass.List (MemDBConnection (m x)) m where
+  list :: (MemDBConnection (m x)) -> m [Choice]
+  list MDBC = list
+
+-- Mocks
+
+initialAppState :: AppState
+initialAppState = AS [mockOption1, mockOption2] [mockChoice] [mockDecision] mockUsers
+  where
+  mockChoice :: Choice
+  mockChoice = Choice (Just 0) "What size thing should I eat?"
+
+  mockOption1 :: Option
+  mockOption1 = Option 0 (Just 1) "Something bigger than my own head"
+
+  mockOption2 :: Option
+  mockOption2 = Option 0 (Just 2) "Something reasonable"
+
+  mockDecision :: Decision
+  mockDecision = Decision 0 (Just 1) mockOption2
+
+  mockUsers :: [User]
+  mockUsers = [ User (Just 0) "Isaac" "Newton"
+              , User (Just 1) "Albert" "Einstein"
+              , User (Just 2) "Richard" "Feynman"
+              ]
+
+-- Implementation
 
 getThing :: (x -> Maybe ID) -> ID -> [x] -> Maybe x
 getThing f oid = find ((== Just oid) . f)
@@ -31,9 +87,6 @@ getOptionById = getThing optionId
 
 getOptionsByChoiceId :: ID -> [Option] -> [Option]
 getOptionsByChoiceId cid = filter ((== cid) . optionChoiceId)
-
-getDecisionById :: ID -> [Decision] -> Maybe Decision
-getDecisionById = getThing decisionId
 
 getDecisionByChoiceId :: ID -> [Decision] -> Maybe Decision
 getDecisionByChoiceId = getThing (Just . decisionChoiceId)
@@ -117,55 +170,3 @@ list = do
   ast <- ask
   as  <- liftIO $ T.readTVarIO ast
   return $ choices as
-
--- Mocks
-
-initialAppState :: AppState
-initialAppState = AS [mockOption1, mockOption2] [mockChoice] [mockDecision] mockUsers
-  where
-  mockChoice :: Choice
-  mockChoice = Choice (Just 0) "What size thing should I eat?"
-
-  mockOption1 :: Option
-  mockOption1 = Option 0 (Just 1) "Something bigger than my own head"
-
-  mockOption2 :: Option
-  mockOption2 = Option 0 (Just 2) "Something reasonable"
-
-  mockDecision :: Decision
-  mockDecision = Decision 0 (Just 1) mockOption2
-
-  mockUsers :: [User]
-  mockUsers = [ User (Just 0) "Isaac" "Newton"
-              , User (Just 1) "Albert" "Einstein"
-              , User (Just 2) "Richard" "Feynman"
-              ]
-
--- DB.Class Instance
-
-data MemDBConnection m = MDBC -- Data context is implicit in reader...
-
-instance (MonadReader (T.TVar AppState) m, MonadIO m)
-      => DBC.Name (MemDBConnection (m x)) m where
-  name :: (MemDBConnection (m x)) -> Choice -> m Choice
-  name MDBC = name
-
-instance (MonadReader (T.TVar AppState) m, MonadIO m, MonadError ServantErr m)
-      => DBC.View (MemDBConnection (m x)) m where
-  view :: (MemDBConnection (m x)) -> ID -> m ChoiceAPIData
-  view MDBC i = view i
-
-instance (MonadReader (T.TVar AppState) m, MonadIO m, MonadError ServantErr m)
-      => DBC.Add (MemDBConnection (m x)) m where
-  add :: (MemDBConnection (m x)) -> ID -> Option -> m Option
-  add MDBC i o = add i o
-
-instance (MonadReader (T.TVar AppState) m, MonadIO m, MonadError ServantErr m)
-      => DBC.Choose (MemDBConnection (m x)) m where
-  choose :: (MemDBConnection (m x)) -> ID -> ID -> m Decision
-  choose MDBC c o = choose c o
-
-instance (MonadReader (T.TVar AppState) m, MonadIO m)
-      => DBC.List (MemDBConnection (m x)) m where
-  list :: (MemDBConnection (m x)) -> m [Choice]
-  list MDBC = list

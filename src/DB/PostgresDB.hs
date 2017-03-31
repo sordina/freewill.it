@@ -64,17 +64,12 @@ postgresView (PGC conn) i = do
   decisionQuery = [sql| select decision
                         from decisions where decisionChoiceId = ?|]
 
--- query_ c "select userid from users" :: IO [Only Int]
---
--- data ChoiceAPIData
---   = CAD {theChoice :: Choice,
---          theOptions :: [Option],
---          theDecision :: Maybe Decision}
---
--- > connectFreewill >>= flip view 1 . PGC
-instance View PostgresConnection IO where
-  view c i = do
-    cs <- postgresView c i
-    print cs
-    return $ CAD (Choice (Just 1) "hello") [] Nothing
+instance View PostgresConnection IO where view = postgresView
 
+{-
+class Name   x m | x -> m where name   :: x -> Choice -> m Choice
+class View   x m | x -> m where view   :: x -> ID -> m ChoiceAPIData
+class Add    x m | x -> m where add    :: x -> ID -> Option -> m Option
+class Choose x m | x -> m where choose :: x -> ID -> ID -> m Decision
+class List   x m | x -> m where list   :: x -> m [Choice]
+-}
