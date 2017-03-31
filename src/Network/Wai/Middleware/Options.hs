@@ -14,15 +14,12 @@ import Servant.Foreign
 import Network.Wai
 import Data.Text hiding (null, zipWith)
 import Network.HTTP.Types.Method
+import Network.Wai.Internal (ResponseReceived(..))
 import Data.Maybe
 
 provideOptions :: (GenerateList NoContent (Foreign NoContent api), HasForeign NoTypes NoContent api)
                => Proxy api -> Middleware
 provideOptions apiproxy app req res = do
-  print req
-  print rmeth
-  print pinfo
-  print mlist
   if rmeth == "OPTIONS"
      then optional prior pinfo mlist
      else prior
@@ -50,4 +47,4 @@ matchSegment a ( Segment (Static (PathSegment b)) ) | a == b    = True
                                                     | otherwise = False
 
 optionsResponse :: [Method] -> IO ResponseReceived
-optionsResponse = undefined
+optionsResponse _ms = return ResponseReceived
