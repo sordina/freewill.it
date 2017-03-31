@@ -7,12 +7,12 @@
 -- A middleware to respond to Options requests for a servant app
 -- very helpful when trying to deal with pre-flight CORS requests.
 --
-module Network.Wai.Middleware.Options where
+module Network.Wai.Middleware.Servant.Options where
 
 import Servant
 import Servant.Foreign
 import Network.Wai
-import Data.Text hiding (null, zipWith)
+import Data.Text hiding (null, zipWith, length)
 import Network.HTTP.Types.Method
 import Network.Wai.Internal (ResponseReceived(..))
 import Data.Maybe
@@ -40,9 +40,13 @@ optional cb prior ts rs = if null methods
   methods = mapMaybe (getMethod ts) rs
 
 getMethod :: [Text] -> Req NoContent -> Maybe Method
-getMethod rs ps = if and $ zipWith matchSegment rs (_path $ _reqUrl ps)
+getMethod rs ps = if sameLength && matchingSegments
                      then Just (_reqMethod ps)
                      else Nothing
+  where
+  pattern          = _path $ _reqUrl ps
+  sameLength       = length rs == length pattern
+  matchingSegments = and $ zipWith matchSegment rs pattern
 
 matchSegment :: Text -> Segment NoContent -> Bool
 matchSegment _ ( Segment (Cap _) )                              = True

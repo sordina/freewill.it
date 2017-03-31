@@ -15,7 +15,7 @@ import Data.Swagger (Swagger(..) )
 import Control.Concurrent.STM.TVar (TVar())
 import Network.Wai.Middleware.Cors
 import Network.Wai.Middleware.RequestLogger
-import Network.Wai.Middleware.Options
+import Network.Wai.Middleware.Servant.Options
 
 type VanillaJS = "vanilla.js"   :> Get '[PlainText] Text
 type Swag      = "swagger.json" :> Get '[JSON]      Swagger
@@ -27,8 +27,8 @@ type App       = VanillaJS
 
 app :: (TVar AppState) -> Application
 app as = logStdoutDev
-       $ provideOptions api
        $ simpleCors
+       $ provideOptions api
        $ serve apiWithSpec (serverWithSpec as)
 
 apiWithSpec :: Proxy App
