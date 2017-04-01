@@ -35,7 +35,7 @@ provideOptions apiproxy app req cb = do
 optional :: (Response -> IO ResponseReceived) -> IO ResponseReceived -> [Text] -> [Req NoContent] -> IO ResponseReceived
 optional cb prior ts rs = if null methods
                              then prior
-                             else optionsResponse cb methods
+                             else cb (buildResponse methods)
   where
   methods = mapMaybe (getMethod ts) rs
 
@@ -52,11 +52,6 @@ matchSegment :: Text -> Segment NoContent -> Bool
 matchSegment _ ( Segment (Cap _) )                              = True
 matchSegment a ( Segment (Static (PathSegment b)) ) | a == b    = True
                                                     | otherwise = False
-
-optionsResponse :: (Response -> IO ResponseReceived) -> [Method] -> IO ResponseReceived
-optionsResponse cb ms = cb response
-  where
-  response = buildResponse ms
 
 buildResponse :: [Method] -> Response
 buildResponse ms = responseBuilder s h mempty
