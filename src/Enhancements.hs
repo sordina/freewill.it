@@ -32,9 +32,7 @@ app as = logStdoutDev
        $ serve apiWithEnhancements (serverWithSpec as)
   where
   policy = simpleCorsResourcePolicy
-             { corsIgnoreFailures = True
-             , corsRequestHeaders = [ "content-type" ]
-             , corsOrigins        = Nothing }
+             { corsRequestHeaders = [ "content-type" ] }
 
 apiWithEnhancements :: Proxy App
 apiWithEnhancements = Proxy
