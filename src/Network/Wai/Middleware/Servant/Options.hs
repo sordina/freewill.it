@@ -62,5 +62,5 @@ buildResponse :: [Method] -> Response
 buildResponse ms = responseBuilder s h mempty
   where
   s = Status 200 "OK"
-  h = [("Allow", m)] -- Allow: OPTIONS, GET, HEAD, POST
   m = B.intercalate ", " ("OPTIONS" : nub ms)
+  h = [ ("Allow", m) ]

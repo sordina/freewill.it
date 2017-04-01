@@ -27,12 +27,17 @@ type App       = VanillaJS
 
 app :: (TVar AppState) -> Application
 app as = logStdoutDev
-       $ simpleCors
+       $ cors (const $ Just policy) -- simpleCors
        $ provideOptions api
-       $ serve apiWithSpec (serverWithSpec as)
+       $ serve apiWithEnhancements (serverWithSpec as)
+  where
+  policy = simpleCorsResourcePolicy
+             { corsIgnoreFailures = True
+             , corsRequestHeaders = [ "content-type" ]
+             , corsOrigins        = Nothing }
 
-apiWithSpec :: Proxy App
-apiWithSpec = Proxy
+apiWithEnhancements :: Proxy App
+apiWithEnhancements = Proxy
 
 jsOptions :: CommonGeneratorOptions
 jsOptions = defCommonGeneratorOptions { urlPrefix = "http://localhost:8080" }
