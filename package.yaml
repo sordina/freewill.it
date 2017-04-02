@@ -13,6 +13,10 @@ dependencies:
   - base >= 4.7 && < 5
   - aeson
   - servant-server
+  - servant-swagger
+  - servant-foreign
+  - servant-js
+  - servant-auth
   - wai
   - wai-cors
   - wai-util
@@ -22,9 +26,6 @@ dependencies:
   - http-types
   - mtl
   - ghc-prim
-  - servant-swagger
-  - servant-foreign
-  - servant-js
   - swagger2
   - text
   - lens

@@ -5,3 +5,4 @@ extra-package-dbs: []
 extra-deps:
   - wai-util-0.8
   - http-accept-0.2
+  - servant-auth-0.2.6.1

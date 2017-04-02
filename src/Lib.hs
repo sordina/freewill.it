@@ -16,6 +16,7 @@ import Servant
 
 import API
 import DB.Class
+import Servant.Auth
 import DB.MemDB (initialAppState, MemDBConnection(..))
 import qualified Control.Concurrent.STM.TVar as T
 

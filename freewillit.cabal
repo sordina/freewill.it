@@ -37,6 +37,10 @@ library
       base >= 4.7 && < 5
     , aeson
     , servant-server
+    , servant-swagger
+    , servant-foreign
+    , servant-js
+    , servant-auth
     , wai
     , wai-cors
     , wai-util
@@ -46,9 +50,6 @@ library
     , http-types
     , mtl
     , ghc-prim
-    , servant-swagger
-    , servant-foreign
-    , servant-js
     , swagger2
     , text
     , lens
@@ -66,6 +67,10 @@ executable freewillit
       base >= 4.7 && < 5
     , aeson
     , servant-server
+    , servant-swagger
+    , servant-foreign
+    , servant-js
+    , servant-auth
     , wai
     , wai-cors
     , wai-util
@@ -75,9 +80,6 @@ executable freewillit
     , http-types
     , mtl
     , ghc-prim
-    , servant-swagger
-    , servant-foreign
-    , servant-js
     , swagger2
     , text
     , lens

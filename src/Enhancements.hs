@@ -38,7 +38,7 @@ apiWithEnhancements :: Proxy App
 apiWithEnhancements = Proxy
 
 jsOptions :: CommonGeneratorOptions
-jsOptions = defCommonGeneratorOptions { urlPrefix = "http://localhost:8080" }
+jsOptions = defCommonGeneratorOptions -- { urlPrefix = "http://localhost:8080" }
 
 serverWithSpec :: (TVar AppState) -> Server App
 serverWithSpec as = return (jsForAPI api (vanillaJSWith jsOptions))
