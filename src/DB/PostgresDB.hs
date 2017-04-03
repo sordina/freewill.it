@@ -8,13 +8,12 @@
 module DB.PostgresDB where
 
 -- https://hackage.haskell.org/package/postgresql-simple-0.5.2.1/docs/Database-PostgreSQL-Simple.html
-
+import Database.PostgreSQL.Simple
+import Database.PostgreSQL.Simple.SqlQQ
 import API
 import DB.Class
 import Data.List
 import GHC.Generics
-import Database.PostgreSQL.Simple
-import Database.PostgreSQL.Simple.SqlQQ
 
 -- TODO: Possibly tunnel through PGDATABASE env variable somehow...
 --       https://www.postgresql.org/docs/9.1/static/libpq-envars.html
@@ -27,6 +26,14 @@ userids c = map fromOnly
 
 -- DB.Class Instances
 
+instance View   PostgresConnection IO where view   = postgresView
+instance Name   PostgresConnection IO where name   = postgresName
+instance Add    PostgresConnection IO where add    = postgresAdd
+instance Choose PostgresConnection IO where choose = postgresChoose
+instance List   PostgresConnection IO where list   = postgresList
+
+-- Helpers
+
 newtype PostgresConnection =
   PGC { getConnection :: Connection }
 
@@ -37,6 +44,8 @@ data DecisionRow = DR {
   } deriving (Eq, Show, Generic)
 
 instance FromRow DecisionRow
+
+-- Implementation
 
 makeDecision :: [Option] -> [DecisionRow] -> Maybe Decision
 makeDecision _os []   = Nothing
@@ -64,12 +73,36 @@ postgresView (PGC conn) i = do
   decisionQuery = [sql| select decision
                         from decisions where decisionChoiceId = ?|]
 
-instance View PostgresConnection IO where view = postgresView
+postgresName :: PostgresConnection -> Choice -> IO Choice
+postgresName (PGC conn) c = do
+  [ Only cid ] <- query conn insertionQuery (Only (choiceName c))
+  return $ c { choiceId = Just cid }
+  where
+  insertionQuery = [sql| insert into choices (choicename) values (?) returning choiceid |]
 
-{-
-class Name   x m | x -> m where name   :: x -> Choice -> m Choice
-class View   x m | x -> m where view   :: x -> ID -> m ChoiceAPIData
-class Add    x m | x -> m where add    :: x -> ID -> Option -> m Option
-class Choose x m | x -> m where choose :: x -> ID -> ID -> m Decision
-class List   x m | x -> m where list   :: x -> m [Choice]
--}
+-- TODO: Add checks for data security
+postgresAdd :: PostgresConnection -> ID -> Option -> IO Option
+postgresAdd (PGC conn) _cid o = do
+  ocid         <- return (optionChoiceId o)
+  [ Only oid ] <- query conn insertionQuery (optionName o, ocid)
+  return $ o { optionId = Just oid }
+  where
+  insertionQuery = [sql| insert into options (optionname, optionchoiceid)
+                         values (?,?) returning optionid |]
+
+postgresChoose :: PostgresConnection -> ID -> ID -> IO Decision
+postgresChoose (PGC conn) cid oid = do
+  [ Only did   ] <- query conn insertionQuery (cid, oid)
+  [ Only oName ] <- query conn optionQuery    (Only oid)
+  o              <- return $ Option cid (Just oid) oName
+  return $ Decision { decisionId = did, decisionChoiceId = cid, decision = o }
+  where
+  optionQuery    = [sql| select optionname from options where optionid = ? |]
+  insertionQuery = [sql| insert into decisions (decisionchoiceid, decision)
+                         values (?,?) returning decisionid |]
+
+postgresList :: PostgresConnection -> IO [Choice]
+postgresList (PGC conn) = do
+  query_ conn choicesQuery
+  where
+  choicesQuery = [sql| select (chioceid, choicename) from choices |]
