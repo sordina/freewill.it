@@ -47,8 +47,8 @@ getMethod rs ps
   matchingSegments = and $ zipWith matchSegment rs pattern
 
 matchSegment :: Text -> Segment NoContent -> Bool
-matchSegment a ( Segment (Static (PathSegment b)) ) | a /= b = False
-matchSegment _ _                                             = True
+matchSegment a (Segment (Static (PathSegment b)) ) | a /= b = False
+matchSegment _ _                                            = True
 
 buildResponse :: [Method] -> Response
 buildResponse ms = responseBuilder s h mempty
