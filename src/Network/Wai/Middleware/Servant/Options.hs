@@ -22,10 +22,9 @@ import qualified Data.ByteString as B
 
 provideOptions :: (GenerateList NoContent (Foreign NoContent api), HasForeign NoTypes NoContent api)
                => Proxy api -> Middleware
-provideOptions apiproxy app req cb = do
-  if rmeth == "OPTIONS"
-     then optional cb prior pinfo mlist
-     else prior
+provideOptions apiproxy app req cb
+  | rmeth == "OPTIONS" = optional cb prior pinfo mlist
+  | otherwise          = prior
   where
   rmeth = requestMethod req :: Method
   pinfo = pathInfo      req :: [ Text ]
@@ -33,16 +32,16 @@ provideOptions apiproxy app req cb = do
   prior = app req cb
 
 optional :: (Response -> IO ResponseReceived) -> IO ResponseReceived -> [Text] -> [Req NoContent] -> IO ResponseReceived
-optional cb prior ts rs = if null methods
-                             then prior
-                             else cb (buildResponse methods)
+optional cb prior ts rs
+  | null methods = prior
+  | otherwise    = cb (buildResponse methods)
   where
   methods = mapMaybe (getMethod ts) rs
 
 getMethod :: [Text] -> Req NoContent -> Maybe Method
-getMethod rs ps = if sameLength && matchingSegments
-                     then Just (_reqMethod ps)
-                     else Nothing
+getMethod rs ps
+  | sameLength && matchingSegments = Just (_reqMethod ps)
+  | otherwise                      = Nothing
   where
   pattern          = _path $ _reqUrl ps
   sameLength       = length rs == length pattern
