@@ -1,7 +1,7 @@
 
 {-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE OverloadedStrings #-}
+
 
 -- |
 -- A middleware to respond to Options requests for a servant app
@@ -14,7 +14,6 @@ import Servant.Foreign
 import Network.Wai
 import Data.Text hiding (null, zipWith, length)
 import Network.HTTP.Types.Method
-import Network.Wai.Internal (ResponseReceived(..))
 import Data.Maybe
 import Data.List (nub)
 import Network.HTTP.Types
@@ -31,7 +30,7 @@ provideOptions apiproxy app req cb
   mlist = listFromAPI (Proxy :: Proxy NoTypes) (Proxy :: Proxy NoContent) apiproxy
   prior = app req cb
 
-optional :: (Response -> IO ResponseReceived) -> IO ResponseReceived -> [Text] -> [Req NoContent] -> IO ResponseReceived
+optional :: (Response -> r) -> r -> [Text] -> [Req NoContent] -> r
 optional cb prior ts rs
   | null methods = prior
   | otherwise    = cb (buildResponse methods)
@@ -48,9 +47,8 @@ getMethod rs ps
   matchingSegments = and $ zipWith matchSegment rs pattern
 
 matchSegment :: Text -> Segment NoContent -> Bool
-matchSegment _ ( Segment (Cap _) )                              = True
-matchSegment a ( Segment (Static (PathSegment b)) ) | a == b    = True
-                                                    | otherwise = False
+matchSegment a ( Segment (Static (PathSegment b)) ) | a /= b = False
+matchSegment _ _                                             = True
 
 buildResponse :: [Method] -> Response
 buildResponse ms = responseBuilder s h mempty
