@@ -71,7 +71,7 @@ postgresView (PGC conn) i = do
   optionQuery   = [sql| select optionChoiceId, optionid, optionName
                         from options where optionChoiceId = ? |]
   decisionQuery = [sql| select decision
-                        from decisions where decisionChoiceId = ?|]
+                        from decisions where decisionChoiceId = ? |]
 
 postgresName :: PostgresConnection -> Choice -> IO Choice
 postgresName (PGC conn) c = do
@@ -102,7 +102,5 @@ postgresChoose (PGC conn) cid oid = do
                          values (?,?) returning decisionid |]
 
 postgresList :: PostgresConnection -> IO [Choice]
-postgresList (PGC conn) = do
-  query_ conn choicesQuery
-  where
-  choicesQuery = [sql| select (chioceid, choicename) from choices |]
+postgresList (PGC conn) =
+  query_ conn [sql| select choiceid, choicename from choices |]
