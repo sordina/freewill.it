@@ -33,6 +33,7 @@ dependencies:
   - transformers
   - stm
   - postgresql-simple
+  - servant-options
 
 library:
   source-dirs: src
