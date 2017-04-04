@@ -5,7 +5,7 @@
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE DeriveGeneric #-}
 
-module DB.PostgresDB where
+module DB.PostgresDB (connectFreewill) where
 
 -- https://hackage.haskell.org/package/postgresql-simple-0.5.2.1/docs/Database-PostgreSQL-Simple.html
 import Database.PostgreSQL.Simple
@@ -20,10 +20,6 @@ import GHC.Generics
 connectFreewill :: IO Connection
 connectFreewill = connectPostgreSQL "dbname='freewill'"
 
-userids :: Connection -> IO [Int]
-userids c = map fromOnly
-        <$> query_ c "select userid from users"
-
 -- DB.Class Instances
 
 instance View   PostgresConnection IO where view   = postgresView
@@ -34,8 +30,7 @@ instance List   PostgresConnection IO where list   = postgresList
 
 -- Helpers
 
-newtype PostgresConnection =
-  PGC { getConnection :: Connection }
+newtype PostgresConnection = PGC Connection
 
 data DecisionRow = DR {
   cid' :: ID,

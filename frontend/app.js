@@ -7,20 +7,18 @@ function comp(name, props) {
 function getChoice() {
   getChoicesByChoiceId(this.choice.choiceId, function(x){
     app.choice = x;
-  })
-}
+  }) }
 
 function getChoice_(o,i) {
   getChoicesByChoiceId(i,
     function(x){ o.choice = x; },
-    function(x){ app.errors.push("Couldn't fetch choice " + i); });
-}
+    function(x){ app.errors.push("Couldn't fetch choice " + i); }
+  ); }
 
 function newChoice() {
   postChoices( {choiceName: this.choiceName}, function(choiceResponse) {
     getChoices_()
-  })
-}
+  }) }
 
 function newOption() {
   var choiceId = this.choice.choiceId;
@@ -49,8 +47,7 @@ function removeAllErrors() {
 function getChoices_() {
   getChoices(function(cs){
     app.choices = cs;
-  })
-}
+  }) }
 
 comp('choices-list', { props:    ['choices', 'choiceName'],
                        methods:  { newChoice: newChoice },
@@ -80,10 +77,12 @@ var routerComponent = {
   template: '<router :choice="choice"></router>'
 }
 
+var router_template = '<p> <em> Click on or create a choice... </em> </p>';
+
 var router = new VueRouter({
-  routes: [ { path: '/',            component: { props: ['choice'], template: '<p> <em> Click on or create a choice... </em> </p>' } },
-            { path: '/choices/:id', component: routerComponent } ]
-});
+  routes: [ { path: '/choices/:id', component: routerComponent },
+            { path: '/',            component: { props:    ['choice'],
+                                                 template: router_template }}]});
 
 var app = new Vue({
   el:     '#app',

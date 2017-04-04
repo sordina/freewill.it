@@ -9,7 +9,7 @@ import Data.Maybe
 import Control.Concurrent.STM.TVar
 
 import qualified Enhancements as E
-import qualified Lib  as L
+import qualified Lib          as L
 
 data Options = Options { port :: Maybe Int }
   deriving (Eq, Ord, Show, Generic)
