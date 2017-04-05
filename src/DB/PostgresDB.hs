@@ -16,6 +16,7 @@ import Data.List
 import GHC.Generics
 
 -- TODO: Possibly tunnel through PGDATABASE env variable somehow...
+--       Maybe this is automatic, maybe it isn't!
 --       https://www.postgresql.org/docs/9.1/static/libpq-envars.html
 connectFreewill :: IO Connection
 connectFreewill = connectPostgreSQL "dbname='freewill'"

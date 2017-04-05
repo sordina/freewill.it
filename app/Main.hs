@@ -1,5 +1,7 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE DataKinds #-}
 
 module Main where
 
@@ -11,14 +13,31 @@ import Control.Concurrent.STM.TVar
 import qualified Enhancements as E
 import qualified Lib          as L
 
-data Options = Options { port :: Maybe Int }
-  deriving (Eq, Ord, Show, Generic)
+data Database = Memory | Postgres
+  deriving (Eq, Show, Read, Generic)
 
+data Options = Options { port     :: Maybe Int
+                       , database :: Maybe Database <?> "Memory | Postgres"
+                       }
+  deriving (Show, Generic)
+
+instance ParseField  Database
 instance ParseRecord Options
 
 main :: IO ()
 main = do
-  p  <- fmap (fromMaybe 8080 . port) $ getRecord "freewill.it"
+  opts <- getRecord "freewill.it"
+  let thePort = fromMaybe 8080     $             port     opts
+      theDB   = fromMaybe Postgres $ unHelpful $ database opts
+  putStrLn $ "Running on http://localhost:" ++ show thePort ++ "/"
+  go thePort theDB
+
+go :: Int -> Database -> IO ()
+
+go p Memory = do
   as <- newTVarIO L.initialAppState
-  putStrLn $ "Running on http://localhost:" ++ show p ++ "/"
+  run p (E.app as)
+
+go p Postgres = do
+  as <- newTVarIO L.initialAppState
   run p (E.app as)

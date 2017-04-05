@@ -10,3 +10,18 @@ Feeling limited to deciding to do things as an individual? Now you can decide to
 ## Ideas
 
 * <https://hackage.haskell.org/package/hmemdb-0.4.0.0/docs/Data-HMemDb.html>
+* <https://github.com/myfreeweb/magicbane>
+
+## Thoughts
+
+Is there ever a time when I'll need another natural-transformation besides runReaderTNat?
+
+Probably not, as we'll always want to fetch a value, then do something interesting with it,
+and the interesting effects can be captured on the constant-side of the Reader.
+
+For example:
+
+    type MemDBHandler    = ReaderT (T.TVar AppState)    Handler
+    type PostgresHandler = ReaderT (PostgresConnection) Handler
+
+etc...
