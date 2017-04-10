@@ -8,45 +8,49 @@ module DB.MemDB
   ( MemDBConnection(..), initialAppState )
   where
 
+import qualified Control.Concurrent.STM.TVar as T
+import qualified Control.Concurrent.STM      as T
+import qualified DB.Class                    as DBClass
+
 import API
 import Data.List
 import Servant
-import qualified Control.Concurrent.STM.TVar as T
-import qualified Control.Concurrent.STM as T
-import Control.Monad.IO.Class (liftIO, MonadIO)
-import Control.Monad.Reader.Class
 import Control.Monad.Except
 import Data.Maybe
-import qualified DB.Class as DBClass
 
 -- DB.Class Instance
 
-data MemDBConnection m = MDBC -- Data context is implicit in reader...
+newtype MemDBConnection m = MDBC (T.TVar AppState) -- Data context is implicit in reader...
 
-instance (MonadReader (T.TVar AppState) m, MonadIO m)
-      => DBClass.Name (MemDBConnection (m x)) m where
+instance MonadIO m => DBClass.Name (MemDBConnection (m x)) m where
   name :: (MemDBConnection (m x)) -> Choice -> m Choice
-  name MDBC = name
+  name (MDBC a) = name a
 
-instance (MonadReader (T.TVar AppState) m, MonadIO m, MonadError ServantErr m)
+instance (MonadIO m, MonadError ServantErr m)
       => DBClass.View (MemDBConnection (m x)) m where
   view :: (MemDBConnection (m x)) -> ID -> m ChoiceAPIData
-  view MDBC i = view i
+  view (MDBC a) i = view a i
 
-instance (MonadReader (T.TVar AppState) m, MonadIO m, MonadError ServantErr m)
+instance (MonadIO m, MonadError ServantErr m)
       => DBClass.Add (MemDBConnection (m x)) m where
-  add :: (MemDBConnection (m x)) -> ID -> Option -> m Option
-  add MDBC i o = add i o
+  add :: MemDBConnection (m x) -> ID -> Option -> m Option
+  add (MDBC a) i o = add a i o
 
-instance (MonadReader (T.TVar AppState) m, MonadIO m, MonadError ServantErr m)
+instance (MonadIO m, MonadError ServantErr m)
       => DBClass.Choose (MemDBConnection (m x)) m where
-  choose :: (MemDBConnection (m x)) -> ID -> ID -> m Decision
-  choose MDBC c o = choose c o
+  choose :: MemDBConnection (m x) -> ID -> ID -> m Decision
+  choose (MDBC a) c o = do
+    fallbackToError $ liftIO (T.atomically (runExceptT (choose a c o)))
 
-instance (MonadReader (T.TVar AppState) m, MonadIO m)
-      => DBClass.List (MemDBConnection (m x)) m where
-  list :: (MemDBConnection (m x)) -> m [Choice]
-  list MDBC = list
+instance MonadIO m => DBClass.List (MemDBConnection (m x)) m where
+  list :: MemDBConnection (m x) -> m [Choice]
+  list (MDBC a) = liftIO (T.atomically (list a))
+
+fallbackToError :: MonadError e m => m (Either e b) -> m b
+fallbackToError action = do
+  r <- action
+  case r of Left  e -> throwError e
+            Right x -> return x
 
 -- Mocks
 
@@ -99,35 +103,30 @@ tryBool :: MonadError ServantErr m => String -> Bool -> m ()
 tryBool _ True  = return ()
 tryBool s False = throwError (err404 {errReasonPhrase = "Not Found: " ++ s})
 
-name :: (MonadReader (T.TVar AppState) m, MonadIO m)
-     => Choice -> m Choice
-name cdata = do
-  ast <- ask
-  liftIO $ T.atomically $ do
-    as <- T.readTVar ast
-    let cs  = choices as
-        cid = newId cs
-        c   = cdata { choiceId = Just cid }
-    T.writeTVar ast $ as { choices = c : cs }
-    return c
+name :: MonadIO m => T.TVar AppState -> Choice -> m Choice
+name ast cdata = liftIO $ T.atomically $ do
+  as <- T.readTVar ast
+  let cs  = choices as
+      cid = newId cs
+      c   = cdata { choiceId = Just cid }
+  T.writeTVar ast $ as { choices = c : cs }
+  return c
 
-view :: (MonadReader (T.TVar AppState) m, MonadIO m, MonadError ServantErr m)
-     => ID -> m ChoiceAPIData
-view cid = do
-  ast <- ask
+view :: (MonadIO m, MonadError ServantErr m)
+     => T.TVar AppState -> ID -> m ChoiceAPIData
+view ast cid = do
   as  <- liftIO $ T.readTVarIO ast
   c   <- tryMaybe ("Couldn't find choice " ++ show cid) $ getChoiceById cid $ choices as
   let os = getOptionsByChoiceId  cid $ options as
       d  = getDecisionByChoiceId cid $ decisions as
   return $ CAD c os d
 
-add :: (MonadReader (T.TVar AppState) m, MonadIO m, MonadError ServantErr m)
-     => ID -> Option -> m Option
-add cid' odata = do
+add :: (MonadIO m, MonadError ServantErr m)
+     => T.TVar AppState -> ID -> Option -> m Option
+add ast cid' odata = do
   -- Verify that choice referenced exists
   let cid = optionChoiceId odata
       msg = "choiceId " ++ show cid ++ " doesn't match choiceId " ++ show cid' ++ "... Try checking the JSON and route."
-  ast    <- ask
   as'    <- liftIO $ T.readTVarIO ast
   _      <- tryMaybe ("Couldn't find choice " ++ show cid) $ getChoiceById cid $ choices as'
   _      <- tryBool msg (cid == cid')
@@ -144,19 +143,18 @@ add cid' odata = do
     T.writeTVar ast $ as { options = o : os }
     return o
 
-choose :: (MonadReader (T.TVar AppState) m, MonadIO m, MonadError ServantErr m)
-     => ID -> ID -> m Decision
-choose cid oid = do
-  ast    <- ask
-  as'    <- liftIO $ T.readTVarIO ast
+choose :: T.TVar AppState -> Integer -> Integer -> ExceptT ServantErr T.STM Decision
+choose ast cid oid = do
+  as'    <- lift $ T.readTVar ast
   _      <- tryMaybe ("Couldn't find choice " ++ show cid) $ getChoiceById cid $ choices as'
   o      <- tryMaybe ("Couldn't find option " ++ show oid) $ getOptionById oid $ options as'
 
   -- Can't rechoose
   let exD = getDecisionByChoiceId cid $ decisions as'
+
   when (isJust exD) $ throwError (err403 {errReasonPhrase = "Already made a decision for this choice!"})
 
-  liftIO $ T.atomically $ do
+  lift $ do
     as <- T.readTVar ast
     let ds  = decisions as
         did = newId ds
@@ -164,9 +162,5 @@ choose cid oid = do
     T.writeTVar ast $ as { decisions = d : ds }
     return d
 
-list :: (MonadReader (T.TVar AppState) m, MonadIO m)
-     => m [Choice]
-list = do
-  ast <- ask
-  as  <- liftIO $ T.readTVarIO ast
-  return $ choices as
+list :: T.TVar AppState -> T.STM [Choice]
+list ast = choices <$> T.readTVar ast
