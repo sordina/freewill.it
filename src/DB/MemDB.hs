@@ -16,39 +16,45 @@ import API
 import Data.List
 import Servant
 import Control.Monad.Except
+import Control.Monad.State
 import Data.Maybe
 
 -- DB.Class Instance
 
-newtype MemDBConnection m = MDBC (T.TVar AppState) -- Data context is implicit in reader...
+newtype MemDBConnection m = MDBC { getConnection :: T.TVar AppState }
 
 instance MonadIO m => DBClass.Name (MemDBConnection (m x)) m where
-  name :: (MemDBConnection (m x)) -> Choice -> m Choice
+  name :: MemDBConnection (m x) -> Choice -> m Choice
   name (MDBC a) = name a
 
 instance (MonadIO m, MonadError ServantErr m)
       => DBClass.View (MemDBConnection (m x)) m where
-  view :: (MemDBConnection (m x)) -> ID -> m ChoiceAPIData
-  view (MDBC a) i = view a i
+  view :: MemDBConnection (m x) -> ID -> m ChoiceAPIData
+  view (MDBC a) = view a
 
 instance (MonadIO m, MonadError ServantErr m)
       => DBClass.Add (MemDBConnection (m x)) m where
   add :: MemDBConnection (m x) -> ID -> Option -> m Option
-  add (MDBC a) i o = add a i o
+  add (MDBC a) = add a
 
 instance (MonadIO m, MonadError ServantErr m)
       => DBClass.Choose (MemDBConnection (m x)) m where
   choose :: MemDBConnection (m x) -> ID -> ID -> m Decision
-  choose (MDBC a) c o = do
-    fallbackToError $ liftIO (T.atomically (runExceptT (choose a c o)))
+  choose (MDBC a) c o = eitherToError =<< liftIO (T.atomically (runExceptT (choose a c o)))
 
 instance MonadIO m => DBClass.List (MemDBConnection (m x)) m where
   list :: MemDBConnection (m x) -> m [Choice]
-  list (MDBC a) = liftIO (T.atomically (list a))
+  list = doStateOnTVar listState . getConnection
 
-fallbackToError :: MonadError e m => m (Either e b) -> m b
-fallbackToError action = do
-  r <- action
+doStateOnTVar :: MonadIO m => State AppState [Choice] -> T.TVar AppState -> m [Choice]
+doStateOnTVar s v = liftIO $ T.atomically $ do
+  b <- T.readTVar v
+  let (a,b') = runState s b
+  T.writeTVar v b'
+  return a
+
+eitherToError :: MonadError e m => Either e a -> m a
+eitherToError r =
   case r of Left  e -> throwError e
             Right x -> return x
 
@@ -162,5 +168,5 @@ choose ast cid oid = do
     T.writeTVar ast $ as { decisions = d : ds }
     return d
 
-list :: T.TVar AppState -> T.STM [Choice]
-list ast = choices <$> T.readTVar ast
+listState :: MonadState AppState m => m [Choice]
+listState = choices <$> get
