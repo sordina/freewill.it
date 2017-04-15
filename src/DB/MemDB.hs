@@ -25,38 +25,31 @@ newtype MemDBConnection m = MDBC { getConnection :: T.TVar AppState }
 
 instance MonadIO m => DBClass.Name (MemDBConnection (m x)) m where
   name :: MemDBConnection (m x) -> Choice -> m Choice
-  name (MDBC a) = name a
+  name (MDBC a) c = doStateOnTVar (nameState c) a
 
 instance (MonadIO m, MonadError ServantErr m)
       => DBClass.View (MemDBConnection (m x)) m where
   view :: MemDBConnection (m x) -> ID -> m ChoiceAPIData
-  view (MDBC a) = view a
+  view db cid = runDB db (viewState cid)
 
 instance (MonadIO m, MonadError ServantErr m)
       => DBClass.Add (MemDBConnection (m x)) m where
   add :: MemDBConnection (m x) -> ID -> Option -> m Option
-  add (MDBC a) = add a
+  add db cid o = runDB db (addState cid o)
 
 instance (MonadIO m, MonadError ServantErr m)
       => DBClass.Choose (MemDBConnection (m x)) m where
   choose :: MemDBConnection (m x) -> ID -> ID -> m Decision
-  choose (MDBC a) c o = eitherToError =<< doStateOnTVar (runExceptT (cs c o)) a
-    where
-    -- Definition purely for clarity, can use chooseState inline
-    cs :: Integer -> Integer -> ExceptT ServantErr (State AppState) Decision
-    cs = chooseState
+  choose db cid oid = runDB db (chooseState cid oid)
 
 instance MonadIO m => DBClass.List (MemDBConnection (m x)) m where
   list :: MemDBConnection (m x) -> m [Choice]
   list = doStateOnTVar listState . getConnection
 
--- Possibly don't need as the benefit comes from a pure internal implementation anyway...
-doStateTOnTVar :: MonadIO m => StateT s T.STM a -> T.TVar s -> m a
-doStateTOnTVar s v = liftIO $ T.atomically $ do
-  b      <- T.readTVar v
-  (a,b') <- runStateT s b
-  T.writeTVar v b'
-  return a
+-- TVar Database Helpers - runDB used on exceptional operations (most)
+
+runDB :: (MonadIO m, MonadError e m) => MemDBConnection t -> ExceptT e (State AppState) b -> m b
+runDB (MDBC a) m = eitherToError =<< doStateOnTVar (runExceptT m) a
 
 doStateOnTVar :: MonadIO m => State s a -> T.TVar s -> m a
 doStateOnTVar s v = liftIO $ T.atomically $ do
@@ -66,34 +59,10 @@ doStateOnTVar s v = liftIO $ T.atomically $ do
   return a
 
 eitherToError :: MonadError e m => Either e a -> m a
-eitherToError r =
-  case r of Left  e -> throwError e
-            Right x -> return x
+eitherToError r = case r of Left  e -> throwError e
+                            Right x -> return x
 
--- Mocks
-
-initialAppState :: AppState
-initialAppState = AS [mockOption1, mockOption2] [mockChoice] [mockDecision] mockUsers
-  where
-  mockChoice :: Choice
-  mockChoice = Choice (Just 0) "What size thing should I eat?"
-
-  mockOption1 :: Option
-  mockOption1 = Option 0 (Just 1) "Something bigger than my own head"
-
-  mockOption2 :: Option
-  mockOption2 = Option 0 (Just 2) "Something reasonable"
-
-  mockDecision :: Decision
-  mockDecision = Decision 0 (Just 1) mockOption2
-
-  mockUsers :: [User]
-  mockUsers = [ User (Just 0) "Isaac" "Newton"
-              , User (Just 1) "Albert" "Einstein"
-              , User (Just 2) "Richard" "Feynman"
-              ]
-
--- Implementation
+-- Pure Implementations
 
 getThing :: (x -> Maybe ID) -> ID -> [x] -> Maybe x
 getThing f oid = find ((== Just oid) . f)
@@ -121,67 +90,50 @@ tryBool :: MonadError ServantErr m => String -> Bool -> m ()
 tryBool _ True  = return ()
 tryBool s False = throwError (err404 {errReasonPhrase = "Not Found: " ++ s})
 
-name :: MonadIO m => T.TVar AppState -> Choice -> m Choice
-name ast cdata = liftIO $ T.atomically $ do
-  as <- T.readTVar ast
+-- Stateful operations
+
+nameState :: MonadState AppState m => Choice -> m Choice
+nameState cdata = do
+  as     <- get
   let cs  = choices as
       cid = newId cs
       c   = cdata { choiceId = Just cid }
-  T.writeTVar ast $ as { choices = c : cs }
+  put $ as { choices = c : cs }
   return c
 
-view :: (MonadIO m, MonadError ServantErr m)
-     => T.TVar AppState -> ID -> m ChoiceAPIData
-view ast cid = do
-  as  <- liftIO $ T.readTVarIO ast
-  c   <- tryMaybe ("Couldn't find choice " ++ show cid) $ getChoiceById cid $ choices as
+viewState :: (MonadError ServantErr m, MonadState AppState m) => Integer -> m ChoiceAPIData
+viewState cid = do
+  as    <- get
+  c     <- tryMaybe ("Couldn't find choice " ++ show cid) $ getChoiceById cid $ choices as
   let os = getOptionsByChoiceId  cid $ options as
       d  = getDecisionByChoiceId cid $ decisions as
   return $ CAD c os d
 
-add :: (MonadIO m, MonadError ServantErr m)
-     => T.TVar AppState -> ID -> Option -> m Option
-add ast cid' odata = do
-  -- Verify that choice referenced exists
+addState :: (MonadError ServantErr m, MonadState AppState m) => ID -> Option -> m Option
+addState cid' odata = do
   let cid = optionChoiceId odata
-      msg = "choiceId " ++ show cid ++ " doesn't match choiceId " ++ show cid' ++ "... Try checking the JSON and route."
-  as'    <- liftIO $ T.readTVarIO ast
-  _      <- tryMaybe ("Couldn't find choice " ++ show cid) $ getChoiceById cid $ choices as'
+      msg = "choiceId " ++ show cid
+         ++ " doesn't match choiceId " ++ show cid'
+         ++ "... Try checking the JSON and route."
+
+  -- Verify that choice referenced exists
+  -- And that only one ID is referenced
+  as     <- get
+  _      <- tryMaybe ("Couldn't find choice " ++ show cid) $ getChoiceById cid $ choices as
   _      <- tryBool msg (cid == cid')
 
+  let exD = getDecisionByChoiceId cid $ decisions as
+      os  = options as
+      oid = newId os
+      o   = odata { optionId = Just oid }
+
   -- Can't deliberate after choice
-  let exD = getDecisionByChoiceId cid $ decisions as'
   when (isJust exD) $ throwError (err403 {errReasonPhrase = "Already made a decision for this choice!"})
 
-  liftIO $ T.atomically $ do
-    as <- T.readTVar ast
-    let os  = options as
-        oid = newId os
-        o   = odata { optionId = Just oid }
-    T.writeTVar ast $ as { options = o : os }
-    return o
+  put $ as { options = o : os }
+  return o
 
-choose :: T.TVar AppState -> Integer -> Integer -> ExceptT ServantErr T.STM Decision
-choose ast cid oid = do
-  as'    <- lift $ T.readTVar ast
-  _      <- tryMaybe ("Couldn't find choice " ++ show cid) $ getChoiceById cid $ choices as'
-  o      <- tryMaybe ("Couldn't find option " ++ show oid) $ getOptionById oid $ options as'
-
-  -- Can't rechoose
-  let exD = getDecisionByChoiceId cid $ decisions as'
-
-  when (isJust exD) $ throwError (err403 {errReasonPhrase = "Already made a decision for this choice!"})
-
-  lift $ do
-    as <- T.readTVar ast
-    let ds  = decisions as
-        did = newId ds
-        d   = Decision cid (Just did) o
-    T.writeTVar ast $ as { decisions = d : ds }
-    return d
-
-chooseState :: (MonadError ServantErr m, MonadState AppState m)
-            => Integer -> Integer -> m Decision
+chooseState :: (MonadError ServantErr m, MonadState AppState m) => ID -> ID -> m Decision
 chooseState cid oid = do
   as     <- get
   _      <- tryMaybe ("Couldn't find choice " ++ show cid) $ getChoiceById cid $ choices as
@@ -200,3 +152,26 @@ chooseState cid oid = do
 
 listState :: MonadState AppState m => m [Choice]
 listState = choices <$> get
+
+-- Mocks
+
+initialAppState :: AppState
+initialAppState = AS [mockOption1, mockOption2] [mockChoice] [mockDecision] mockUsers
+  where
+  mockChoice :: Choice
+  mockChoice = Choice (Just 0) "What size thing should I eat?"
+
+  mockOption1 :: Option
+  mockOption1 = Option 0 (Just 1) "Something bigger than my own head"
+
+  mockOption2 :: Option
+  mockOption2 = Option 0 (Just 2) "Something reasonable"
+
+  mockDecision :: Decision
+  mockDecision = Decision 0 (Just 1) mockOption2
+
+  mockUsers :: [User]
+  mockUsers = [ User (Just 0) "Isaac" "Newton"
+              , User (Just 1) "Albert" "Einstein"
+              , User (Just 2) "Richard" "Feynman"
+              ]
