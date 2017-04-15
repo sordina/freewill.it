@@ -40,13 +40,25 @@ instance (MonadIO m, MonadError ServantErr m)
 instance (MonadIO m, MonadError ServantErr m)
       => DBClass.Choose (MemDBConnection (m x)) m where
   choose :: MemDBConnection (m x) -> ID -> ID -> m Decision
-  choose (MDBC a) c o = eitherToError =<< liftIO (T.atomically (runExceptT (choose a c o)))
+  choose (MDBC a) c o = eitherToError =<< doStateOnTVar (runExceptT (cs c o)) a
+    where
+    -- Definition purely for clarity, can use chooseState inline
+    cs :: Integer -> Integer -> ExceptT ServantErr (State AppState) Decision
+    cs = chooseState
 
 instance MonadIO m => DBClass.List (MemDBConnection (m x)) m where
   list :: MemDBConnection (m x) -> m [Choice]
   list = doStateOnTVar listState . getConnection
 
-doStateOnTVar :: MonadIO m => State AppState [Choice] -> T.TVar AppState -> m [Choice]
+-- Possibly don't need as the benefit comes from a pure internal implementation anyway...
+doStateTOnTVar :: MonadIO m => StateT s T.STM a -> T.TVar s -> m a
+doStateTOnTVar s v = liftIO $ T.atomically $ do
+  b      <- T.readTVar v
+  (a,b') <- runStateT s b
+  T.writeTVar v b'
+  return a
+
+doStateOnTVar :: MonadIO m => State s a -> T.TVar s -> m a
 doStateOnTVar s v = liftIO $ T.atomically $ do
   b <- T.readTVar v
   let (a,b') = runState s b
@@ -167,6 +179,24 @@ choose ast cid oid = do
         d   = Decision cid (Just did) o
     T.writeTVar ast $ as { decisions = d : ds }
     return d
+
+chooseState :: (MonadError ServantErr m, MonadState AppState m)
+            => Integer -> Integer -> m Decision
+chooseState cid oid = do
+  as     <- get
+  _      <- tryMaybe ("Couldn't find choice " ++ show cid) $ getChoiceById cid $ choices as
+  o      <- tryMaybe ("Couldn't find option " ++ show oid) $ getOptionById oid $ options as
+
+  let exD = getDecisionByChoiceId cid $ decisions as
+      ds  = decisions as
+      did = newId ds
+      d   = Decision cid (Just did) o
+
+  -- Can't rechoose
+  when (isJust exD) $ throwError (err403 {errReasonPhrase = "Already made a decision for this choice!"})
+
+  put $ as { decisions = d : ds }
+  return d
 
 listState :: MonadState AppState m => m [Choice]
 listState = choices <$> get
