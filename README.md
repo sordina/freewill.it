@@ -11,6 +11,7 @@ Feeling limited to deciding to do things as an individual? Now you can decide to
 
 * <https://hackage.haskell.org/package/hmemdb-0.4.0.0/docs/Data-HMemDb.html>
 * <https://github.com/myfreeweb/magicbane>
+* <https://github.com/valderman/selda>
 
 ## Thoughts
 

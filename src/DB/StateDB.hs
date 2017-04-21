@@ -49,22 +49,22 @@ instance (MonadState AppState m, MonadError ServantErr m) => Database (LocalStat
 
 -- Pure Implementations
 
-getThing :: (x -> Maybe ID) -> ID -> [x] -> Maybe x
+getThing :: Eq a => (x -> Maybe a) -> a -> [x] -> Maybe x
 getThing f oid = find ((== Just oid) . f)
 
 newId :: [x] -> Integer
 newId = fromIntegral . length
 
-getChoiceById :: ID -> [Choice] -> Maybe Choice
+getChoiceById :: ChoiceID -> [Choice] -> Maybe Choice
 getChoiceById = getThing choiceId
 
-getOptionById :: ID -> [Option] -> Maybe Option
+getOptionById :: OptionID -> [Option] -> Maybe Option
 getOptionById = getThing optionId
 
-getOptionsByChoiceId :: ID -> [Option] -> [Option]
+getOptionsByChoiceId :: ChoiceID -> [Option] -> [Option]
 getOptionsByChoiceId cid = filter ((== cid) . optionChoiceId)
 
-getDecisionByChoiceId :: ID -> [Decision] -> Maybe Decision
+getDecisionByChoiceId :: ChoiceID -> [Decision] -> Maybe Decision
 getDecisionByChoiceId = getThing (Just . decisionChoiceId)
 
 tryMaybe :: MonadError ServantErr m => String -> Maybe a -> m a
@@ -81,12 +81,12 @@ nameState :: MonadState AppState m => Choice -> m Choice
 nameState cdata = do
   as     <- get
   let cs  = choices as
-      cid = newId cs
+      cid = ChoiceID $ newId cs
       c   = cdata { choiceId = Just cid }
   put $ as { choices = c : cs }
   return c
 
-viewState :: (MonadError ServantErr m, MonadState AppState m) => Integer -> m ChoiceAPIData
+viewState :: (MonadError ServantErr m, MonadState AppState m) => ChoiceID -> m ChoiceAPIData
 viewState cid = do
   as    <- get
   c     <- tryMaybe ("Couldn't find choice " ++ show cid) $ getChoiceById cid $ choices as
@@ -94,7 +94,7 @@ viewState cid = do
       d  = getDecisionByChoiceId cid $ decisions as
   return $ CAD c os d
 
-addState :: (MonadError ServantErr m, MonadState AppState m) => ID -> Option -> m Option
+addState :: (MonadError ServantErr m, MonadState AppState m) => ChoiceID -> Option -> m Option
 addState cid' odata = do
   let cid = optionChoiceId odata
       msg = "choiceId " ++ show cid
@@ -109,7 +109,7 @@ addState cid' odata = do
 
   let exD = getDecisionByChoiceId cid $ decisions as
       os  = options as
-      oid = newId os
+      oid = OptionID $ newId os
       o   = odata { optionId = Just oid }
 
   -- Can't deliberate after choice
@@ -118,7 +118,7 @@ addState cid' odata = do
   put $ as { options = o : os }
   return o
 
-chooseState :: (MonadError ServantErr m, MonadState AppState m) => ID -> ID -> m Decision
+chooseState :: (MonadError ServantErr m, MonadState AppState m) => ChoiceID -> OptionID -> m Decision
 chooseState cid oid = do
   as     <- get
   _      <- tryMaybe ("Couldn't find choice " ++ show cid) $ getChoiceById cid $ choices as
@@ -126,7 +126,7 @@ chooseState cid oid = do
 
   let exD = getDecisionByChoiceId cid $ decisions as
       ds  = decisions as
-      did = newId ds
+      did = DecisionID $ newId ds
       d   = Decision cid (Just did) o
 
   -- Can't rechoose

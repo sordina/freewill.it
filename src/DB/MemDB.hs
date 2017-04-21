@@ -34,17 +34,17 @@ instance MonadIO m => Name (MemDBConnection (m x)) m where
 
 instance (MonadIO m, MonadError ServantErr m)
       => View (MemDBConnection (m x)) m where
-  view :: MemDBConnection (m x) -> ID -> m ChoiceAPIData
+  view :: MemDBConnection (m x) -> ChoiceID -> m ChoiceAPIData
   view db cid = runDB db (viewState cid)
 
 instance (MonadIO m, MonadError ServantErr m)
       => Add (MemDBConnection (m x)) m where
-  add :: MemDBConnection (m x) -> ID -> Option -> m Option
+  add :: MemDBConnection (m x) -> ChoiceID -> Option -> m Option
   add db cid o = runDB db (addState cid o)
 
 instance (MonadIO m, MonadError ServantErr m)
       => Choose (MemDBConnection (m x)) m where
-  choose :: MemDBConnection (m x) -> ID -> ID -> m Decision
+  choose :: MemDBConnection (m x) -> ChoiceID -> OptionID -> m Decision
   choose db cid oid = runDB db (chooseState cid oid)
 
 instance MonadIO m => List (MemDBConnection (m x)) m where

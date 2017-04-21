@@ -34,9 +34,9 @@ instance List   PostgresConnection IO where list   = postgresList
 newtype PostgresConnection = PGC Connection
 
 data DecisionRow = DR {
-  cid' :: ID,
-  did' :: Maybe ID,
-  oid' :: ID
+  cid' :: ChoiceID,
+  did' :: Maybe DecisionID,
+  oid' :: OptionID
   } deriving (Eq, Show, Generic)
 
 instance FromRow DecisionRow
@@ -54,7 +54,7 @@ makeDecision os (d:_) = case o of Just o' -> Just $ Decision cid did o'
   did = did' d
   o   = find ((==Just oid).optionId) os
 
-postgresView  :: PostgresConnection -> ID -> IO ChoiceAPIData
+postgresView  :: PostgresConnection -> ChoiceID -> IO ChoiceAPIData
 postgresView (PGC conn) i = do
   [ theChoice ] <- query conn choiceQuery   (Only i) -- TODO: Introduce failure context
   os            <- query conn optionQuery   (Only i)
@@ -77,7 +77,7 @@ postgresName (PGC conn) c = do
   insertionQuery = [sql| insert into choices (choicename) values (?) returning choiceid |]
 
 -- TODO: Add checks for data security
-postgresAdd :: PostgresConnection -> ID -> Option -> IO Option
+postgresAdd :: PostgresConnection -> ChoiceID -> Option -> IO Option
 postgresAdd (PGC conn) _cid o = do
   ocid         <- return (optionChoiceId o)
   [ Only oid ] <- query conn insertionQuery (optionName o, ocid)
@@ -86,7 +86,7 @@ postgresAdd (PGC conn) _cid o = do
   insertionQuery = [sql| insert into options (optionname, optionchoiceid)
                          values (?,?) returning optionid |]
 
-postgresChoose :: PostgresConnection -> ID -> ID -> IO Decision
+postgresChoose :: PostgresConnection -> ChoiceID -> OptionID -> IO Decision
 postgresChoose (PGC conn) cid oid = do
   [ Only did   ] <- query conn insertionQuery (cid, oid)
   [ Only oName ] <- query conn optionQuery    (Only oid)
