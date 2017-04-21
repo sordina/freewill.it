@@ -8,10 +8,10 @@ module Main where
 import Network.Wai.Handler.Warp
 import Options.Generic
 import Data.Maybe
-import Control.Concurrent.STM.TVar
 
 import qualified Enhancements as E
-import qualified Lib          as L
+import qualified DB.MemDB     as DB
+import qualified API          as A
 
 data Database = Memory | Postgres
   deriving (Eq, Show, Read, Generic)
@@ -32,12 +32,15 @@ main = do
   putStrLn $ "Running on http://localhost:" ++ show thePort ++ "/"
   go thePort theDB
 
+newConnection :: IO (DB.MemDBConnection (A.M a))
+newConnection = DB.newMemDBConnection
+
 go :: Int -> Database -> IO ()
 
 go p Memory = do
-  as <- newTVarIO L.initialAppState
+  as <- newConnection
   run p (E.app as)
 
 go p Postgres = do
-  as <- newTVarIO L.initialAppState
+  as <- newConnection
   run p (E.app as)

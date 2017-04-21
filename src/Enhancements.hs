@@ -1,6 +1,7 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE FlexibleContexts #-}
 
 module Enhancements ( app ) where
 
@@ -11,8 +12,8 @@ import Servant
 import Servant.Swagger
 import Servant.JS
 import Data.Text
+import DB.Class
 import Data.Swagger (Swagger(..) )
-import Control.Concurrent.STM.TVar (TVar())
 import Network.Wai.Middleware.Cors
 import Network.Wai.Middleware.RequestLogger
 import Network.Wai.Middleware.Servant.Options
@@ -25,11 +26,11 @@ type App       = VanillaJS
             :<|> Raw
             :<|> Redirect "index.html"
 
-app :: (TVar AppState) -> Application
-app as = logStdoutDev
+app :: (List db M, Name db M, View db M, Add db M, Choose db M) => db -> Application
+app db = logStdoutDev
        $ cors (const $ Just policy) -- simpleCors
        $ provideOptions api
-       $ serve apiWithEnhancements (serverWithSpec as)
+       $ serve apiWithEnhancements (serverWithSpec db)
   where
   policy = simpleCorsResourcePolicy
              { corsRequestHeaders = [ "content-type" ] }
@@ -40,9 +41,9 @@ apiWithEnhancements = Proxy
 jsOptions :: CommonGeneratorOptions
 jsOptions = defCommonGeneratorOptions -- { urlPrefix = "http://localhost:8080" }
 
-serverWithSpec :: (TVar AppState) -> Server App
-serverWithSpec as = return (jsForAPI api (vanillaJSWith jsOptions))
+serverWithSpec :: (List db M, Name db M, View db M, Add db M, Choose db M) => db -> Server App
+serverWithSpec db = return (jsForAPI api (vanillaJSWith jsOptions))
                :<|> return (toSwagger api)
-               :<|> server as
+               :<|> server db
                :<|> serveDirectory ("frontend" :: String)
                :<|> redirectTo

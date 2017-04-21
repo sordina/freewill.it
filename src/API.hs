@@ -15,9 +15,10 @@ import Data.Text (unpack)
 import Servant
 import Data.Swagger (ToSchema)
 import GHC.Generics
-import Control.Monad.Trans.Reader
 import Database.PostgreSQL.Simple
-import qualified Control.Concurrent.STM.TVar as T
+import Control.Monad.Except
+
+type M = ExceptT ServantErr IO
 
 type ID = Integer
 
@@ -71,9 +72,6 @@ data AppState = AS {
   , decisions :: [Decision]
   , users     :: [User    ]
   } deriving (Eq, Show, Generic)
-
--- type Handler = ExceptT ServantErr IO
-type AppHandler = ReaderT (T.TVar AppState) Handler
 
 {-
 instance FormUrlEncoded User where

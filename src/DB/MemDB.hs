@@ -5,12 +5,16 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 
 module DB.MemDB
-  ( MemDBConnection(..), initialAppState )
+  ( newMemDBConnection
+  , MemDBConnection(..)
+  , initialAppState
+  , test
+  )
   where
 
 import qualified Control.Concurrent.STM.TVar as T
 import qualified Control.Concurrent.STM      as T
-import qualified DB.Class                    as DBClass
+import DB.Class
 
 import API
 import Data.List
@@ -23,28 +27,46 @@ import Data.Maybe
 
 newtype MemDBConnection m = MDBC { getConnection :: T.TVar AppState }
 
-instance MonadIO m => DBClass.Name (MemDBConnection (m x)) m where
+newMemDBConnection :: IO (MemDBConnection m)
+newMemDBConnection = MDBC <$> T.newTVarIO emptyAppState
+
+instance MonadIO m => Name (MemDBConnection (m x)) m where
   name :: MemDBConnection (m x) -> Choice -> m Choice
   name (MDBC a) c = doStateOnTVar (nameState c) a
 
 instance (MonadIO m, MonadError ServantErr m)
-      => DBClass.View (MemDBConnection (m x)) m where
+      => View (MemDBConnection (m x)) m where
   view :: MemDBConnection (m x) -> ID -> m ChoiceAPIData
   view db cid = runDB db (viewState cid)
 
 instance (MonadIO m, MonadError ServantErr m)
-      => DBClass.Add (MemDBConnection (m x)) m where
+      => Add (MemDBConnection (m x)) m where
   add :: MemDBConnection (m x) -> ID -> Option -> m Option
   add db cid o = runDB db (addState cid o)
 
 instance (MonadIO m, MonadError ServantErr m)
-      => DBClass.Choose (MemDBConnection (m x)) m where
+      => Choose (MemDBConnection (m x)) m where
   choose :: MemDBConnection (m x) -> ID -> ID -> m Decision
   choose db cid oid = runDB db (chooseState cid oid)
 
-instance MonadIO m => DBClass.List (MemDBConnection (m x)) m where
+instance MonadIO m => List (MemDBConnection (m x)) m where
   list :: MemDBConnection (m x) -> m [Choice]
   list = doStateOnTVar listState . getConnection
+
+-- Test
+
+test :: IO (Either ServantErr ())
+test = runExceptT $ do
+  d <- liftIO $ MDBC <$> T.newTVarIO emptyAppState :: ExceptT ServantErr IO (MemDBConnection (M ()))
+  c <- name d (Choice Nothing "TestChoice")
+  i <- tryMaybe "Can't find choice" $ choiceId c
+  o <- add  d i (Option i Nothing "TestOption")
+  r <- list d
+  v <- view d i
+  liftIO $ print c
+  liftIO $ print o
+  liftIO $ print r
+  liftIO $ print v
 
 -- TVar Database Helpers - runDB used on exceptional operations (most)
 
@@ -154,6 +176,9 @@ listState :: MonadState AppState m => m [Choice]
 listState = choices <$> get
 
 -- Mocks
+
+emptyAppState :: AppState
+emptyAppState = AS [] [] [] []
 
 initialAppState :: AppState
 initialAppState = AS [mockOption1, mockOption2] [mockChoice] [mockDecision] mockUsers

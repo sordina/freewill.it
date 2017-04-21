@@ -37,7 +37,7 @@ dependencies:
 
 library:
   source-dirs: src
-  exposed-modules: ['API','Lib','Enhancements']
+  exposed-modules: ['API','Lib','Enhancements','DB.Class','DB.MemDB','DB.PostgresDB']
 
 executables:
   freewillit:

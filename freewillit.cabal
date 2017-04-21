@@ -24,11 +24,11 @@ library
       API
       Lib
       Enhancements
-  other-modules:
       DB.Class
       DB.MemDB
-      DB.MockDB
       DB.PostgresDB
+  other-modules:
+      DB.MockDB
       RedirectTo
       Util
       Paths_freewillit

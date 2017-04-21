@@ -4,6 +4,10 @@
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE AllowAmbiguousTypes #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE NoMonomorphismRestriction #-}
 
 module Lib
     ( api
@@ -16,31 +20,25 @@ import Servant
 
 import API
 import DB.Class
-import Servant.Auth
-import DB.MemDB (initialAppState, MemDBConnection(..))
-import qualified Control.Concurrent.STM.TVar as T
+import DB.MemDB
 
 api :: Proxy API
 api = Proxy
 
-server :: T.TVar AppState -> Server API
-server as = enter (runReaderTNat as) authServer
-       :<|> enter (runReaderTNat as) choiceServer
+server :: (List db M, Name db M, View db M, Add db M, Choose db M) => db -> Server API
+server db = authServer :<|> choiceServer db
 
-authServer :: ServerT AuthAPI AppHandler
+choiceServer :: (List db M, Name db M, View db M, Add db M, Choose db M) => db -> Server ChoiceAPI
+choiceServer db = list   db
+             :<|> name   db
+             :<|> view   db
+             :<|> add    db
+             :<|> choose db
+
+authServer :: Server AuthAPI
 authServer = return mockUsers
         :<|> return mockUsers
         :<|> return mockUsers
         :<|> return mockUsers
   where
   AS _ _ _ mockUsers = initialAppState
-
-choiceServer :: ServerT ChoiceAPI AppHandler
-choiceServer = list   db
-          :<|> name   db
-          :<|> view   db
-          :<|> add    db
-          :<|> choose db
-  where
-  db :: MemDBConnection (AppHandler x)
-  db = MDBC -- Hard-Coded for now, but passed in by Reader later...
