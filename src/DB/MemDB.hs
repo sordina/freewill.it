@@ -14,8 +14,9 @@ module DB.MemDB
 
 import qualified Control.Concurrent.STM.TVar as T
 import qualified Control.Concurrent.STM      as T
-import DB.Class
+import Data.Functor.Identity
 
+import DB.Class
 import API
 import Data.List
 import Servant
@@ -52,6 +53,29 @@ instance (MonadIO m, MonadError ServantErr m)
 instance MonadIO m => List (MemDBConnection (m x)) m where
   list :: MemDBConnection (m x) -> m [Choice]
   list = doStateOnTVar listState . getConnection
+
+instance ( MonadIO m, MonadError ServantErr m ) => Database (MemDBConnection (m x)) m where
+
+
+-- Local State Version of Database that cannot persist outside of local scope
+
+data LocalState m = LS
+
+instance MonadState AppState m => Name (LocalState (m x)) m where
+  name LS c = nameState c
+
+instance (MonadError ServantErr m, MonadState AppState m) => Add (LocalState (m x)) m where
+  add LS cid o = addState cid o
+
+instance (MonadError ServantErr m, MonadState AppState m) => View (LocalState (m x)) m where
+  view LS cid = viewState cid
+
+instance (MonadError ServantErr m, MonadState AppState m) => Choose (LocalState (m x)) m where
+  choose LS cid oid = chooseState cid oid
+
+instance MonadState AppState m => List (LocalState (m x)) m where
+  list LS = listState
+
 
 -- Test
 
@@ -181,22 +205,12 @@ emptyAppState :: AppState
 emptyAppState = AS [] [] [] []
 
 initialAppState :: AppState
-initialAppState = AS [mockOption1, mockOption2] [mockChoice] [mockDecision] mockUsers
-  where
-  mockChoice :: Choice
-  mockChoice = Choice (Just 0) "What size thing should I eat?"
-
-  mockOption1 :: Option
-  mockOption1 = Option 0 (Just 1) "Something bigger than my own head"
-
-  mockOption2 :: Option
-  mockOption2 = Option 0 (Just 2) "Something reasonable"
-
-  mockDecision :: Decision
-  mockDecision = Decision 0 (Just 1) mockOption2
-
-  mockUsers :: [User]
-  mockUsers = [ User (Just 0) "Isaac" "Newton"
-              , User (Just 1) "Albert" "Einstein"
-              , User (Just 2) "Richard" "Feynman"
-              ]
+initialAppState = flip execState emptyAppState $ runExceptT $ do
+  let db = LS :: LocalState (ExceptT ServantErr (StateT AppState Identity) a)
+  c   <- name db (Choice Nothing "What size thing should I eat?")
+  cid <- tryMaybe "Can't find choice" $ choiceId c
+  _   <- add db cid (Option cid Nothing "Something bigger than my own head")
+  o   <- add db cid (Option cid Nothing "Something reasonable")
+  oid <- tryMaybe "Can't find option" $ optionId o
+  _   <- choose db cid oid
+  return ()

@@ -25,10 +25,10 @@ import DB.MemDB
 api :: Proxy API
 api = Proxy
 
-server :: (List db M, Name db M, View db M, Add db M, Choose db M) => db -> Server API
+server :: Database db M => db -> Server API
 server db = authServer :<|> choiceServer db
 
-choiceServer :: (List db M, Name db M, View db M, Add db M, Choose db M) => db -> Server ChoiceAPI
+choiceServer :: Database db M => db -> Server ChoiceAPI
 choiceServer db = list   db
              :<|> name   db
              :<|> view   db

@@ -26,7 +26,7 @@ type App       = VanillaJS
             :<|> Raw
             :<|> Redirect "index.html"
 
-app :: (List db M, Name db M, View db M, Add db M, Choose db M) => db -> Application
+app :: Database db M => db -> Application
 app db = logStdoutDev
        $ cors (const $ Just policy) -- simpleCors
        $ provideOptions api
@@ -41,7 +41,7 @@ apiWithEnhancements = Proxy
 jsOptions :: CommonGeneratorOptions
 jsOptions = defCommonGeneratorOptions -- { urlPrefix = "http://localhost:8080" }
 
-serverWithSpec :: (List db M, Name db M, View db M, Add db M, Choose db M) => db -> Server App
+serverWithSpec :: Database db M => db -> Server App
 serverWithSpec db = return (jsForAPI api (vanillaJSWith jsOptions))
                :<|> return (toSwagger api)
                :<|> server db
