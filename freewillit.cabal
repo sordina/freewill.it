@@ -29,6 +29,7 @@ library
       DB.PostgresDB
   other-modules:
       DB.MockDB
+      DB.StateDB
       RedirectTo
       Util
       Paths_freewillit
