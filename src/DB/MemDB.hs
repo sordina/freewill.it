@@ -7,7 +7,6 @@
 module DB.MemDB
   ( newMemDBConnection
   , MemDBConnection(..)
-  , initialAppState
   , test
   )
   where

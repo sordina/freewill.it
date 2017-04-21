@@ -73,6 +73,9 @@ data AppState = AS {
   , users     :: [User    ]
   } deriving (Eq, Show, Generic)
 
+emptyAppState :: AppState
+emptyAppState = AS [] [] [] []
+
 {-
 instance FormUrlEncoded User where
   fromFormUrlEncoded inputs =

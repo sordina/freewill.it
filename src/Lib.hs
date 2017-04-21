@@ -12,7 +12,6 @@
 module Lib
     ( api
     , server
-    , initialAppState
     , API
     ) where
 
@@ -20,7 +19,6 @@ import Servant
 
 import API
 import DB.Class
-import DB.MemDB
 
 api :: Proxy API
 api = Proxy
@@ -36,9 +34,7 @@ choiceServer db = list   db
              :<|> choose db
 
 authServer :: Server AuthAPI
-authServer = return mockUsers
-        :<|> return mockUsers
-        :<|> return mockUsers
-        :<|> return mockUsers
-  where
-  AS _ _ _ mockUsers = initialAppState
+authServer = return []
+        :<|> return []
+        :<|> return []
+        :<|> return []
