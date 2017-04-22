@@ -4,10 +4,7 @@ function comp(name, props) {
   Vue.component(name, props);
 }
 
-function getChoice() {
-  getChoicesByChoiceId(this.choice.choiceId, function(x){
-    app.choice = x;
-  }) }
+function getChoice() { getChoice_(app, this.choice.choiceId); }
 
 function getChoice_(o,i) {
   getChoicesByChoiceId(i,

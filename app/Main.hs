@@ -27,7 +27,7 @@ instance ParseRecord Options
 
 main :: IO ()
 main = do
-  opts <- getRecord "freewill.it"
+  opts <- getRecord "freewill.ai"
   let thePort = fromMaybe 8080     $             port     opts
       theDB   = fromMaybe Postgres $ unHelpful $ database opts
   putStrLn $ "Using " ++ show theDB ++ " database driver"

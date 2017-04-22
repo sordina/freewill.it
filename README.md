@@ -1,11 +1,13 @@
 
-# freewill.it
+# freewill.ai
 
 FWaaS - "Free Will as a Service"!
 
 Feeling limited to deciding to do things as an individual? Now you can decide to do things _in the cloud!_
 
 ![](https://github.com/sordina/freewill.it/blob/master/frontend/images/freewill.png?raw=true)
+
+(Will move to freewill.ai at some point...)
 
 ## Ideas
 

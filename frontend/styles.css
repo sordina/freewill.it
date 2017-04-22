@@ -63,3 +63,7 @@ input {
 	padding: 0.5em;
 	background: #fcc;
 }
+
+.small {
+	font-size: 80%;
+}
