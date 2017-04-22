@@ -14,6 +14,7 @@ import Data.Aeson
 import Data.Aeson.TH
 import Data.Text (unpack)
 import Servant
+import Servant.Auth.Server
 import Data.Swagger (ToSchema, ToParamSchema)
 import GHC.Generics
 import Database.PostgreSQL.Simple
@@ -73,6 +74,9 @@ instance FromRow Option
 
 instance ToParamSchema ChoiceID
 instance ToParamSchema OptionID
+
+instance ToJWT   User
+instance FromJWT User
 
 deriveJSON defaultOptions ''UserID
 deriveJSON defaultOptions ''User

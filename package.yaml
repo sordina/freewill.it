@@ -35,6 +35,7 @@ dependencies:
   - postgresql-simple
   - servant-options
   - http-api-data
+  - servant-auth-server
 
 library:
   source-dirs: src
