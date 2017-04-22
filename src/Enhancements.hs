@@ -56,7 +56,6 @@ serverWithSpec db = return (jsForAPI api (vanillaJSWith jsOptions))
                :<|> serveDirectory ("frontend" :: String)
                :<|> redirectTo
 
-protected :: ( MonadError ServantErr m, MonadIO m, Show b )
-          => AuthResult b -> m b
+protected :: ( MonadError ServantErr m, MonadIO m, Show b ) => AuthResult b -> m b
 protected (Authenticated user) = liftIO (putStrLn "Auth Succeeded :)") >> liftIO (print user) >> return user
 protected err                  = liftIO (putStrLn "Auth Failed :("   ) >> liftIO (print err ) >> throwError err401

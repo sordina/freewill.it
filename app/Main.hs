@@ -44,6 +44,7 @@ type CTX = Context '[Auth.CookieSettings, Auth.JWTSettings]
 getContext :: o -> IO CTX
 getContext _o = do
   k <- Auth.generateKey
+  putStrLn $ "JWT KEY: " ++ show k -- TODO: Remove!
   return $ Auth.defaultCookieSettings :. Auth.defaultJWTSettings k :. Servant.EmptyContext
 
 newMemDBConnection :: IO (MemDB.MemDBConnection (A.M a))

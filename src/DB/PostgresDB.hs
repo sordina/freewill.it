@@ -2,7 +2,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE QuasiQuotes #-}
-{-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE ScopedTypeVariables #-}
@@ -75,11 +74,11 @@ makeDecision os (d:_) = case o of Just o' -> Just $ Decision cid did o'
 
 postgresView  :: Connection -> ChoiceID -> IO ChoiceAPIData
 postgresView conn i = do
-  [ theChoice ] <- query conn choiceQuery   (Only i) -- TODO: Introduce failure context
-  os            <- query conn optionQuery   (Only i)
-  ds            <- query conn decisionQuery (Only i)
-  d             <- return $ makeDecision os ds
-  return $ CAD theChoice os d
+  [ myChoice ] <- query conn choiceQuery   (Only i) -- TODO: Introduce failure context
+  os           <- query conn optionQuery   (Only i)
+  ds           <- query conn decisionQuery (Only i)
+  let d         = makeDecision os ds
+  return $ CAD myChoice os d
   where
   choiceQuery   = [sql| select choiceid, choicename
                         from choices where choiceid = ?  |]
@@ -99,7 +98,7 @@ postgresName conn c = do
 -- TODO: Add checks for data security
 postgresAdd :: Connection -> ChoiceID -> Option -> IO Option
 postgresAdd conn _cid o = do
-  ocid         <- return (optionChoiceId o)
+  let ocid      = optionChoiceId o
   [ Only oid ] <- query conn insertionQuery (optionName o, ocid)
   return $ o { optionId = Just oid }
   where
@@ -110,8 +109,8 @@ postgresChoose :: Connection -> ChoiceID -> OptionID -> IO Decision
 postgresChoose conn cid oid = do
   [ Only did   ] <- query conn insertionQuery (cid, oid)
   [ Only oName ] <- query conn optionQuery    (Only oid)
-  o              <- return $ Option cid (Just oid) oName
-  return $ Decision { decisionId = did, decisionChoiceId = cid, decision = o }
+  let o           = Option cid (Just oid) oName
+  return Decision { decisionId = did, decisionChoiceId = cid, decision = o }
   where
   insertionQuery = [sql| insert into decisions (decisionchoiceid, decision) values (?,?) returning decisionid |]
   optionQuery    = [sql| select optionname from options where optionid = ? |]
