@@ -102,14 +102,6 @@ data AppState = AS {
 emptyAppState :: AppState
 emptyAppState = AS [] [] [] []
 
-{-
-instance FormUrlEncoded User where
-  fromFormUrlEncoded inputs =
-    User <$> lkup inputs "ID"
-         <*> grab inputs "FirstName"
-         <*> grab inputs "LastName"
--}
-
 -- ReqBody '[JSON, FormUrlEncoded] String -- For reference
 --
 type AuthAPI = "signup"  :> Post '[JSON] [User]

@@ -9,9 +9,10 @@ import Network.Wai.Handler.Warp
 import Options.Generic
 import Data.Maybe
 
-import qualified Enhancements as E
-import qualified DB.MemDB     as DB
-import qualified API          as A
+import qualified Enhancements  as E
+import qualified API           as A
+import qualified DB.MemDB      as MemDB
+import qualified DB.PostgresDB as PostgresDB
 
 data Database = Memory | Postgres
   deriving (Eq, Show, Read, Generic)
@@ -29,18 +30,22 @@ main = do
   opts <- getRecord "freewill.it"
   let thePort = fromMaybe 8080     $             port     opts
       theDB   = fromMaybe Postgres $ unHelpful $ database opts
+  putStrLn $ "Using " ++ show theDB ++ " database driver"
   putStrLn $ "Running on http://localhost:" ++ show thePort ++ "/"
   go thePort theDB
 
-newConnection :: IO (DB.MemDBConnection (A.M a))
-newConnection = DB.newMemDBConnection
+newMemDBConnection :: IO (MemDB.MemDBConnection (A.M a))
+newMemDBConnection = MemDB.newMemDBConnection
+
+newPostgresDBConnection :: IO (PostgresDB.PostgresConnection (A.M a))
+newPostgresDBConnection = PostgresDB.newPostgresDBConnection
 
 go :: Int -> Database -> IO ()
 
 go p Memory = do
-  as <- newConnection
+  as <- newMemDBConnection
   run p (E.app as)
 
 go p Postgres = do
-  as <- newConnection
+  as <- newPostgresDBConnection
   run p (E.app as)

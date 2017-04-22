@@ -51,7 +51,7 @@ instance MonadIO m => List (MemDBConnection (m x)) m where
   list :: MemDBConnection (m x) -> m [Choice]
   list = doStateOnTVar listState . getConnection
 
-instance ( MonadIO m, MonadError ServantErr m ) => Database (MemDBConnection (m x)) m where
+instance ( MonadIO m, MonadError ServantErr m ) => Database (MemDBConnection (m x)) m
 
 
 -- Test
@@ -81,6 +81,7 @@ doStateOnTVar s v = liftIO $ T.atomically $ do
   T.writeTVar v b'
   return a
 
+-- | eitherToError (Left (GHC.IO.Exception.userError "Foo testing"))
 eitherToError :: MonadError e m => Either e a -> m a
 eitherToError r = case r of Left  e -> throwError e
                             Right x -> return x
