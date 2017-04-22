@@ -11,6 +11,11 @@ module DB.PostgresDB
   ( connectFreewill
   , newPostgresDBConnection
   , PostgresConnection
+  , viewTest
+  , viewTestChoice
+  , viewTestOptions
+  , viewTestDecision
+  , chooseTest
   )
   where
 
@@ -84,7 +89,40 @@ postgresView conn i = do
   decisionQuery = [sql| select decisionChoiceId, decisionid, decision
                         from decisions where decisionChoiceId = ? |]
 
-{-
+postgresName :: Connection -> Choice -> IO Choice
+postgresName conn c = do
+  [ Only cid ] <- query conn insertionQuery (Only (choiceName c))
+  return $ c { choiceId = Just cid }
+  where
+  insertionQuery = [sql| insert into choices (choicename) values (?) returning choiceid |]
+
+-- TODO: Add checks for data security
+postgresAdd :: Connection -> ChoiceID -> Option -> IO Option
+postgresAdd conn _cid o = do
+  ocid         <- return (optionChoiceId o)
+  [ Only oid ] <- query conn insertionQuery (optionName o, ocid)
+  return $ o { optionId = Just oid }
+  where
+  insertionQuery = [sql| insert into options (optionname, optionchoiceid)
+                         values (?,?) returning optionid |]
+
+postgresChoose :: Connection -> ChoiceID -> OptionID -> IO Decision
+postgresChoose conn cid oid = do
+  [ Only did   ] <- query conn insertionQuery (cid, oid)
+  [ Only oName ] <- query conn optionQuery    (Only oid)
+  o              <- return $ Option cid (Just oid) oName
+  return $ Decision { decisionId = did, decisionChoiceId = cid, decision = o }
+  where
+  insertionQuery = [sql| insert into decisions (decisionchoiceid, decision) values (?,?) returning decisionid |]
+  optionQuery    = [sql| select optionname from options where optionid = ? |]
+
+postgresList :: Connection -> IO [Choice]
+postgresList conn =
+  query_ conn [sql| select choiceid, choicename from choices
+                    order by choiceid desc |]
+
+-- Testing Functions (Rely on some things being in the database)
+--
 viewTest :: IO ChoiceAPIData
 viewTest = do
   db <- connectFreewill
@@ -107,47 +145,8 @@ viewTestDecision = do
   db <- connectFreewill
   [x :: DecisionRow] <- query_ db [sql| select decisionChoiceId, decisionid, decision from decisions where decisionChoiceId = 1 |]
   return x
--}
-
-postgresName :: Connection -> Choice -> IO Choice
-postgresName conn c = do
-  [ Only cid ] <- query conn insertionQuery (Only (choiceName c))
-  return $ c { choiceId = Just cid }
-  where
-  insertionQuery = [sql| insert into choices (choicename) values (?) returning choiceid |]
-
--- TODO: Add checks for data security
-postgresAdd :: Connection -> ChoiceID -> Option -> IO Option
-postgresAdd conn _cid o = do
-  ocid         <- return (optionChoiceId o)
-  [ Only oid ] <- query conn insertionQuery (optionName o, ocid)
-  return $ o { optionId = Just oid }
-  where
-  insertionQuery = [sql| insert into options (optionname, optionchoiceid)
-                         values (?,?) returning optionid |]
-
-{-
- decisionid       | integer | not null default nextval('decisions_decisionid_seq'::regclass)
- userid           | integer |
- decisionchoiceid | integer |
- decision         | integer |
--}
-postgresChoose :: Connection -> ChoiceID -> OptionID -> IO Decision
-postgresChoose conn cid oid = do
-  [ Only did   ] <- query conn insertionQuery (cid, oid)
-  [ Only oName ] <- query conn optionQuery    (Only oid)
-  o              <- return $ Option cid (Just oid) oName
-  return $ Decision { decisionId = did, decisionChoiceId = cid, decision = o }
-  where
-  insertionQuery = [sql| insert into decisions (decisionchoiceid, decision) values (?,?) returning decisionid |]
-  optionQuery    = [sql| select optionname from options where optionid = ? |]
 
 chooseTest :: IO Decision
 chooseTest = do
   db <- connectFreewill
   postgresChoose db (ChoiceID 1) (OptionID 1)
-
-postgresList :: Connection -> IO [Choice]
-postgresList conn =
-  query_ conn [sql| select choiceid, choicename from choices
-                    order by choiceid desc |]

@@ -32,6 +32,7 @@ td:first-child {
 
 .link {
 	cursor: pointer;
+	color: #EA3333;
 }
 
 .router-link-active {
