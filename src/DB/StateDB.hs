@@ -30,7 +30,7 @@ import Data.Maybe
 data LocalState m = LS
 
 instance MonadState AppState m => Name (LocalState (m x)) m where
-  name LS c = nameState c
+  name LS = nameState
 
 instance (MonadError ServantErr m, MonadState AppState m) => Add (LocalState (m x)) m where
   add LS cid o = addState cid o

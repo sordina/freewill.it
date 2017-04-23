@@ -2,17 +2,17 @@
 --
 -- see: https://github.com/sol/hpack
 
-name:                freewillit
-version:             0.1.0.0
-homepage:            https://github.com/githubuser/alksjdhflaksjhdf#readme
-license:             BSD3
-license-file:        LICENSE
-author:              Author name here
-maintainer:          example@example.com
-copyright:           2017 Author name here
-category:            Web
-build-type:          Simple
-cabal-version:       >= 1.10
+name:           freewill
+version:        0.1.0.0
+category:       Web
+homepage:       https://github.com/githubuser/alksjdhflaksjhdf#readme
+author:         Author name here
+maintainer:     example@example.com
+copyright:      2017 Author name here
+license:        BSD3
+license-file:   LICENSE
+build-type:     Simple
+cabal-version:  >= 1.10
 
 extra-source-files:
     README.md
@@ -20,6 +20,33 @@ extra-source-files:
 library
   hs-source-dirs:
       src
+  build-depends:
+      base >= 4.7 && < 5
+    , aeson
+    , servant-server
+    , servant-swagger
+    , servant-foreign
+    , servant-js
+    , servant-auth
+    , wai
+    , wai-cors
+    , wai-util
+    , wai-extra
+    , warp
+    , bytestring
+    , http-types
+    , mtl
+    , ghc-prim
+    , swagger2
+    , text
+    , lens
+    , safe
+    , transformers
+    , stm
+    , postgresql-simple
+    , servant-options
+    , http-api-data
+    , servant-auth-server
   exposed-modules:
       API
       Lib
@@ -32,40 +59,13 @@ library
       DB.StateDB
       RedirectTo
       Util
-      Paths_freewillit
-  build-depends:
-      base >= 4.7 && < 5
-    , aeson
-    , servant-server
-    , servant-swagger
-    , servant-foreign
-    , servant-js
-    , servant-auth
-    , wai
-    , wai-cors
-    , wai-util
-    , wai-extra
-    , warp
-    , bytestring
-    , http-types
-    , mtl
-    , ghc-prim
-    , swagger2
-    , text
-    , lens
-    , safe
-    , transformers
-    , stm
-    , postgresql-simple
-    , servant-options
-    , http-api-data
-    , servant-auth-server
+      Paths_freewill
   default-language: Haskell2010
 
-executable freewillit
+executable freewill
+  main-is: Main.hs
   hs-source-dirs:
       app
-  main-is: Main.hs
   build-depends:
       base >= 4.7 && < 5
     , aeson
@@ -93,6 +93,6 @@ executable freewillit
     , servant-options
     , http-api-data
     , servant-auth-server
-    , freewillit
+    , freewill
     , optparse-generic
   default-language: Haskell2010

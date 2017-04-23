@@ -1,4 +1,4 @@
-name:                freewillit
+name:                freewill
 version:             0.1.0.0
 homepage:            https://github.com/githubuser/alksjdhflaksjhdf#readme
 license:             BSD3
@@ -42,9 +42,9 @@ library:
   exposed-modules: ['API','Lib','Enhancements','DB.Class','DB.MemDB','DB.PostgresDB']
 
 executables:
-  freewillit:
+  freewill:
     source-dirs: app
     main: Main.hs
     dependencies:
-      - freewillit
+      - freewill
       - optparse-generic
