@@ -78,6 +78,13 @@ instance ToParamSchema OptionID
 instance ToJWT   User
 instance FromJWT User
 
+data Login = Login { username :: String, password :: String }
+   deriving (Eq, Show, Read, Generic)
+
+instance ToJSON Login
+instance FromJSON Login
+
+
 deriveJSON defaultOptions ''UserID
 deriveJSON defaultOptions ''User
 deriveJSON defaultOptions ''ChoiceID

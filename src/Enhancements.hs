@@ -22,11 +22,14 @@ import Network.Wai.Middleware.Servant.Options
 import Control.Monad.IO.Class
 import Control.Monad.Error.Class
 
+type LoginHead = Headers '[Header "Set-Cookie" SetCookie] User
+type LoginAPI  = "login"        :> ReqBody '[JSON] Login :> Post '[JSON] LoginHead
 type VanillaJS = "vanilla.js"   :> Get  '[PlainText] Text
 type Swag      = "swagger.json" :> Get  '[JSON]      Swagger
 type TestAuth  = "auth"         :> Auth '[JWT] User  :> Get '[JSON] User
 type App       = VanillaJS
             :<|> Swag
+            :<|> LoginAPI
             :<|> TestAuth
             :<|> API
             :<|> Raw
@@ -37,10 +40,11 @@ app :: (HasContextEntry x JWTSettings, HasContextEntry x CookieSettings, Databas
 app context db = logStdoutDev
                $ cors (const $ Just policy) -- simpleCors
                $ provideOptions api
-               $ serveWithContext apiWithEnhancements context (serverWithSpec db)
+               $ serveWithContext apiWithEnhancements context (serverWithSpec db js cs)
   where
-  policy = simpleCorsResourcePolicy
-             { corsRequestHeaders = [ "content-type" ] }
+  js     = getContextEntry context :: JWTSettings
+  cs     = getContextEntry context :: CookieSettings
+  policy = simpleCorsResourcePolicy { corsRequestHeaders = [ "content-type" ] }
 
 apiWithEnhancements :: Proxy App
 apiWithEnhancements = Proxy
@@ -48,13 +52,31 @@ apiWithEnhancements = Proxy
 jsOptions :: CommonGeneratorOptions
 jsOptions = defCommonGeneratorOptions -- { urlPrefix = "http://localhost:8080" }
 
-serverWithSpec :: Database db M => db -> Server App
-serverWithSpec db = return (jsForAPI api (vanillaJSWith jsOptions))
-               :<|> return (toSwagger api)
-               :<|> protected -- TODO: Remove once we're happy
-               :<|> server db
-               :<|> serveDirectory ("frontend" :: String)
-               :<|> redirectTo
+serverWithSpec :: Database db M => db -> JWTSettings -> CookieSettings -> Server App
+serverWithSpec db js cs
+     = return (jsForAPI api (vanillaJSWith jsOptions))
+  :<|> return (toSwagger api)
+  :<|> login js cs
+  :<|> protected -- TODO: Remove once we're happy
+  :<|> server db
+  :<|> serveDirectory ("frontend" :: String)
+  :<|> redirectTo
+
+login :: JWTSettings -> CookieSettings -> Server LoginAPI
+login = checkCreds
+
+checkCreds :: JWTSettings -> CookieSettings -> Login -> Handler LoginHead
+checkCreds jwtSettings cookieSettings (Login "Ali Baba" "Open Sesame") = do
+   -- Usually you would ask a database for the user info. This is just a
+   -- regular servant handler, so you can follow your normal database access
+   -- patterns (including using 'enter').
+   let usr = User (Just (UserID 1)) "Ali" "Baba"
+   mcookie <- liftIO $ makeCookie cookieSettings jwtSettings usr
+   case mcookie of
+     Nothing     -> throwError err401
+     Just cookie -> return $ addHeader cookie usr
+checkCreds _ _ _ = throwError err401
+
 
 protected :: ( MonadError ServantErr m, MonadIO m, Show b ) => AuthResult b -> m b
 protected (Authenticated user) = liftIO (putStrLn "Auth Succeeded :)") >> liftIO (print user) >> return user
