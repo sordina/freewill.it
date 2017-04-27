@@ -67,9 +67,6 @@ login = checkCreds
 
 checkCreds :: JWTSettings -> CookieSettings -> Login -> Handler LoginHead
 checkCreds jwtSettings cookieSettings (Login "Ali Baba" "Open Sesame") = do
-   -- Usually you would ask a database for the user info. This is just a
-   -- regular servant handler, so you can follow your normal database access
-   -- patterns (including using 'enter').
    let usr = User (Just (UserID 1)) "Ali" "Baba"
    mcookie <- liftIO $ makeCookie cookieSettings jwtSettings usr
    case mcookie of

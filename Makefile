@@ -6,5 +6,8 @@ help:
 migrate:
 	cd db && ./seed.bash
 
+reset-dev-database:
+	cd db && ./reset.bash
+
 run:
 	stack run
