@@ -28,6 +28,10 @@ import Control.Monad.IO.Class
 import API
 import DB.Class
 
+-- FUNDAMENTAL DATATYPE!!!!
+--
+newtype PostgresConnection m = PGC Connection
+
 newPostgresDBConnection :: IO (PostgresConnection m)
 newPostgresDBConnection = PGC <$> connectFreewill
 
@@ -48,8 +52,6 @@ instance MonadIO m => List   (PostgresConnection (m x)) m where list   (PGC db) 
 instance MonadIO m => Database (PostgresConnection (m x)) m
 
 -- Helpers
-
-newtype PostgresConnection m = PGC Connection
 
 data DecisionRow = DR {
   cid' :: ChoiceID,

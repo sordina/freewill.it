@@ -21,7 +21,7 @@ data Database = Memory | Postgres
   deriving (Eq, Show, Read, Generic)
 
 data Options = Options { port     :: Maybe Int
-                       , database :: Maybe Database <?> "Memory | Postgres"
+                       , database :: Maybe Database <?> "Memory | Postgres (Default)"
                        , jwtKey   :: Maybe String   <?> "JWT Key (Not Currently Used...)"
                        }
   deriving (Show, Generic)

@@ -8,12 +8,12 @@ import API
 
 -- | Individual Components of Database Functionality
 --
-class Name   x m | x -> m where name   :: x -> Choice               -> m Choice
-class View   x m | x -> m where view   :: x -> ChoiceID             -> m ChoiceAPIData
-class Add    x m | x -> m where add    :: x -> ChoiceID -> Option   -> m Option
-class Choose x m | x -> m where choose :: x -> ChoiceID -> OptionID -> m Decision
-class List   x m | x -> m where list   :: x                         -> m [Choice]
+class Name   db m | db -> m where name   :: db -> Choice               -> m Choice
+class View   db m | db -> m where view   :: db -> ChoiceID             -> m ChoiceAPIData
+class Add    db m | db -> m where add    :: db -> ChoiceID -> Option   -> m Option
+class Choose db m | db -> m where choose :: db -> ChoiceID -> OptionID -> m Decision
+class List   db m | db -> m where list   :: db                         -> m [Choice]
 
 -- | Convenience Class Intended for Most Higer-Level Application Routes
 --
-class (Name x m, View x m, Add x m, Choose x m, List x m) => Database x m where
+class (Name db m, View db m, Add db m, Choose db m, List db m) => Database db m where
