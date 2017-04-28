@@ -36,6 +36,7 @@ dependencies:
   - servant-options
   - http-api-data
   - servant-auth-server
+  - sqlqq-parse
 
 library:
   source-dirs: src

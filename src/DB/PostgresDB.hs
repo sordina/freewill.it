@@ -20,7 +20,8 @@ module DB.PostgresDB
 
 -- https://hackage.haskell.org/package/postgresql-simple-0.5.2.1/docs/Database-PostgreSQL-Simple.html
 import Database.PostgreSQL.Simple
-import Database.PostgreSQL.Simple.SqlQQ
+import Database.PostgreSQL.Simple.SqlQQ.Parsed
+import qualified Database.PostgreSQL.Simple.SqlQQ as SQQ
 import Data.List
 import GHC.Generics
 import Control.Monad.IO.Class
@@ -104,7 +105,7 @@ postgresAdd conn _cid o = do
   [ Only oid ] <- query conn insertionQuery (optionName o, ocid)
   return $ o { optionId = Just oid }
   where
-  insertionQuery = [sql| insert into options (optionname, optionchoiceid)
+  insertionQuery = [SQQ.sql| insert into options (optionname, optionchoiceid)
                          values (?,?) returning optionid |]
 
 postgresChoose :: Connection -> ChoiceID -> OptionID -> IO Decision
@@ -114,7 +115,7 @@ postgresChoose conn cid oid = do
   let o           = Option cid (Just oid) oName
   return Decision { decisionId = did, decisionChoiceId = cid, decision = o }
   where
-  insertionQuery = [sql| insert into decisions (decisionchoiceid, decision) values (?,?) returning decisionid |]
+  insertionQuery = [SQQ.sql| insert into decisions (decisionchoiceid, decision) values (?,?) returning decisionid |]
   optionQuery    = [sql| select optionname from options where optionid = ? |]
 
 postgresList :: Connection -> IO [Choice]
