@@ -38,9 +38,9 @@ function decide() {
   postChoicesByChoiceIdChoose(
     choiceId,
     option.optionId,
-    function() {
-      getChoice.call({choice: {choiceId: choiceId}})
-    })}
+    function()    { getChoice.call({choice: {choiceId: choiceId}}) },
+    function(err) { console.log(err); app.errors.push("Couldn't decide due to an error "); }
+  )}
 
 function removeAllErrors() {
   app.errors = [];
