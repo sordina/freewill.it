@@ -13,19 +13,24 @@ function getChoice_(o,i) {
   ); }
 
 function newChoice() {
-  postChoices( {choiceName: this.choiceName}, function(choiceResponse) {
-    getChoices_()
-  }) }
+  postChoices( {choiceName: this.choiceName},
+    function(choiceResponse) { getChoices_() },
+    function(x) { console.log(x); app.errors.push("Could not create choice due to error "); }
+  ) }
 
 function newOption() {
   var choiceId = this.choice.choiceId;
+  var optName  = this.optionName;
+  if(! optName || optName == "") {
+    app.errors.push("Please fill in the option name ");
+    return;
+  }
   postChoicesByChoiceIdAdd(
     choiceId,
-    { optionName: this.optionName,
-      optionChoiceId: choiceId},
-    function(optionResponse) {
-      getChoice.call({choice: {choiceId: choiceId}})
-    }) }
+    { optionName: optName, optionChoiceId: choiceId},
+    function(optionResponse) { getChoice.call({choice: {choiceId: choiceId}}); },
+    function(err)            { console.log(err); app.errors.push("Error adding option to choice "); }
+  )}
 
 function decide() {
   var choiceId = this.option.optionChoiceId;

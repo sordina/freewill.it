@@ -52,8 +52,8 @@ instance (MonadState AppState m, MonadError ServantErr m) => Database (LocalStat
 getThing :: Eq a => (x -> Maybe a) -> a -> [x] -> Maybe x
 getThing f oid = find ((== Just oid) . f)
 
-newId :: [x] -> Integer
-newId = fromIntegral . length
+newId :: [x] -> UUID
+newId = UUID . show . length
 
 getChoiceById :: ChoiceID -> [Choice] -> Maybe Choice
 getChoiceById = getThing choiceId

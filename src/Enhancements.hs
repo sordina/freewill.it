@@ -67,7 +67,7 @@ login = checkCreds
 
 checkCreds :: JWTSettings -> CookieSettings -> Login -> Handler LoginHead
 checkCreds jwtSettings cookieSettings (Login "Ali Baba" "Open Sesame") = do
-   let usr = User (Just (UserID 1)) "Ali" "Baba"
+   let usr = User (Just (UserID (UUID "testid"))) "Ali" "Baba"
    mcookie <- liftIO $ makeCookie cookieSettings jwtSettings usr
    case mcookie of
      Nothing     -> throwError err401

@@ -22,13 +22,27 @@ import Control.Monad.Except
 import Web.Internal.HttpApiData
 import Database.PostgreSQL.Simple.FromField
 import Database.PostgreSQL.Simple.ToField
+import qualified Data.ByteString.Char8 as BC
+import Database.PostgreSQL.Simple.TypeInfo.Static (typoid, uuid)
 
 type M = ExceptT ServantErr IO
 
-newtype UserID     = UserID     Integer deriving (Eq, Show, Generic, FromField, ToField)
-newtype ChoiceID   = ChoiceID   Integer deriving (Eq, Show, Generic, FromField, ToField)
-newtype OptionID   = OptionID   Integer deriving (Eq, Show, Generic, FromField, ToField)
-newtype DecisionID = DecisionID Integer deriving (Eq, Show, Generic, FromField, ToField)
+newtype UUID       = UUID       String deriving (Eq, Show, Generic, FromHttpApiData)
+newtype UserID     = UserID     UUID   deriving (Eq, Show, Generic, FromField, ToField)
+newtype ChoiceID   = ChoiceID   UUID   deriving (Eq, Show, Generic, FromField, ToField)
+newtype OptionID   = OptionID   UUID   deriving (Eq, Show, Generic, FromField, ToField)
+newtype DecisionID = DecisionID UUID   deriving (Eq, Show, Generic, FromField, ToField)
+
+instance FromField UUID where
+  fromField f mdata =
+    if typeOid f /= typoid uuid
+      then returnError Incompatible f ""
+      else case BC.unpack <$> mdata of
+       Nothing  -> returnError UnexpectedNull f ""
+       Just dat -> return (UUID dat)
+
+instance ToField UUID where
+  toField (UUID s) = Escape (BC.pack s)
 
 data User = User
   { userId        :: Maybe UserID
@@ -59,6 +73,7 @@ data ChoiceAPIData = CAD
   , theDecision :: Maybe Decision
   } deriving (Eq, Show, Generic)
 
+instance ToSchema UUID
 instance ToSchema UserID
 instance ToSchema User
 instance ToSchema ChoiceID
@@ -72,6 +87,7 @@ instance ToSchema ChoiceAPIData
 instance FromRow Choice
 instance FromRow Option
 
+instance ToParamSchema UUID
 instance ToParamSchema ChoiceID
 instance ToParamSchema OptionID
 
@@ -85,6 +101,7 @@ instance ToJSON Login
 instance FromJSON Login
 
 
+deriveJSON defaultOptions ''UUID
 deriveJSON defaultOptions ''UserID
 deriveJSON defaultOptions ''User
 deriveJSON defaultOptions ''ChoiceID

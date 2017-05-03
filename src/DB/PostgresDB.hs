@@ -10,11 +10,6 @@ module DB.PostgresDB
   ( connectFreewill
   , newPostgresDBConnection
   , PostgresConnection
-  , viewTest
-  , viewTestChoice
-  , viewTestOptions
-  , viewTestDecision
-  , chooseTest
   )
   where
 
@@ -86,7 +81,7 @@ postgresView conn i = do
                         from choices where choiceid = ?  |]
   optionQuery   = [sql| select optionChoiceId, optionid, optionName
                         from options where optionChoiceId = ?
-                        order by optionid desc |]
+                        order by created desc |]
   decisionQuery = [sql| select decisionChoiceId, decisionid, decision
                         from decisions where decisionChoiceId = ? |]
 
@@ -120,34 +115,4 @@ postgresChoose conn cid oid = do
 postgresList :: Connection -> IO [Choice]
 postgresList conn =
   query_ conn [sql| select choiceid, choicename from choices
-                    order by choiceid desc |]
-
--- Testing Functions (Rely on some things being in the database)
---
-viewTest :: IO ChoiceAPIData
-viewTest = do
-  db <- connectFreewill
-  postgresView db (ChoiceID 1)
-
-viewTestChoice :: IO Choice
-viewTestChoice = do
-  db <- connectFreewill
-  [x :: Choice] <- query_ db [sql| select choiceid, choicename from choices where choiceid = 1 |]
-  return x
-
-viewTestOptions :: IO [Option]
-viewTestOptions = do
-  db <- connectFreewill
-  (x :: [Option]) <- query_ db [sql| select optionChoiceId, optionId, optionName from options where optionchoiceid = 1 |]
-  return x
-
-viewTestDecision :: IO DecisionRow
-viewTestDecision = do
-  db <- connectFreewill
-  [x :: DecisionRow] <- query_ db [sql| select decisionChoiceId, decisionid, decision from decisions where decisionChoiceId = 1 |]
-  return x
-
-chooseTest :: IO Decision
-chooseTest = do
-  db <- connectFreewill
-  postgresChoose db (ChoiceID 1) (OptionID 1)
+                    order by created desc |]

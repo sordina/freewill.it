@@ -1,27 +1,30 @@
 
 create table users(
-	userid    serial PRIMARY KEY,
+	userid    uuid primary key default md5(random()::text || clock_timestamp()::text)::uuid,
+	created   timestamp default now(),
 	firstname text,
 	lastname  text
 );
 
--- choiceid   uuid primary key default md5(random()::text || clock_timestamp()::text)::uuid,
 create table choices(
-	choiceid   serial primary key,
-	userid     integer references users (userid),
+	choiceid   uuid primary key default md5(random()::text || clock_timestamp()::text)::uuid,
+	created    timestamp default now(),
+	userid     uuid references users (userid),
 	choicename text
 );
 
 create table options(
-	optionid       serial primary key,
-	userid         integer references users (userid),
-	optionchoiceid integer references choices (choiceid),
+	optionid       uuid primary key default md5(random()::text || clock_timestamp()::text)::uuid,
+	created        timestamp default now(),
+	userid         uuid references users (userid),
+	optionchoiceid uuid references choices (choiceid),
 	optionname     text
 );
 
 create table decisions(
-	decisionid       serial primary key,
-	userid           integer references users   (userid),
-	decisionchoiceid integer references choices (choiceid),
-	decision         integer references options (optionid)
+	decisionid       uuid primary key default md5(random()::text || clock_timestamp()::text)::uuid,
+	created          timestamp default now(),
+	userid           uuid references users   (userid),
+	decisionchoiceid uuid references choices (choiceid),
+	decision         uuid references options (optionid)
 );
