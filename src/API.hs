@@ -7,6 +7,12 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE InstanceSigs #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# OPTIONS_GHC -fno-warn-orphans #-} -- Can remove once we've used a package for our instance
 
 module API where
 
@@ -15,6 +21,7 @@ import Data.Aeson.TH
 import Data.Text (unpack)
 import Servant
 import Servant.Auth.Server
+import Servant.Foreign
 import Data.Swagger (ToSchema, ToParamSchema)
 import GHC.Generics
 import Database.PostgreSQL.Simple
@@ -145,8 +152,30 @@ type ChoiceAPI = Get     '[JSON] [Choice]
             :<|> ChoiceCapture :> "choose" :> ReqBody '[JSON] OptionID :> Post '[JSON] Decision
 
 type API = AuthAPI
-      :<|> ("choices" :> ChoiceAPI)
-      -- :<|> ("choices" :> Auth '[JWT] User :> ChoiceAPI)
+      :<|> "choices" :> Auth '[JWT] UserID :> ChoiceAPI
+
+
+-- Should be provided by a package soon?
+-- https://github.com/plow-technologies/servant-auth/issues/8
+-- Don't want to muck around with authorization for vanilla js...
+instance ( HasForeign lang ftype api , HasForeignType lang ftype 'Text )
+    => HasForeign lang ftype (Auth '[JWT] a :> api) where
+
+  type Foreign ftype (Auth '[JWT] a :> api) = Foreign ftype api
+
+  foreignFor lang Proxy Proxy subR =
+    foreignFor lang Proxy (Proxy :: Proxy api) subR -- was req, but that enforces an arg...
+    {-
+    where
+      req = subR{ _reqHeaders = HeaderArg arg : _reqHeaders subR }
+      arg = Arg
+        { _argName = PathSegment "Authorization"
+        , _argType = typeFor lang (Proxy :: Proxy ftype) (Proxy :: Proxy 'Text)
+        }
+      -}
 
 help :: IO ()
-help = putStrLn $ Data.Text.unpack $ layout (Proxy :: Proxy API)
+help = putStrLn $ Data.Text.unpack $ layoutWithContext (Proxy :: Proxy API) unusedContext
+  where
+  unusedContext :: Context '[CookieSettings, JWTSettings]
+  unusedContext = undefined

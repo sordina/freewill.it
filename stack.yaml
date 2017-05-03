@@ -8,3 +8,4 @@ extra-deps:
   - servant-auth-0.2.6.1
   - servant-auth-server-0.2.6.1
   - servant-options-0.1.0.0
+  - servant-auth-swagger-0.2.6.1

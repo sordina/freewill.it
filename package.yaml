@@ -36,6 +36,7 @@ dependencies:
   - servant-options
   - http-api-data
   - servant-auth-server
+  - servant-auth-swagger
 
 library:
   source-dirs: src
