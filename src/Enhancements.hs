@@ -22,11 +22,11 @@ import Network.Wai.Middleware.Servant.Options
 import Control.Monad.IO.Class
 import Control.Monad.Error.Class
 
-type LoginHead = Headers '[Header "Set-Cookie" SetCookie] User
+type LoginHead = Headers '[Header "Set-Cookie" SetCookie] UserID
 type LoginAPI  = "login"        :> ReqBody '[JSON] Login :> Post '[JSON] LoginHead
 type VanillaJS = "vanilla.js"   :> Get  '[PlainText] Text
 type Swag      = "swagger.json" :> Get  '[JSON]      Swagger
-type TestAuth  = "auth"         :> Auth '[JWT] User  :> Get '[JSON] User
+type TestAuth  = "auth"         :> Auth '[JWT] UserID :> Get '[JSON] UserID
 type App       = VanillaJS
             :<|> Swag
             :<|> LoginAPI
@@ -67,7 +67,7 @@ login = checkCreds
 
 checkCreds :: JWTSettings -> CookieSettings -> Login -> Handler LoginHead
 checkCreds jwtSettings cookieSettings (Login "Ali Baba" "Open Sesame") = do
-   let usr = User (Just (UserID (UUID "testid"))) "Ali" "Baba"
+   let usr = UserID (UUID "testid")
    mcookie <- liftIO $ makeCookie cookieSettings jwtSettings usr
    case mcookie of
      Nothing     -> throwError err401

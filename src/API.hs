@@ -91,15 +91,14 @@ instance ToParamSchema UUID
 instance ToParamSchema ChoiceID
 instance ToParamSchema OptionID
 
-instance ToJWT   User
-instance FromJWT User
-
 data Login = Login { username :: String, password :: String }
    deriving (Eq, Show, Read, Generic)
 
 instance ToJSON Login
 instance FromJSON Login
 
+instance ToJWT   UserID
+instance FromJWT UserID
 
 deriveJSON defaultOptions ''UUID
 deriveJSON defaultOptions ''UserID
