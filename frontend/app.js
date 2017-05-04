@@ -47,9 +47,20 @@ function removeAllErrors() {
 }
 
 function getChoices_() {
-  getChoices(function(cs){
-    app.choices = cs;
-  }) }
+  getChoices(
+    function(cs)  { app.choices = cs; },
+    function(err) { console.log(err); app.errors.push("Error Listing Choices "); }
+  )}
+
+function login(a) {
+  console.log("called login")
+  console.log(a)
+  console.log(this)
+  postLogin(
+    { username: this.username, password: this.password},
+    function(res) { console.log(res); app.user = res; },
+    function(err) { console.log(err); app.errors.push("Could not log in "); }
+  ) }
 
 comp('choices-list', { props:    ['choices', 'choiceName'],
                        methods:  { newChoice: newChoice },
@@ -70,6 +81,9 @@ comp('errors',       { props:    ['errors'],
 
 comp('router',       { props:    ['choice'] });
 
+comp('login-dialog', { props:    ['username', 'password'],
+                       methods:  { login: login }});
+
 var routerComponent = {
   name:     "RouterTemplate",
   props:    [ 'choice' ],
@@ -89,7 +103,7 @@ var router = new VueRouter({
 var app = new Vue({
   el:     '#app',
   router: router,
-  data:   { choices: [], choice: null, errors: [] }
+  data:   { choices: [], choice: null, errors: [], user: null }
 });
 
 getChoices_();

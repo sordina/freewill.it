@@ -67,3 +67,8 @@ input {
 .small {
 	font-size: 80%;
 }
+
+#login {
+	width: 300px;
+	margin: auto;
+}

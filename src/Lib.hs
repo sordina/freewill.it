@@ -19,16 +19,17 @@ import Servant
 
 import API
 import DB.Class
-import Servant.Auth.Server (throwAll, AuthResult(..))
+import Servant.Auth.Server
+import Control.Monad.IO.Class
 
 api :: Proxy API
 api = Proxy
 
-server :: Database db M => db -> Server API
-server db = authServer :<|> choiceServer db
+server :: Database db M => db -> JWTSettings -> CookieSettings -> Server API
+server db js cs = login js cs :<|> choiceServer db
 
 choiceServer :: Database db M => db -> AuthResult UserID -> Server ChoiceAPI
-choiceServer db (Authenticated user)
+choiceServer db (Authenticated _user)
      = list   db
   :<|> name   db
   :<|> view   db
@@ -37,8 +38,14 @@ choiceServer db (Authenticated user)
 
 choiceServer _db _authFail = throwAll err401
 
-authServer :: Server AuthAPI
-authServer = return []
-        :<|> return []
-        :<|> return []
-        :<|> return []
+login :: JWTSettings -> CookieSettings -> Server LoginAPI
+login = checkCreds
+
+checkCreds :: JWTSettings -> CookieSettings -> Login -> Handler LoginHead
+checkCreds jwtSettings cookieSettings (Login "Ali Baba" "Open Sesame") = do
+   let usr = UserID (UUID "testid")
+   mcookie <- liftIO $ makeCookie cookieSettings jwtSettings usr
+   case mcookie of
+     Nothing     -> throwError err401
+     Just cookie -> return $ addHeader cookie usr
+checkCreds _ _ _ = throwError err401

@@ -31,6 +31,7 @@ import Database.PostgreSQL.Simple.FromField
 import Database.PostgreSQL.Simple.ToField
 import qualified Data.ByteString.Char8 as BC
 import Database.PostgreSQL.Simple.TypeInfo.Static (typoid, uuid)
+import Data.Swagger.Internal.ParamSchema
 
 type M = ExceptT ServantErr IO
 
@@ -80,6 +81,11 @@ data ChoiceAPIData = CAD
   , theDecision :: Maybe Decision
   } deriving (Eq, Show, Generic)
 
+data Login = Login
+  { username :: String
+  , password :: String
+  } deriving (Eq, Show, Generic)
+
 instance ToSchema UUID
 instance ToSchema UserID
 instance ToSchema User
@@ -90,19 +96,15 @@ instance ToSchema Option
 instance ToSchema DecisionID
 instance ToSchema Decision
 instance ToSchema ChoiceAPIData
+instance ToSchema Login
 
 instance FromRow Choice
+instance FromRow Login
 instance FromRow Option
 
 instance ToParamSchema UUID
 instance ToParamSchema ChoiceID
 instance ToParamSchema OptionID
-
-data Login = Login { username :: String, password :: String }
-   deriving (Eq, Show, Read, Generic)
-
-instance ToJSON Login
-instance FromJSON Login
 
 instance ToJWT   UserID
 instance FromJWT UserID
@@ -117,6 +119,7 @@ deriveJSON defaultOptions ''Option
 deriveJSON defaultOptions ''DecisionID
 deriveJSON defaultOptions ''Decision
 deriveJSON defaultOptions ''ChoiceAPIData
+deriveJSON defaultOptions ''Login
 
 instance FromHttpApiData UserID where
   parseHeader     h = UserID <$> parseHeaderWithPrefix "UserID " h
@@ -127,21 +130,14 @@ instance FromHttpApiData ChoiceID where
   parseQueryParam p = ChoiceID <$> parseQueryParam p
 
 data AppState = AS {
-    options   :: [Option  ]
-  , choices   :: [Choice  ]
-  , decisions :: [Decision]
-  , users     :: [User    ]
+    options   :: [ Option ]
+  , choices   :: [ Choice ]
+  , decisions :: [ Decision ]
+  , users     :: [ User ]
   } deriving (Eq, Show, Generic)
 
 emptyAppState :: AppState
 emptyAppState = AS [] [] [] []
-
--- ReqBody '[JSON, FormUrlEncoded] String -- For reference
---
-type AuthAPI = "signup"  :> Post '[JSON] [User]
-          :<|> "signin"  :> Post '[JSON] [User]
-          :<|> "signout" :> Post '[JSON] [User]
-          :<|> "users"   :> Get  '[JSON] [User]
 
 type ChoiceCapture = Capture "choiceId" ChoiceID
 
@@ -151,9 +147,12 @@ type ChoiceAPI = Get     '[JSON] [Choice]
             :<|> ChoiceCapture :> "add"    :> ReqBody '[JSON] Option   :> Post '[JSON] Option
             :<|> ChoiceCapture :> "choose" :> ReqBody '[JSON] OptionID :> Post '[JSON] Decision
 
+type LoginHead = Headers '[Header "Set-Cookie" SetCookie] UserID
+type LoginAPI  = "login" :> ReqBody '[JSON] Login :> Post '[JSON] LoginHead
+type AuthAPI   = LoginAPI
+
 type API = AuthAPI
       :<|> "choices" :> Auth '[JWT] UserID :> ChoiceAPI
-
 
 -- Should be provided by a package soon?
 -- https://github.com/plow-technologies/servant-auth/issues/8
@@ -165,14 +164,29 @@ instance ( HasForeign lang ftype api , HasForeignType lang ftype 'Text )
 
   foreignFor lang Proxy Proxy subR =
     foreignFor lang Proxy (Proxy :: Proxy api) subR -- was req, but that enforces an arg...
-    {-
-    where
-      req = subR{ _reqHeaders = HeaderArg arg : _reqHeaders subR }
-      arg = Arg
-        { _argName = PathSegment "Authorization"
-        , _argType = typeFor lang (Proxy :: Proxy ftype) (Proxy :: Proxy 'Text)
-        }
-      -}
+
+instance ToParamSchema SetCookie where
+  toParamSchema = mempty
+
+{-
+
+instance ToParamSchema SetCookie where
+  toParamSchema _ = error "bla"
+instance ( HasForeign lang ftype api , HasForeignType lang ftype 'Text )
+    => HasForeign lang ftype (Headers '[Header "Set-Cookie" SetCookie] a :> api) where
+  type Foreign ftype (Headers '[Header "Set-Cookie" SetCookie] a :> api) = Foreign ftype api
+  foreignFor lang Proxy Proxy subR = foreignFor lang Proxy (Proxy :: Proxy api) subR
+
+  class ToResponseHeader (h :: k) where
+  toResponseHeader :: Proxy h
+                      -> (Data.Swagger.Internal.HeaderName, Data.Swagger.Internal.Header)
+
+  {-# MINIMAL toResponseHeader #-}
+  	-- Defined in ‘Servant.Swagger.Internal’
+instance (GHC.TypeLits.KnownSymbol sym,
+          Data.Swagger.Internal.ParamSchema.ToParamSchema a) =>
+         ToResponseHeader (Header sym a)
+-}
 
 help :: IO ()
 help = putStrLn $ Data.Text.unpack $ layoutWithContext (Proxy :: Proxy API) unusedContext
