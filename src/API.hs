@@ -168,26 +168,6 @@ instance ( HasForeign lang ftype api , HasForeignType lang ftype 'Text )
 instance ToParamSchema SetCookie where
   toParamSchema = mempty
 
-{-
-
-instance ToParamSchema SetCookie where
-  toParamSchema _ = error "bla"
-instance ( HasForeign lang ftype api , HasForeignType lang ftype 'Text )
-    => HasForeign lang ftype (Headers '[Header "Set-Cookie" SetCookie] a :> api) where
-  type Foreign ftype (Headers '[Header "Set-Cookie" SetCookie] a :> api) = Foreign ftype api
-  foreignFor lang Proxy Proxy subR = foreignFor lang Proxy (Proxy :: Proxy api) subR
-
-  class ToResponseHeader (h :: k) where
-  toResponseHeader :: Proxy h
-                      -> (Data.Swagger.Internal.HeaderName, Data.Swagger.Internal.Header)
-
-  {-# MINIMAL toResponseHeader #-}
-  	-- Defined in ‘Servant.Swagger.Internal’
-instance (GHC.TypeLits.KnownSymbol sym,
-          Data.Swagger.Internal.ParamSchema.ToParamSchema a) =>
-         ToResponseHeader (Header sym a)
--}
-
 help :: IO ()
 help = putStrLn $ Data.Text.unpack $ layoutWithContext (Proxy :: Proxy API) unusedContext
   where

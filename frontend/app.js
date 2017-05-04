@@ -53,12 +53,10 @@ function getChoices_() {
   )}
 
 function login(a) {
-  console.log("called login")
-  console.log(a)
-  console.log(this)
   postLogin(
-    { username: this.username, password: this.password},
-    function(res) { console.log(res); app.user = res; },
+    { username: this.username, password: this.password },
+    function(res) { console.log(res); app.user = res;
+                    document.cookie = "Authorization=Bearer " + "lol"; },
     function(err) { console.log(err); app.errors.push("Could not log in "); }
   ) }
 
