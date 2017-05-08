@@ -45,7 +45,9 @@ getContext :: o -> IO CTX
 getContext _o = do
   k <- Auth.generateKey
   putStrLn $ "JWT KEY: " ++ show k -- TODO: Remove!
-  return $ Auth.defaultCookieSettings :. Auth.defaultJWTSettings k :. Servant.EmptyContext
+  return $ cs :. Auth.defaultJWTSettings k :. Servant.EmptyContext
+  where
+  cs = Auth.defaultCookieSettings { Auth.cookieIsSecure = Auth.NotSecure } -- TODO: Make this optional for dev-mode...
 
 newMemDBConnection :: IO (MemDB.MemDBConnection (A.M a))
 newMemDBConnection = MemDB.newMemDBConnection

@@ -15,12 +15,12 @@ module Lib
     , API
     ) where
 
-import Servant
+import Servant hiding (Secure, NotSecure)
+import Servant.Auth.Server
+import Control.Monad.IO.Class
 
 import API
 import DB.Class
-import Servant.Auth.Server
-import Control.Monad.IO.Class
 
 api :: Proxy API
 api = Proxy
@@ -43,9 +43,12 @@ login = checkCreds
 
 checkCreds :: JWTSettings -> CookieSettings -> Login -> Handler LoginHead
 checkCreds jwtSettings cookieSettings (Login "Ali Baba" "Open Sesame") = do
-   let usr = UserID (UUID "testid")
-   mcookie <- liftIO $ makeCookie cookieSettings jwtSettings usr
-   case mcookie of
-     Nothing     -> throwError err401
-     Just cookie -> return $ addHeader cookie usr
+   -- Usually you would ask a database for the user info. This is just a
+   -- regular servant handler, so you can follow your normal database access
+   -- patterns (including using 'enter').
+   let usr = UserID (UUID "AliBabaXXX")
+   mApplyCookies <- liftIO $ acceptLogin cookieSettings jwtSettings usr
+   case mApplyCookies of
+     Nothing           -> throwError err401
+     Just applyCookies -> return $ applyCookies usr
 checkCreds _ _ _ = throwError err401

@@ -21,9 +21,11 @@ import Network.Wai.Middleware.Cors
 import Network.Wai.Middleware.RequestLogger
 import Network.Wai.Middleware.Servant.Options
 
-type VanillaJS = "vanilla.js"   :> Get  '[PlainText] Text
+type VanillaJS = "api-vanilla.js"   :> Get  '[PlainText] Text
+type JQueryJS  = "api-jquery.js"    :> Get  '[PlainText] Text
 type Swag      = "swagger.json" :> Get  '[JSON]      Swagger
 type App       = VanillaJS
+            :<|> JQueryJS
             :<|> Swag
             :<|> API
             :<|> Raw
@@ -49,6 +51,7 @@ jsOptions = defCommonGeneratorOptions -- { urlPrefix = "http://localhost:8080" }
 serverWithSpec :: Database db M => db -> JWTSettings -> CookieSettings -> Server App
 serverWithSpec db js cs
      = return (jsForAPI api (vanillaJSWith jsOptions))
+  :<|> return (jsForAPI api (jqueryWith  jsOptions))
   :<|> return (toSwagger api)
   :<|> Lib.server db js cs
   :<|> serveDirectory ("frontend" :: String)

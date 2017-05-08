@@ -37,6 +37,7 @@ dependencies:
   - http-api-data
   - servant-auth-server
   - servant-auth-swagger
+  - cookie
 
 library:
   source-dirs: src

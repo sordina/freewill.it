@@ -1,4 +1,14 @@
 
+// Set the XSRF Header correctly on each request...
+// Powered by JQuery
+//
+$.ajaxPrefilter(function(opts, origOpts, xhr) {
+  var token = $.cookie('XSRF-TOKEN');
+  if( token ) {
+    xhr.setRequestHeader('X-XSRF-TOKEN', token);
+  }
+})
+
 function comp(name, props) {
   props.template = '#' + name;
   Vue.component(name, props);
@@ -55,8 +65,7 @@ function getChoices_() {
 function login(a) {
   postLogin(
     { username: this.username, password: this.password },
-    function(res) { console.log(res); app.user = res;
-                    document.cookie = "Authorization=Bearer " + "lol"; },
+    function(res) { console.log(res); app.user = res; },
     function(err) { console.log(err); app.errors.push("Could not log in "); }
   ) }
 

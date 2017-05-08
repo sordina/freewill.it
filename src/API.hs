@@ -147,20 +147,20 @@ type ChoiceAPI = Get     '[JSON] [Choice]
             :<|> ChoiceCapture :> "add"    :> ReqBody '[JSON] Option   :> Post '[JSON] Option
             :<|> ChoiceCapture :> "choose" :> ReqBody '[JSON] OptionID :> Post '[JSON] Decision
 
-type LoginHead = Headers '[Header "Set-Cookie" SetCookie] UserID
+type LoginHead = Headers '[Header "Set-Cookie" SetCookie, Header "Set-Cookie" SetCookie] UserID
 type LoginAPI  = "login" :> ReqBody '[JSON] Login :> Post '[JSON] LoginHead
 type AuthAPI   = LoginAPI
 
 type API = AuthAPI
-      :<|> "choices" :> Auth '[JWT] UserID :> ChoiceAPI
+      :<|> "choices" :> Auth '[JWT, Cookie] UserID :> ChoiceAPI
 
 -- Should be provided by a package soon?
 -- https://github.com/plow-technologies/servant-auth/issues/8
 -- Don't want to muck around with authorization for vanilla js...
 instance ( HasForeign lang ftype api , HasForeignType lang ftype 'Text )
-    => HasForeign lang ftype (Auth '[JWT] a :> api) where
+    => HasForeign lang ftype (Auth '[JWT, Cookie] a :> api) where
 
-  type Foreign ftype (Auth '[JWT] a :> api) = Foreign ftype api
+  type Foreign ftype (Auth '[JWT, Cookie] a :> api) = Foreign ftype api
 
   foreignFor lang Proxy Proxy subR =
     foreignFor lang Proxy (Proxy :: Proxy api) subR -- was req, but that enforces an arg...
