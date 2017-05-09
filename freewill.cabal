@@ -49,6 +49,7 @@ library
     , servant-auth-server
     , servant-auth-swagger
     , cookie
+    , groom
   exposed-modules:
       API
       Lib
@@ -59,6 +60,7 @@ library
   other-modules:
       DB.MockDB
       DB.StateDB
+      Network.Wai.Middleware.Debugging
       RedirectTo
       Util
       Paths_freewill
@@ -97,6 +99,7 @@ executable freewill
     , servant-auth-server
     , servant-auth-swagger
     , cookie
+    , groom
     , freewill
     , optparse-generic
   default-language: Haskell2010

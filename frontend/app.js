@@ -3,8 +3,8 @@
 // Powered by JQuery
 //
 $.ajaxPrefilter(function(opts, origOpts, xhr) {
-  $.cookie.raw = true;
-  var token = $.cookie('XSRF-TOKEN');
+  Cookies.raw = true;
+  var token = Cookies.get('XSRF-TOKEN');
   if( token ) {
     xhr.setRequestHeader('X-XSRF-TOKEN', token);
   }
@@ -15,7 +15,9 @@ function comp(name, props) {
   Vue.component(name, props);
 }
 
-function getChoice() { getChoice_(app, this.choice.choiceId); }
+function getChoice() {
+  getChoice_(app, this.choice.choiceId);
+}
 
 function getChoice_(o,i) {
   getChoicesByChoiceId(i,

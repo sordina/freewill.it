@@ -38,6 +38,7 @@ dependencies:
   - servant-auth-server
   - servant-auth-swagger
   - cookie
+  - groom
 
 library:
   source-dirs: src
