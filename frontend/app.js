@@ -3,6 +3,7 @@
 // Powered by JQuery
 //
 $.ajaxPrefilter(function(opts, origOpts, xhr) {
+  $.cookie.raw = true;
   var token = $.cookie('XSRF-TOKEN');
   if( token ) {
     xhr.setRequestHeader('X-XSRF-TOKEN', token);
