@@ -23,6 +23,7 @@ data Database = Memory | Postgres
 data Options = Options { port     :: Maybe Int
                        , database :: Maybe Database <?> "Memory | Postgres (Default)"
                        , jwtKey   :: Maybe String   <?> "JWT Key (Not Currently Used...)"
+                       , safeAuth :: Maybe Bool     <?> "HTTPS only for Auth (Default: True)"
                        }
   deriving (Show, Generic)
 
@@ -41,13 +42,16 @@ main = do
 
 type CTX = Context '[Auth.CookieSettings, Auth.JWTSettings]
 
-getContext :: o -> IO CTX
-getContext _o = do
+getContext :: Options -> IO CTX
+getContext o = do
   k <- Auth.generateKey
   putStrLn $ "JWT KEY: " ++ show k -- TODO: Remove!
   return $ cs :. Auth.defaultJWTSettings k :. Servant.EmptyContext
   where
-  cs = Auth.defaultCookieSettings { Auth.cookieIsSecure = Auth.NotSecure } -- TODO: Make this optional for dev-mode...
+  cs       = Auth.defaultCookieSettings { Auth.cookieIsSecure = security }
+  sa       = unHelpful (safeAuth o)
+  security | sa == Just False = Auth.NotSecure
+           | otherwise        = Auth.Secure
 
 newMemDBConnection :: IO (MemDB.MemDBConnection (A.M a))
 newMemDBConnection = MemDB.newMemDBConnection

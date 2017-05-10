@@ -30,19 +30,19 @@ import Data.Maybe
 data LocalState m = LS
 
 instance MonadState AppState m => Name (LocalState (m x)) m where
-  name LS = nameState
+  name LS _userid = nameState
 
 instance (MonadError ServantErr m, MonadState AppState m) => Add (LocalState (m x)) m where
-  add LS cid o = addState cid o
+  add LS _userid cid o = addState cid o
 
 instance (MonadError ServantErr m, MonadState AppState m) => View (LocalState (m x)) m where
-  view LS cid = viewState cid
+  view LS _userid cid = viewState cid
 
 instance (MonadError ServantErr m, MonadState AppState m) => Choose (LocalState (m x)) m where
-  choose LS cid oid = chooseState cid oid
+  choose LS _userid cid oid = chooseState cid oid
 
 instance MonadState AppState m => List (LocalState (m x)) m where
-  list LS = listState
+  list LS _userid = listState
 
 instance (MonadState AppState m, MonadError ServantErr m) => Database (LocalState (m x)) m where
 

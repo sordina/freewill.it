@@ -29,27 +29,22 @@ newMemDBConnection :: IO (MemDBConnection m)
 newMemDBConnection = MDBC <$> T.newTVarIO emptyAppState
 
 instance MonadIO m => Name (MemDBConnection (m x)) m where
-  name :: MemDBConnection (m x) -> Choice -> m Choice
-  name (MDBC a) c = doStateOnTVar (nameState c) a
+  name (MDBC a) _userid c = doStateOnTVar (nameState c) a
 
 instance (MonadIO m, MonadError ServantErr m)
       => View (MemDBConnection (m x)) m where
-  view :: MemDBConnection (m x) -> ChoiceID -> m ChoiceAPIData
-  view db cid = runDB db (viewState cid)
+  view db _userid cid = runDB db (viewState cid)
 
 instance (MonadIO m, MonadError ServantErr m)
       => Add (MemDBConnection (m x)) m where
-  add :: MemDBConnection (m x) -> ChoiceID -> Option -> m Option
-  add db cid o = runDB db (addState cid o)
+  add db _userid cid o = runDB db (addState cid o)
 
 instance (MonadIO m, MonadError ServantErr m)
       => Choose (MemDBConnection (m x)) m where
-  choose :: MemDBConnection (m x) -> ChoiceID -> OptionID -> m Decision
-  choose db cid oid = runDB db (chooseState cid oid)
+  choose db _userid cid oid = runDB db (chooseState cid oid)
 
 instance MonadIO m => List (MemDBConnection (m x)) m where
-  list :: MemDBConnection (m x) -> m [Choice]
-  list = doStateOnTVar listState . getConnection
+  list db _userid = doStateOnTVar listState $ getConnection db
 
 instance ( MonadIO m, MonadError ServantErr m ) => Database (MemDBConnection (m x)) m
 
@@ -59,11 +54,11 @@ instance ( MonadIO m, MonadError ServantErr m ) => Database (MemDBConnection (m 
 test :: IO (Either ServantErr ())
 test = runExceptT $ do
   d <- liftIO $ MDBC <$> T.newTVarIO emptyAppState :: ExceptT ServantErr IO (MemDBConnection (M ()))
-  c <- name d (Choice Nothing "TestChoice")
+  c <- name d undefined (Choice Nothing "TestChoice")
   i <- tryMaybe "Can't find choice" $ choiceId c
-  o <- add  d i (Option i Nothing "TestOption")
-  r <- list d
-  v <- view d i
+  o <- add  d undefined i (Option i Nothing "TestOption")
+  r <- list d undefined
+  v <- view d undefined i
   liftIO $ print c
   liftIO $ print o
   liftIO $ print r

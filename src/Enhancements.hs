@@ -53,7 +53,7 @@ jsOptions = defCommonGeneratorOptions -- { urlPrefix = "http://localhost:8080" }
 serverWithSpec :: Database db M => db -> JWTSettings -> CookieSettings -> Server App
 serverWithSpec db js cs
      = return (jsForAPI api (vanillaJSWith jsOptions))
-  :<|> return (jsForAPI api (jqueryWith  jsOptions))
+  :<|> return (jsForAPI api (jqueryWith    jsOptions))
   :<|> return (toSwagger api)
   :<|> Lib.server db js cs
   :<|> serveDirectory ("frontend" :: String)

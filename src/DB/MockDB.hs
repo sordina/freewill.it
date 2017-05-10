@@ -23,10 +23,10 @@ initialAppState = flip execState emptyAppState $ runExceptT $ makeInitialAppStat
 
 makeInitialAppState :: (Name db m, Choose db m, Add db m, MonadError ServantErr m) => db -> m ()
 makeInitialAppState db = do
-  c   <- name db (Choice Nothing "What size thing should I eat?")
+  c   <- name db undefined (Choice Nothing "What size thing should I eat?")
   cid <- tryMaybe "Can't find choice" $ choiceId c
-  _   <- add db cid (Option cid Nothing "Something bigger than my own head")
-  o   <- add db cid (Option cid Nothing "Something reasonable")
+  _   <- add db undefined cid (Option cid Nothing "Something bigger than my own head")
+  o   <- add db undefined cid (Option cid Nothing "Something reasonable")
   oid <- tryMaybe "Can't find option" $ optionId o
-  _   <- choose db cid oid
+  _   <- choose db undefined cid oid
   return ()

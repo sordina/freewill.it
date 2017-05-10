@@ -6,6 +6,7 @@ import Text.Groom
 
 debug :: W.Middleware
 debug wapp req respond = do
+  putStrLn ""
   putStrLn "Got Request"
   putStrLn $ unlines $ map ("    " ++) $ lines $ groom
     [ ( "requestMethod"          , show $ W.requestMethod          req )

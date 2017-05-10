@@ -38,11 +38,11 @@ connectFreewill = connectPostgreSQL "dbname='freewill'"
 
 -- DB.Class Instances
 
-instance MonadIO m => View   (PostgresConnection (m x)) m where view   (PGC db) cid       = liftIO $ postgresView    db cid
-instance MonadIO m => Name   (PostgresConnection (m x)) m where name   (PGC db) cdata     = liftIO $ postgresName    db cdata
-instance MonadIO m => Add    (PostgresConnection (m x)) m where add    (PGC db) cid odata = liftIO $ postgresAdd     db cid odata
-instance MonadIO m => Choose (PostgresConnection (m x)) m where choose (PGC db) cid oid   = liftIO $ postgresChoose  db cid oid
-instance MonadIO m => List   (PostgresConnection (m x)) m where list   (PGC db)           = liftIO $ postgresList    db
+instance MonadIO m => View   (PostgresConnection (m x)) m where view   (PGC db) _userid cid       = liftIO $ postgresView    db cid
+instance MonadIO m => Name   (PostgresConnection (m x)) m where name   (PGC db) _userid cdata     = liftIO $ postgresName    db cdata
+instance MonadIO m => Add    (PostgresConnection (m x)) m where add    (PGC db) _userid cid odata = liftIO $ postgresAdd     db cid odata
+instance MonadIO m => Choose (PostgresConnection (m x)) m where choose (PGC db) _userid cid oid   = liftIO $ postgresChoose  db cid oid
+instance MonadIO m => List   (PostgresConnection (m x)) m where list   (PGC db) _userid           = liftIO $ postgresList    db
 
 instance MonadIO m => Database (PostgresConnection (m x)) m
 
