@@ -22,25 +22,25 @@ choiceId=$(
 
 echo "Adding Option"
 optionId=$(
-  curl -v --fail -H "$auth" -H "Content-Type: application/json" \
-  --data "{\"optionChoiceId\":$choiceId, \"optionName\": \"No icecream will make me fat\"}" \
+  curl -s --fail -H "$auth" -H "Content-Type: application/json" \
+  --data "{\"optionChoiceId\":\"$choiceId\", \"optionName\": \"No icecream will make me fat\"}" \
   http://localhost:8080/choices/$choiceId/add | jq -r .optionId
   )
 
 echo "Adding Second Option"
-curl -v --fail -H "$auth" -H "Content-Type: application/json" \
-  --data "{\"optionChoiceId\":$choiceId, \"optionName\": \"Yes icecream is delicious\"}" \
+curl -s --fail -H "$auth" -H "Content-Type: application/json" \
+  --data "{\"optionChoiceId\":\"$choiceId\", \"optionName\": \"Yes icecream is delicious\"}" \
   http://localhost:8080/choices/$choiceId/add | jq .
 
 echo "Deciding on option $optionId"
-curl -v --fail -H "$auth" -H "Content-Type: application/json" \
-  --data "$optionId" \
+curl -s --fail -H "$auth" -H "Content-Type: application/json" \
+  --data "\"$optionId\"" \
   http://localhost:8080/choices/$choiceId/choose | jq .
 
 echo "Deciding on option $optionId again!"
 failure=$(
-  curl -v --fail -H "$auth" -H "Content-Type: application/json" \
-  --data "$optionId" \
+  curl -s --fail -H "$auth" -H "Content-Type: application/json" \
+  --data "\"$optionId\"" \
   http://localhost:8080/choices/$choiceId/choose || echo failed
   )
 
@@ -53,7 +53,7 @@ fi
 echo "Adding Third Option"
 failure=$(
   curl -s --fail -H "$auth" -H "Content-Type: application/json" \
-  --data "{\"optionChoiceId\":$choiceId, \"optionName\": \"Yes icecream is delicious\"}" \
+  --data "{\"optionChoiceId\":\"$choiceId\", \"optionName\": \"Yes icecream is delicious\"}" \
   http://localhost:8080/choices/$choiceId/add || echo failed
   )
 
@@ -72,7 +72,10 @@ curl -s --fail -H "$auth" http://localhost:8080/choices/$choiceId | jq .
 echo "Extensions"
 
 echo "Swagger API Spec"
-curl -s --fail -H "$auth" http://localhost:8080/swagger.json | jq .
+curl -s --fail -H "$auth" http://localhost:8080/swagger.json | jq . > /dev/null && echo Success
 
 echo "Vanilla JS"
-curl -s --fail -H "$auth" http://localhost:8080/vanilla.js
+curl -s --fail -H "$auth" http://localhost:8080/api-vanilla.js > /dev/null && echo Success
+
+echo "JQuery JS"
+curl -s --fail -H "$auth" http://localhost:8080/api-jquery.js > /dev/null && echo Success
