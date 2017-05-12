@@ -1,9 +1,9 @@
-resolver: lts-8.8
+resolver: lts-8.13
 packages:
   - '.'
   - location:
       git: git@github.com:sordina/servant-auth.git
-      commit: 9ecf1e6
+      commit: 9ecf1e638bdbc8f2bd194c413bb403978d8b981f
     subdirs: ["servant-auth-swagger", "servant-auth-server"]
     extra-dep: true
     # - location: /Users/lyndon/Code/servant-auth
@@ -14,6 +14,5 @@ extra-package-dbs: []
 extra-deps:
   - wai-util-0.8
   - http-accept-0.2
-  - servant-auth-0.2.6.1
-  - servant-auth-server-0.2.6.1
+  - servant-auth-0.2.7.0
   - servant-options-0.1.0.0

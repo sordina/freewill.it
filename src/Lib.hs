@@ -6,6 +6,7 @@
 {-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE GADTs #-}
 
 module Lib
     ( api
@@ -29,8 +30,8 @@ server db js cs = authAPI db js cs
              :<|> choiceServer db
 
 authAPI :: Database db M => db -> JWTSettings -> CookieSettings -> Server AuthAPI
-authAPI _db js cs = register' js cs
-               :<|> login'    js cs
+authAPI db js cs = registerAndSetCookies db js cs
+              :<|> loginAndSetCookies    db js cs
 
 choiceServer :: Database db M => db -> AuthResult UserID -> Server ChoiceAPI
 choiceServer db (Authenticated u)
@@ -42,15 +43,15 @@ choiceServer db (Authenticated u)
 
 choiceServer _db _authFail = throwAll err401
 
-register' :: JWTSettings -> CookieSettings -> Server RegisterAPI
-register' js cs d = checkLogin d >>= setCookie js cs
+registerAndSetCookies :: Database db M => db -> JWTSettings -> CookieSettings -> Server RegisterAPI
+registerAndSetCookies db js cs d = checkLogin db d >>= setCookie js cs
 
-login' :: JWTSettings -> CookieSettings -> Server LoginAPI
-login' js cs d = checkLogin d >>= setCookie js cs
+loginAndSetCookies :: Database db M => db -> JWTSettings -> CookieSettings -> Server LoginAPI
+loginAndSetCookies db js cs d = checkLogin db d >>= setCookie js cs
 
-checkLogin :: MonadError ServantErr m => LoginDetails -> m UserID
-checkLogin (LoginDetails "Ali Baba" "Open Sesame") = return $ UserID (UUID "AliBabaXXX")
-checkLogin _                                       = throwError err401
+checkLogin :: (m ~ M, MonadError ServantErr m, Database db m) => db -> LoginDetails -> m UserID
+checkLogin _db (LoginDetails "Ali Baba" "Open Sesame") = return $ UserID (UUID "AliBabaXXX") -- TODO: Only use DB
+checkLogin db  (LoginDetails un         pw           ) = login db un pw
 
 setCookie :: ( MonadError ServantErr m
              , AddHeader "Set-Cookie" SetCookie withOneCookie b

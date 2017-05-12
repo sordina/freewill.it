@@ -18,10 +18,12 @@ class Login    db m | db -> m where login    :: db -> String -> String          
 
 -- | Convenience Class Intended for Most Higer-Level Application Routes
 --
-class ( Name db m
-      , View db m
-      , Add db m
-      , Choose db m
-      , List db m
+class ( Name     db m
+      , View     db m
+      , Add      db m
+      , Choose   db m
+      , List     db m
+      , Register db m
+      , Login    db m
       )
       => Database db m where

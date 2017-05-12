@@ -46,6 +46,14 @@ instance (MonadIO m, MonadError ServantErr m)
 instance MonadIO m => List (MemDBConnection (m x)) m where
   list db _userid = doStateOnTVar listState $ getConnection db
 
+instance (MonadIO m, MonadError ServantErr m)
+      => Login (MemDBConnection (m x)) m where
+  login db fn ln = runDB db (loginState fn ln)
+
+instance (MonadIO m, MonadError ServantErr m)
+      => Register (MemDBConnection (m x)) m where
+  register db fn ln = runDB db (registerState fn ln)
+
 instance ( MonadIO m, MonadError ServantErr m ) => Database (MemDBConnection (m x)) m
 
 

@@ -10,6 +10,8 @@ module DB.StateDB
   , nameState
   , chooseState
   , viewState
+  , registerState
+  , loginState
   , emptyAppState
   , tryMaybe
   , LocalState(..)
@@ -40,6 +42,12 @@ instance (MonadError ServantErr m, MonadState AppState m) => View (LocalState (m
 
 instance (MonadError ServantErr m, MonadState AppState m) => Choose (LocalState (m x)) m where
   choose LS _userid cid oid = chooseState cid oid
+
+instance (MonadError ServantErr m, MonadState AppState m) => Register (LocalState (m x)) m where
+  register LS un pw = registerState un pw
+
+instance (MonadError ServantErr m, MonadState AppState m) => Login (LocalState (m x)) m where
+  login LS un pw = loginState un pw
 
 instance MonadState AppState m => List (LocalState (m x)) m where
   list LS _userid = listState
@@ -137,3 +145,29 @@ chooseState cid oid = do
 
 listState :: MonadState AppState m => m [Choice]
 listState = choices <$> get
+
+registerState :: (MonadError ServantErr m, MonadState AppState m) => String -> String -> m UserID
+registerState fn ln = do
+  as    <- get
+  let us = users as
+      u  = find (\x -> userFirstName x == fn && userLastName x == ln) us
+
+  when (isJust u) $ throwError (err401 {errReasonPhrase = "Can't create user"})
+
+  -- TODO: Fix this silly "UUID" nonsense, use a hash or something
+  --
+  let uid = UserID (UUID (fn ++ "~~" ++ ln))
+      n   = User (Just uid) fn ln
+
+  put $ as { users = n : us }
+
+  return uid
+
+loginState :: (MonadError ServantErr m, MonadState AppState m) => String -> String -> m UserID
+loginState fn ln = do
+  as    <- get
+  let us = users as
+  u     <- tryMaybe "Couldn't log-in"          $ find (\x -> userFirstName x == fn && userLastName x == ln) us
+  uid   <- tryMaybe "No ID for user... Weird." $ userId u
+
+  return uid

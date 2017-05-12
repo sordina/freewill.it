@@ -38,11 +38,13 @@ connectFreewill = connectPostgreSQL "dbname='freewill'"
 
 -- DB.Class Instances
 
-instance MonadIO m => View   (PostgresConnection (m x)) m where view   (PGC db) _userid cid       = liftIO $ postgresView    db cid
-instance MonadIO m => Name   (PostgresConnection (m x)) m where name   (PGC db) _userid cdata     = liftIO $ postgresName    db cdata
-instance MonadIO m => Add    (PostgresConnection (m x)) m where add    (PGC db) _userid cid odata = liftIO $ postgresAdd     db cid odata
-instance MonadIO m => Choose (PostgresConnection (m x)) m where choose (PGC db) _userid cid oid   = liftIO $ postgresChoose  db cid oid
-instance MonadIO m => List   (PostgresConnection (m x)) m where list   (PGC db) _userid           = liftIO $ postgresList    db
+instance MonadIO m => View     (PostgresConnection (m x)) m where view     (PGC db) _userid cid       = liftIO $ postgresView     db cid
+instance MonadIO m => Name     (PostgresConnection (m x)) m where name     (PGC db) _userid cdata     = liftIO $ postgresName     db cdata
+instance MonadIO m => Add      (PostgresConnection (m x)) m where add      (PGC db) _userid cid odata = liftIO $ postgresAdd      db cid odata
+instance MonadIO m => Choose   (PostgresConnection (m x)) m where choose   (PGC db) _userid cid oid   = liftIO $ postgresChoose   db cid oid
+instance MonadIO m => Register (PostgresConnection (m x)) m where register (PGC db)         fn ln     = liftIO $ postgresRegister db fn ln
+instance MonadIO m => Login    (PostgresConnection (m x)) m where login    (PGC db)         fn ln     = liftIO $ postgresLogin    db fn ln
+instance MonadIO m => List     (PostgresConnection (m x)) m where list     (PGC db) _userid           = liftIO $ postgresList     db
 
 instance MonadIO m => Database (PostgresConnection (m x)) m
 
@@ -111,6 +113,24 @@ postgresChoose conn cid oid = do
   where
   insertionQuery = [sql| insert into decisions (decisionchoiceid, decision) values (?,?) returning decisionid |]
   optionQuery    = [sql| select optionname from options where optionid = ? |]
+
+postgresRegister :: Connection -> String -> String -> IO UserID
+postgresRegister conn fn ln = do
+  x@[ ]         <- query conn lookupQuery    (fn, ln) -- Expect no users with matching names
+  [Only uid ]   <- query conn insertionQuery (fn, ln)
+  types x uid
+  where
+  types :: [Only UserID] -> UserID -> IO UserID
+  types _us u    = return u
+  lookupQuery    = [sql| select userid from users where firstname = ? and lastname = ? |]
+  insertionQuery = [sql| insert into users (firstname, lastname) values (?, ?) returning userid |]
+
+postgresLogin :: Connection -> String -> String -> IO UserID
+postgresLogin conn fn ln = do
+  [Only uid] <- query conn lookupQuery (fn, ln)
+  return uid
+  where
+  lookupQuery = [sql| select userid from users where firstname = ? and lastname = ? |]
 
 postgresList :: Connection -> IO [Choice]
 postgresList conn =
