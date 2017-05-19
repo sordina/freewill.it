@@ -58,6 +58,7 @@ library
       DB.MemDB
       DB.PostgresDB
   other-modules:
+      Data
       DB.MockDB
       DB.StateDB
       Network.Wai.Middleware.Debugging

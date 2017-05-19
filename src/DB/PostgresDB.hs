@@ -20,7 +20,7 @@ import Data.List
 import GHC.Generics
 import Control.Monad.IO.Class
 
-import API
+import Data
 import DB.Class
 
 -- FUNDAMENTAL DATATYPE!!!!

@@ -20,6 +20,7 @@ import Control.Monad.IO.Class
 import Control.Monad.Error.Class
 
 import API
+import Data
 import DB.Class
 
 api :: Proxy API
@@ -49,7 +50,7 @@ userInfo (Authenticated u) = return u
 userInfo _                 = throwAll err401
 
 registerAndSetCookies :: Database db M => db -> JWTSettings -> CookieSettings -> Server RegisterAPI
-registerAndSetCookies db js cs d = checkLogin db d >>= setCookie js cs
+registerAndSetCookies db js cs (LoginDetails un pw) = register db un pw >>= setCookie js cs
 
 loginAndSetCookies :: Database db M => db -> JWTSettings -> CookieSettings -> Server LoginAPI
 loginAndSetCookies db js cs d = checkLogin db d >>= setCookie js cs

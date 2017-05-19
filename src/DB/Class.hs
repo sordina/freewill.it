@@ -4,7 +4,7 @@
 
 module DB.Class where
 
-import API
+import Data
 
 -- | Individual Components of Database Functionality
 --

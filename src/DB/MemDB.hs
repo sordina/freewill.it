@@ -16,7 +16,8 @@ import qualified Control.Concurrent.STM      as T
 
 import DB.Class
 import DB.StateDB
-import API
+import Data
+import API (M)
 import Servant
 import Control.Monad.Except
 import Control.Monad.State

@@ -7,7 +7,7 @@ module DB.MockDB
   )
   where
 
-import API
+import Data
 import DB.Class
 import DB.StateDB
 import Control.Monad.Except

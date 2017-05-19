@@ -2,15 +2,28 @@
 
 set -euf -o pipefail
 
+un="user_$$"
+pw="pw_$$"
+
+echo "Register"
+token=$(
+  curl -v --fail -XPOST -H "Content-Type: application/json" \
+  --data "{\"username\":\"$un\", \"password\": \"$pw\"}" \
+  http://localhost:8080/register 2>&1 \
+  | grep 'Set-Cookie: JWT-Cookie' | sed 's/[^=]*=//; s/;.*//'
+)
+
+echo "Registration Token: $token"
+
 echo "Login"
 token=$(
   curl -v --fail -XPOST -H "Content-Type: application/json" \
-  --data '{"username":"Ali Baba", "password": "Open Sesame"}' \
+  --data "{\"username\":\"$un\", \"password\": \"$pw\"}" \
   http://localhost:8080/login 2>&1 \
   | grep 'Set-Cookie: JWT-Cookie' | sed 's/[^=]*=//; s/;.*//'
 )
 
-echo "Token: $token"
+echo "Login Token: $token"
 auth="Authorization: Bearer $token"
 
 echo "Adding Choice"
@@ -79,3 +92,5 @@ curl -s --fail -H "$auth" http://localhost:8080/api-vanilla.js > /dev/null && ec
 
 echo "JQuery JS"
 curl -s --fail -H "$auth" http://localhost:8080/api-jquery.js > /dev/null && echo Success
+
+echo "Test-Suite Completed"

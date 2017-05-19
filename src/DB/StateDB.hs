@@ -19,7 +19,7 @@ module DB.StateDB
   where
 
 import DB.Class
-import API
+import Data
 import Data.List
 import Servant
 import Control.Monad.Except
