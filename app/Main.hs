@@ -23,7 +23,7 @@ data Database = Memory | Postgres
 data Options = Options { port     :: Maybe Int
                        , database :: Maybe Database <?> "Memory | Postgres (Default)"
                        , jwtKey   :: Maybe String   <?> "JWT Key (Not Currently Used...)"
-                       , safeAuth :: Maybe Bool     <?> "HTTPS only for Auth (Default: True)"
+                       , safeAuth :: Maybe Bool     <?> "False | True (Default) - Mandate HTTPS for Auth"
                        }
   deriving (Show, Generic)
 
