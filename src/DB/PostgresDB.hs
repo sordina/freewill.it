@@ -127,7 +127,7 @@ postgresRegister conn fn ln = do
   types x uid
   where
   types :: [Only UserID] -> UserID -> IO UserID
-  types _us u    = return u
+  types _us      = return
   lookupQuery    = [sql| select userid from users where firstname = ? and lastname = ? |]
   insertionQuery = [sql| insert into users (firstname, lastname) values (?, ?) returning userid |]
 

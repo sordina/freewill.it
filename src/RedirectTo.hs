@@ -1,6 +1,5 @@
 {-# LANGUAGE DataKinds             #-}
 {-# LANGUAGE DeriveDataTypeable    #-}
-{-# LANGUAGE DeriveFunctor         #-}
 {-# LANGUAGE PolyKinds             #-}
 {-# LANGUAGE TypeOperators         #-}
 {-# LANGUAGE FlexibleInstances     #-}
@@ -14,7 +13,6 @@
 module RedirectTo ( RedirectTo ) where
 
 import GHC.TypeLits            (Symbol, KnownSymbol, symbolVal)
-import Data.Typeable           (Proxy(..))
 import Servant.Server.Internal (passToServer)
 import Servant
 import GHC.Generics

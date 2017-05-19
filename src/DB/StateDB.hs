@@ -176,7 +176,6 @@ loginState :: (MonadError ServantErr m, MonadState AppState m) => String -> Stri
 loginState fn ln = do
   as    <- get
   let us = users as
-  u     <- tryMaybe "Couldn't log-in"          $ find (\x -> userFirstName x == fn && userLastName x == ln) us
-  uid   <- tryMaybe "No ID for user... Weird." $ userId u
+  u     <- tryMaybe "Couldn't log-in" $ find (\x -> userFirstName x == fn && userLastName x == ln) us
 
-  return uid
+  tryMaybe "No ID for user... Weird." $ userId u
