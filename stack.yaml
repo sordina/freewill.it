@@ -3,16 +3,16 @@ packages:
   - '.'
   - location:
       git: git@github.com:sordina/servant-auth.git
-      commit: 9ecf1e638bdbc8f2bd194c413bb403978d8b981f
+      commit: 52f8436
     subdirs: ["servant-auth-swagger", "servant-auth-server"]
     extra-dep: true
-    # - location: /Users/lyndon/Code/servant-auth
-    # subdirs: ["servant-auth-server"]
-    # extra-dep: true
+  # - location: /Users/lyndon/Code/servant-auth
+  # - subdirs: ["servant-auth-server"]
+  # - extra-dep: true
 flags: {}
 extra-package-dbs: []
 extra-deps:
   - wai-util-0.8
   - http-accept-0.2
-  - servant-auth-0.2.7.0
   - servant-options-0.1.0.0
+  - servant-auth-0.2.7.0

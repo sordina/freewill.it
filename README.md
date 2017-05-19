@@ -16,6 +16,7 @@ Feeling limited to deciding to do things as an individual? Now you can decide to
 * <https://github.com/valderman/selda>
 * <https://hackage.haskell.org/package/monad-persist-0.0.1.2/docs/Control-Monad-Persist.html>
 * <https://www.reddit.com/r/haskell/comments/68qzlr/freerpersistent_freereffects_wrapper_for/>
+* <https://hackage.haskell.org/package/servant-docs-0.10/docs/Servant-Docs.html>
 
 ## Thoughts
 

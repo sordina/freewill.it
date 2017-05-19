@@ -7,7 +7,7 @@ token=$(
   curl -v --fail -XPOST -H "Content-Type: application/json" \
   --data '{"username":"Ali Baba", "password": "Open Sesame"}' \
   http://localhost:8080/login 2>&1 \
-  | grep 'Set-Cookie: JWT-Cookie' | sed 's/.*=//; s/;.*//'
+  | grep 'Set-Cookie: JWT-Cookie' | sed 's/[^=]*=//; s/;.*//'
 )
 
 echo "Token: $token"
