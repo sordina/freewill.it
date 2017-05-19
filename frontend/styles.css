@@ -68,6 +68,17 @@ input {
 	font-size: 80%;
 }
 
+.user-info {
+	position: absolute;
+	width: 180px;
+	height 15px;
+	border: 1px solid red;
+	border-width: 0 0 1px 1px;
+	text-align: center;
+	top: 0;
+	right: 0;
+}
+
 #login {
 	width: 300px;
 	margin: auto;

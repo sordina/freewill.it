@@ -12,6 +12,7 @@
   <body>
     <h1> <a href="/"><em>freewill.ai</em></a> </h1>
     <div id="app">
+      <user-info :user="user"></user-info>
       <table v-if="user">
         <tr>
           <td><choices-list :choices="choices"></choices-list></td>
@@ -79,6 +80,13 @@
     <script type="text/x-template" id="router">
       <choice-info v-if="choice" :choice="choice.theChoice" :options="choice.theOptions" :decision="choice.theDecision"></choice-info>
       <p v-else><em>Loading Choice...</em></p>
+    </script>
+
+    <script type="text/x-template" id="user-info">
+      <div class="user-info">
+        <p> User: {{user}} </p>
+        <p @click="logout" class="link"> <strong> Logout </strong> </p>
+      </div>
     </script>
 
     <script type="text/x-template" id="errors">

@@ -141,7 +141,8 @@ emptyAppState = AS [] [] [] []
 
 type ChoiceCapture = Capture "choiceId" ChoiceID
 
-type ChoiceAPI = Get     '[JSON] [Choice]
+type ChoiceAPI = "me" :> Get  '[JSON] UserID -- TODO: Move out of choices resource
+            :<|> Get     '[JSON] [Choice]
             :<|> ReqBody '[JSON] Choice    :> Post '[JSON] Choice
             :<|> ChoiceCapture             :> Get  '[JSON] ChoiceAPIData
             :<|> ChoiceCapture :> "add"    :> ReqBody '[JSON] Option   :> Post '[JSON] Option

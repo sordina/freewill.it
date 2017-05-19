@@ -22,27 +22,27 @@ function getChoice() {
 function getChoice_(o,i) {
   getChoicesByChoiceId(i,
     function(x){ o.choice = x; },
-    function(x){ app.errors.push("Couldn't fetch choice " + i); }
+    function(x){ push_error("Couldn't fetch choice " + i); }
   ); }
 
 function newChoice() {
   postChoices( {choiceName: this.choiceName},
     function(choiceResponse) { getChoices_() },
-    function(x) { console.log(x); app.errors.push("Could not create choice due to error "); }
+    function(x) { console.log(x); push_error("Could not create choice due to error "); }
   ) }
 
 function newOption() {
   var choiceId = this.choice.choiceId;
   var optName  = this.optionName;
   if(! optName || optName == "") {
-    app.errors.push("Please fill in the option name ");
+    push_error("Please fill in the option name ");
     return;
   }
   postChoicesByChoiceIdAdd(
     choiceId,
     { optionName: optName, optionChoiceId: choiceId},
     function(optionResponse) { getChoice.call({choice: {choiceId: choiceId}}); },
-    function(err)            { console.log(err); app.errors.push("Error adding option to choice "); }
+    function(err)            { console.log(err); push_error("Error adding option to choice "); }
   )}
 
 function decide() {
@@ -52,7 +52,7 @@ function decide() {
     choiceId,
     option.optionId,
     function()    { getChoice.call({choice: {choiceId: choiceId}}) },
-    function(err) { console.log(err); app.errors.push("Couldn't decide due to an error "); }
+    function(err) { console.log(err); push_error("Couldn't decide due to an error "); }
   )}
 
 function removeAllErrors() {
@@ -62,15 +62,36 @@ function removeAllErrors() {
 function getChoices_() {
   getChoices(
     function(cs)  { app.choices = cs; },
-    function(err) { console.log(err); app.errors.push("Error Listing Choices "); }
+    function(err) { console.log(err); push_error("Error Listing Choices "); }
   )}
+
+function getUser_() {
+  getChoicesMe(function(user) {
+    console.log("Found user: " + user);
+    app.user = user;
+    getChoices_();
+  }, function (err) {
+    console.log("Couldn't automatically log in");
+    console.log(err);
+  })
+}
 
 function login(a) {
   postLogin(
     { username: this.username, password: this.password },
     function(res) { console.log(res); app.user = res; },
-    function(err) { console.log(err); app.errors.push("Could not log in "); }
+    function(err) { console.log(err); push_error("Could not log in "); }
   ) }
+
+function logout() {
+  console.log('Logout not implemented yet.');
+  push_error('Logout not implemented yet.');
+  }
+
+function push_error(err) {
+  console.log(err);
+  app.errors.push(err);
+}
 
 comp('choices-list', { props:    ['choices', 'choiceName'],
                        methods:  { newChoice: newChoice },
@@ -94,6 +115,9 @@ comp('router',       { props:    ['choice'] });
 comp('login-dialog', { props:    ['username', 'password'],
                        methods:  { login: login }});
 
+comp('user-info',    { props:    ['user'],
+                       methods:  { logout: logout }});
+
 var routerComponent = {
   name:     "RouterTemplate",
   props:    [ 'choice' ],
@@ -116,4 +140,4 @@ var app = new Vue({
   data:   { choices: [], choice: null, errors: [], user: null }
 });
 
-getChoices_();
+getUser_();

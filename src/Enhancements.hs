@@ -20,7 +20,7 @@ import Data.Swagger (Swagger(..) )
 import Network.Wai.Middleware.Cors
 import Network.Wai.Middleware.RequestLogger
 import Network.Wai.Middleware.Servant.Options
-import qualified Network.Wai.Middleware.Debugging as L
+-- import qualified Network.Wai.Middleware.Debugging as L
 
 type VanillaJS = "api-vanilla.js"   :> Get  '[PlainText] Text
 type JQueryJS  = "api-jquery.js"    :> Get  '[PlainText] Text
@@ -34,8 +34,7 @@ type App       = VanillaJS
 
 app :: (HasContextEntry x JWTSettings, HasContextEntry x CookieSettings, Database db M)
     => Context x -> db -> Application
-app context db = L.debug
-               $ logStdoutDev
+app context db = logStdoutDev
                $ cors (const $ Just policy) -- simpleCors
                $ provideOptions api
                $ serveWithContext apiWithEnhancements context (serverWithSpec db js cs)

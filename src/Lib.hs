@@ -35,7 +35,8 @@ authAPI db js cs = registerAndSetCookies db js cs
 
 choiceServer :: Database db M => db -> AuthResult UserID -> Server ChoiceAPI
 choiceServer db (Authenticated u)
-     = list   db u
+     = return    u
+  :<|> list   db u
   :<|> name   db u
   :<|> view   db u
   :<|> add    db u
