@@ -29,7 +29,11 @@
           <tr> <td> <h3> LOGIN </h3> </td> </tr>
           <tr> <td><input v-model="username" placeholder="Username" /> </td> </tr>
           <tr> <td><input type="password" v-model="password" placeholder="Password" /> </td> </tr>
-          <tr> <td><input @click="login" type="submit" value="Login!" /> </td> </tr>
+          <tr> <td>
+            <input @click="login" type="submit" value="Login!" />
+            ...or...
+            <input @click="register" type="submit" value="Register!" />
+          </td> </tr>
         </table>
       </form>
     </script>

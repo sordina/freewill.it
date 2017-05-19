@@ -76,6 +76,17 @@ function getUser_() {
   })
 }
 
+function register(a) {
+  postRegister(
+    { username: this.username, password: this.password },
+    function(res) { console.log(res); app.user = res; getChoices_(); },
+    function(err) { console.log(err); push_error("Could not register"); }
+  )
+  console.log("Caught post register event");
+  console.log(a);
+  a.preventDefault();
+  }
+
 function login(a) {
   postLogin(
     { username: this.username, password: this.password },
@@ -117,7 +128,7 @@ comp('errors',       { props:    ['errors'],
 comp('router',       { props:    ['choice'] });
 
 comp('login-dialog', { props:    ['username', 'password'],
-                       methods:  { login: login }});
+                       methods:  { login: login, register: register }});
 
 comp('user-info',    { props:    ['user'],
                        methods:  { logout: logout }});
