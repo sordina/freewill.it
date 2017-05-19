@@ -21,12 +21,13 @@ initialAppState = flip execState emptyAppState $ runExceptT $ makeInitialAppStat
   where
   db = LS :: LocalState (ExceptT ServantErr (State AppState) a)
 
-makeInitialAppState :: (Name db m, Choose db m, Add db m, MonadError ServantErr m) => db -> m ()
+makeInitialAppState :: (Database db m, MonadError ServantErr m) => db -> m ()
 makeInitialAppState db = do
-  c   <- name db undefined (Choice Nothing "What size thing should I eat?")
+  u   <- register db "hello" "world"
+  c   <- name db u (Choice Nothing "What size thing should I eat?" (Just u))
   cid <- tryMaybe "Can't find choice" $ choiceId c
-  _   <- add db undefined cid (Option cid Nothing "Something bigger than my own head")
-  o   <- add db undefined cid (Option cid Nothing "Something reasonable")
+  _   <- add db u cid (Option cid Nothing "Something bigger than my own head" (Just u))
+  o   <- add db u cid (Option cid Nothing "Something reasonable" (Just u))
   oid <- tryMaybe "Can't find option" $ optionId o
-  _   <- choose db undefined cid oid
+  _   <- choose db u cid oid
   return ()

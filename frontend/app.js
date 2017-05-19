@@ -66,7 +66,7 @@ function getChoices_() {
   )}
 
 function getUser_() {
-  getChoicesMe(function(user) {
+  getMe(function(user) {
     console.log("Found user: " + user);
     app.user = user;
     getChoices_();
@@ -79,9 +79,13 @@ function getUser_() {
 function login(a) {
   postLogin(
     { username: this.username, password: this.password },
-    function(res) { console.log(res); app.user = res; },
+    function(res) { console.log(res); app.user = res; getChoices_(); },
     function(err) { console.log(err); push_error("Could not log in "); }
-  ) }
+  )
+  console.log("Caught post login event");
+  console.log(a);
+  a.preventDefault();
+  }
 
 function logout() {
   console.log('Logout not implemented yet.');

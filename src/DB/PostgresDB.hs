@@ -38,13 +38,13 @@ connectFreewill = connectPostgreSQL "dbname='freewill'"
 
 -- DB.Class Instances
 
-instance MonadIO m => View     (PostgresConnection (m x)) m where view     (PGC db) _userid cid       = liftIO $ postgresView     db cid
-instance MonadIO m => Name     (PostgresConnection (m x)) m where name     (PGC db) _userid cdata     = liftIO $ postgresName     db cdata
-instance MonadIO m => Add      (PostgresConnection (m x)) m where add      (PGC db) _userid cid odata = liftIO $ postgresAdd      db cid odata
-instance MonadIO m => Choose   (PostgresConnection (m x)) m where choose   (PGC db) _userid cid oid   = liftIO $ postgresChoose   db cid oid
-instance MonadIO m => Register (PostgresConnection (m x)) m where register (PGC db)         fn ln     = liftIO $ postgresRegister db fn ln
-instance MonadIO m => Login    (PostgresConnection (m x)) m where login    (PGC db)         fn ln     = liftIO $ postgresLogin    db fn ln
-instance MonadIO m => List     (PostgresConnection (m x)) m where list     (PGC db) _userid           = liftIO $ postgresList     db
+instance MonadIO m => View     (PostgresConnection (m x)) m where view     (PGC db) uid cid       = liftIO $ postgresView     db uid cid
+instance MonadIO m => Name     (PostgresConnection (m x)) m where name     (PGC db) uid cdata     = liftIO $ postgresName     db uid cdata
+instance MonadIO m => Add      (PostgresConnection (m x)) m where add      (PGC db) uid cid odata = liftIO $ postgresAdd      db uid cid odata
+instance MonadIO m => Choose   (PostgresConnection (m x)) m where choose   (PGC db) uid cid oid   = liftIO $ postgresChoose   db uid cid oid
+instance MonadIO m => List     (PostgresConnection (m x)) m where list     (PGC db) uid           = liftIO $ postgresList     db uid
+instance MonadIO m => Register (PostgresConnection (m x)) m where register (PGC db)     fn ln     = liftIO $ postgresRegister db fn ln
+instance MonadIO m => Login    (PostgresConnection (m x)) m where login    (PGC db)     fn ln     = liftIO $ postgresLogin    db fn ln
 
 instance MonadIO m => Database (PostgresConnection (m x)) m
 
@@ -60,59 +60,65 @@ instance FromRow DecisionRow
 
 -- Implementation
 
-makeDecision :: [Option] -> [DecisionRow] -> Maybe Decision
-makeDecision _os []   = Nothing
-makeDecision [] _ds   = Nothing
-makeDecision os (d:_) = case o of Just o' -> Just $ Decision cid did o'
-                                  Nothing -> Nothing
+makeDecision :: UserID -> [Option] -> [DecisionRow] -> Maybe Decision
+makeDecision _uid _os []   = Nothing
+makeDecision _uid [] _ds   = Nothing
+makeDecision uid  os (d:_) = case o of Just o' -> Just $ Decision cid did o' (Just uid)
+                                       Nothing -> Nothing
   where
   oid = oid' d
   cid = cid' d
   did = did' d
   o   = find ((==Just oid).optionId) os
 
-postgresView  :: Connection -> ChoiceID -> IO ChoiceAPIData
-postgresView conn i = do
-  [ myChoice ] <- query conn choiceQuery   (Only i) -- TODO: Introduce failure context
-  os           <- query conn optionQuery   (Only i)
-  ds           <- query conn decisionQuery (Only i)
-  let d         = makeDecision os ds
+postgresView  :: Connection -> UserID -> ChoiceID -> IO ChoiceAPIData
+postgresView conn uid cid = do
+  [ myChoice ] <- query conn choiceQuery   (cid, uid) -- TODO: Introduce failure context
+  os           <- query conn optionQuery   (cid, uid)
+  ds           <- query conn decisionQuery (cid, uid)
+  let d         = makeDecision uid os ds
   return $ CAD myChoice os d
   where
-  choiceQuery   = [sql| select choiceid, choicename
-                        from choices where choiceid = ?  |]
-  optionQuery   = [sql| select optionChoiceId, optionid, optionName
-                        from options where optionChoiceId = ?
+  choiceQuery   = [sql| select choiceid, choicename, userid
+                        from choices where choiceid = ? and userid = ?  |]
+  optionQuery   = [sql| select optionChoiceId, optionid, optionName, userid
+                        from options where optionChoiceId = ? and userid = ?
                         order by created desc |]
   decisionQuery = [sql| select decisionChoiceId, decisionid, decision
-                        from decisions where decisionChoiceId = ? |]
+                        from decisions where decisionChoiceId = ? and userid = ? |]
 
-postgresName :: Connection -> Choice -> IO Choice
-postgresName conn c = do
-  [ Only cid ] <- query conn insertionQuery (Only (choiceName c))
-  return $ c { choiceId = Just cid }
+postgresName :: Connection -> UserID -> Choice -> IO Choice
+postgresName conn uid c = do
+  [ Only cid ] <- query conn insertionQuery (choiceName c, uid)
+  return $ c { choiceId = Just cid, choiceUserId = Just uid }
   where
-  insertionQuery = [sql| insert into choices (choicename) values (?) returning choiceid |]
+  insertionQuery = [sql| insert into choices (choicename, userid) values (?,?) returning choiceid |]
 
--- TODO: Add checks for data security
-postgresAdd :: Connection -> ChoiceID -> Option -> IO Option
-postgresAdd conn _cid o = do
+postgresAdd :: Connection -> UserID -> ChoiceID -> Option -> IO Option
+postgresAdd conn uid _cid o = do
   let ocid      = optionChoiceId o
-  [ Only oid ] <- query conn insertionQuery (optionName o, ocid)
-  return $ o { optionId = Just oid }
+  [ Only oid ] <- query conn insertionQuery (optionName o, ocid, uid)
+  return $ o { optionId = Just oid, optionUserId = Just uid }
   where
-  insertionQuery = [sql| insert into options (optionname, optionchoiceid)
-                         values (?,?) returning optionid |]
+  insertionQuery = [sql| insert into options (optionname, optionchoiceid, userid)
+                         values (?,?,?) returning optionid |]
 
-postgresChoose :: Connection -> ChoiceID -> OptionID -> IO Decision
-postgresChoose conn cid oid = do
-  [ Only did   ] <- query conn insertionQuery (cid, oid)
-  [ Only oName ] <- query conn optionQuery    (Only oid)
-  let o           = Option cid (Just oid) oName
-  return Decision { decisionId = did, decisionChoiceId = cid, decision = o }
+postgresChoose :: Connection -> UserID -> ChoiceID -> OptionID -> IO Decision
+postgresChoose conn uid cid oid = do
+  [ Only did   ] <- query conn insertionQuery (cid, oid, uid)
+  [ Only oName ] <- query conn optionQuery    (oid, uid)
+  let o           = Option cid (Just oid) oName (Just uid)
+  return Decision { decisionId = did, decisionChoiceId = cid, decision = o, decisionUserId = Just uid }
   where
-  insertionQuery = [sql| insert into decisions (decisionchoiceid, decision) values (?,?) returning decisionid |]
-  optionQuery    = [sql| select optionname from options where optionid = ? |]
+  insertionQuery = [sql| insert into decisions (decisionchoiceid, decision, userid) values (?,?,?) returning decisionid |]
+  optionQuery    = [sql| select optionname from options where optionid = ? and userid = ? |]
+
+postgresList :: Connection -> UserID -> IO [Choice]
+postgresList conn uid = query conn selectionquery (Only uid)
+  where
+  selectionquery = [sql| select choiceid, choicename, userid from choices
+                         where userid = ?
+                         order by created desc |]
 
 postgresRegister :: Connection -> String -> String -> IO UserID
 postgresRegister conn fn ln = do
@@ -131,8 +137,3 @@ postgresLogin conn fn ln = do
   return uid
   where
   lookupQuery = [sql| select userid from users where firstname = ? and lastname = ? |]
-
-postgresList :: Connection -> IO [Choice]
-postgresList conn =
-  query_ conn [sql| select choiceid, choicename from choices
-                    order by created desc |]

@@ -29,22 +29,22 @@ newMemDBConnection :: IO (MemDBConnection m)
 newMemDBConnection = MDBC <$> T.newTVarIO emptyAppState
 
 instance MonadIO m => Name (MemDBConnection (m x)) m where
-  name (MDBC a) _userid c = doStateOnTVar (nameState c) a
+  name (MDBC a) uid c = doStateOnTVar (nameState uid c) a
 
 instance (MonadIO m, MonadError ServantErr m)
       => View (MemDBConnection (m x)) m where
-  view db _userid cid = runDB db (viewState cid)
+  view db uid cid = runDB db (viewState uid cid)
 
 instance (MonadIO m, MonadError ServantErr m)
       => Add (MemDBConnection (m x)) m where
-  add db _userid cid o = runDB db (addState cid o)
+  add db uid cid o = runDB db (addState uid cid o)
 
 instance (MonadIO m, MonadError ServantErr m)
       => Choose (MemDBConnection (m x)) m where
-  choose db _userid cid oid = runDB db (chooseState cid oid)
+  choose db uid cid oid = runDB db (chooseState uid cid oid)
 
 instance MonadIO m => List (MemDBConnection (m x)) m where
-  list db _userid = doStateOnTVar listState $ getConnection db
+  list db uid = doStateOnTVar (listState uid) $ getConnection db
 
 instance (MonadIO m, MonadError ServantErr m)
       => Login (MemDBConnection (m x)) m where
@@ -62,11 +62,12 @@ instance ( MonadIO m, MonadError ServantErr m ) => Database (MemDBConnection (m 
 test :: IO (Either ServantErr ())
 test = runExceptT $ do
   d <- liftIO $ MDBC <$> T.newTVarIO emptyAppState :: ExceptT ServantErr IO (MemDBConnection (M ()))
-  c <- name d undefined (Choice Nothing "TestChoice")
+  u <- register d "hello" "world"
+  c <- name d u (Choice Nothing "TestChoice" (Just u))
   i <- tryMaybe "Can't find choice" $ choiceId c
-  o <- add  d undefined i (Option i Nothing "TestOption")
-  r <- list d undefined
-  v <- view d undefined i
+  o <- add  d u i (Option i Nothing "TestOption" (Just u))
+  r <- list d u
+  v <- view d u i
   liftIO $ print c
   liftIO $ print o
   liftIO $ print r

@@ -59,20 +59,23 @@ data User = User
   } deriving (Eq, Show, Generic)
 
 data Choice = Choice
-  { choiceId   :: Maybe ChoiceID
-  , choiceName :: String
+  { choiceId     :: Maybe ChoiceID
+  , choiceName   :: String
+  , choiceUserId :: Maybe UserID
   } deriving (Eq, Show, Generic)
 
 data Option = Option
   { optionChoiceId :: ChoiceID
   , optionId       :: Maybe OptionID
   , optionName     :: String
+  , optionUserId   :: Maybe UserID
   } deriving (Eq, Show, Generic)
 
 data Decision = Decision
   { decisionChoiceId :: ChoiceID
   , decisionId       :: Maybe DecisionID
   , decision         :: Option
+  , decisionUserId   :: Maybe UserID
   } deriving (Eq, Show, Generic)
 
 data ChoiceAPIData = CAD
@@ -141,8 +144,7 @@ emptyAppState = AS [] [] [] []
 
 type ChoiceCapture = Capture "choiceId" ChoiceID
 
-type ChoiceAPI = "me" :> Get  '[JSON] UserID -- TODO: Move out of choices resource
-            :<|> Get     '[JSON] [Choice]
+type ChoiceAPI = Get     '[JSON] [Choice]
             :<|> ReqBody '[JSON] Choice    :> Post '[JSON] Choice
             :<|> ChoiceCapture             :> Get  '[JSON] ChoiceAPIData
             :<|> ChoiceCapture :> "add"    :> ReqBody '[JSON] Option   :> Post '[JSON] Option
@@ -152,7 +154,9 @@ type LoginHead   = Headers '[Header "Set-Cookie" SetCookie, Header "Set-Cookie" 
 type LoginAPI    = "login"     :>   ReqBody '[JSON] LoginDetails :> Post '[JSON] LoginHead
 type RegisterAPI = "register"  :>   ReqBody '[JSON] LoginDetails :> Post '[JSON] LoginHead
 type AuthAPI     = RegisterAPI :<|> LoginAPI
-type API         = AuthAPI     :<|> "choices" :> Auth '[JWT, Cookie] UserID :> ChoiceAPI
+type API         = AuthAPI
+              :<|> "me"      :> Auth '[JWT, Cookie] UserID :> Get  '[JSON] UserID
+              :<|> "choices" :> Auth '[JWT, Cookie] UserID :> ChoiceAPI
 
 -- Should be provided by a package soon?
 -- https://github.com/plow-technologies/servant-auth/issues/8

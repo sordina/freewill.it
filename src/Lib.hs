@@ -26,7 +26,8 @@ api :: Proxy API
 api = Proxy
 
 server :: Database db M => db -> JWTSettings -> CookieSettings -> Server API
-server db js cs = authAPI db js cs
+server db js cs = authAPI      db js cs
+             :<|> userInfo
              :<|> choiceServer db
 
 authAPI :: Database db M => db -> JWTSettings -> CookieSettings -> Server AuthAPI
@@ -35,14 +36,17 @@ authAPI db js cs = registerAndSetCookies db js cs
 
 choiceServer :: Database db M => db -> AuthResult UserID -> Server ChoiceAPI
 choiceServer db (Authenticated u)
-     = return    u
-  :<|> list   db u
+     = list   db u
   :<|> name   db u
   :<|> view   db u
   :<|> add    db u
   :<|> choose db u
 
 choiceServer _db _authFail = throwAll err401
+
+userInfo :: (ThrowAll (m a), Monad m) => AuthResult a -> m a
+userInfo (Authenticated u) = return u
+userInfo _                 = throwAll err401
 
 registerAndSetCookies :: Database db M => db -> JWTSettings -> CookieSettings -> Server RegisterAPI
 registerAndSetCookies db js cs d = checkLogin db d >>= setCookie js cs
