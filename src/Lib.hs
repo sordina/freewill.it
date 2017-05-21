@@ -29,6 +29,7 @@ api = Proxy
 server :: Database db M => db -> JWTSettings -> CookieSettings -> Server API
 server db js cs = authAPI      db js cs
              :<|> userInfo
+             :<|> logout
              :<|> choiceServer db
 
 authAPI :: Database db M => db -> JWTSettings -> CookieSettings -> Server AuthAPI
@@ -48,6 +49,12 @@ choiceServer _db _authFail = throwAll err401
 userInfo :: (ThrowAll (m a), Monad m) => AuthResult a -> m a
 userInfo (Authenticated u) = return u
 userInfo _                 = throwAll err401
+
+logout :: (ThrowAll (m a)) => AuthResult t -> m a
+logout (Authenticated _) = throwAll $ err302 { errHeaders = [ ("Location", "/")
+                                                            , ("Set-Cookie", "JWT-Cookie=deleted; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT" ) ] }
+logout _                 = throwAll err401
+
 
 registerAndSetCookies :: Database db M => db -> JWTSettings -> CookieSettings -> Server RegisterAPI
 registerAndSetCookies db js cs (LoginDetails un pw) = register db un pw >>= setCookie js cs

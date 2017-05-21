@@ -89,7 +89,7 @@
     </script>
 
     <script type="text/x-template" id="user-info">
-      <div class="user-info">
+      <div class="user-info" v-if="user" >
         <p> User: {{user}} </p>
         <p @click="logout" class="link"> <strong> Logout </strong> </p>
       </div>

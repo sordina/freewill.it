@@ -38,6 +38,7 @@ type RegisterAPI = "register"  :>   ReqBody '[JSON] LoginDetails :> Post '[JSON]
 type AuthAPI     = RegisterAPI :<|> LoginAPI
 type API         = AuthAPI
               :<|> "me"      :> Auth '[JWT, Cookie] UserID :> Get  '[JSON] UserID
+              :<|> "logout"  :> Auth '[JWT, Cookie] UserID :> Post '[JSON] UserID -- TODO: Use empty response somehow
               :<|> "choices" :> Auth '[JWT, Cookie] UserID :> ChoiceAPI
 
 -- Should be provided by a package soon?

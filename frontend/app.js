@@ -99,9 +99,17 @@ function login(a) {
   }
 
 function logout() {
-  console.log('Logout not implemented yet.');
-  push_error('Logout not implemented yet.');
+  function resetApp() {
+    app.choices = [];
+    app.choice  = null;
+    app.errors  = [];
+    app.user    = null;
+    app.errors.push("Logged Out");
   }
+  postLogout(
+    function(res) { resetApp(); },
+    function(err) { resetApp(); }
+  ) }
 
 function push_error(err) {
   console.log(err);
