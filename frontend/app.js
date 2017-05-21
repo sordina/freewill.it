@@ -105,6 +105,7 @@ function logout() {
     app.errors  = [];
     app.user    = null;
     app.errors.push("Logged Out");
+    router.push("/");
   }
   postLogout(
     function(res) { resetApp(); },
