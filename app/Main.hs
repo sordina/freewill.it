@@ -9,20 +9,24 @@ import Network.Wai.Handler.Warp
 import Options.Generic
 import Data.Maybe
 import Servant ( Context( (:.) ) )
+import Data.Aeson (encode, decode)
+import System.Directory (doesFileExist)
 
 import qualified Servant
-import qualified Enhancements        as E
-import qualified API                 as A
-import qualified DB.MemDB            as MemDB
-import qualified DB.PostgresDB       as PostgresDB
-import qualified Servant.Auth.Server as Auth
+import qualified Enhancements         as E
+import qualified API                  as A
+import qualified DB.MemDB             as MemDB
+import qualified DB.PostgresDB        as PostgresDB
+import qualified Servant.Auth.Server  as Auth
+import qualified Crypto.JOSE.JWK      as J
+import qualified Data.ByteString.Lazy as BL
 
 data Database = Memory | Postgres
   deriving (Eq, Show, Read, Generic)
 
 data Options = Options { port     :: Maybe Int
                        , database :: Maybe Database <?> "Memory | Postgres (Default)"
-                       , jwtKey   :: Maybe String   <?> "JWT Key (Not Currently Used...)"
+                       , jwtKey   :: Maybe FilePath <?> "JWT Key FilePath"
                        , safeAuth :: Maybe Bool     <?> "False | True (Default) - Mandate HTTPS for Auth"
                        }
   deriving (Show, Generic)
@@ -42,10 +46,23 @@ main = do
 
 type CTX = Context '[Auth.CookieSettings, Auth.JWTSettings]
 
+loadOrGenerateAndSaveKey :: Maybe FilePath -> IO J.JWK
+loadOrGenerateAndSaveKey Nothing   = Auth.generateKey
+loadOrGenerateAndSaveKey (Just fp) = do
+  fe <- doesFileExist fp
+  if fe then fromJust . decode <$> BL.readFile fp
+        else generateAndSaveKey fp
+
+generateAndSaveKey :: FilePath -> IO J.JWK
+generateAndSaveKey fp = do
+  k <- Auth.generateKey
+  putStrLn $ "Writing JWK to " ++ fp
+  BL.writeFile fp (encode k)
+  return k
+
 getContext :: Options -> IO CTX
 getContext o = do
-  k <- Auth.generateKey
-  putStrLn $ "JWT KEY: " ++ show k -- TODO: Remove!
+  k <- loadOrGenerateAndSaveKey (unHelpful (jwtKey o))
   return $ cs :. Auth.defaultJWTSettings k :. Servant.EmptyContext
   where
   cs       = Auth.defaultCookieSettings { Auth.cookieIsSecure = security }

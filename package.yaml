@@ -39,6 +39,8 @@ dependencies:
   - servant-auth-swagger
   - cookie
   - groom
+  - directory
+  - jose
 
 library:
   source-dirs: src

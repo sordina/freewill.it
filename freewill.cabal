@@ -50,6 +50,8 @@ library
     , servant-auth-swagger
     , cookie
     , groom
+    , directory
+    , jose
   exposed-modules:
       API
       Lib
@@ -101,6 +103,8 @@ executable freewill
     , servant-auth-swagger
     , cookie
     , groom
+    , directory
+    , jose
     , freewill
     , optparse-generic
   default-language: Haskell2010
