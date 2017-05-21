@@ -31,6 +31,9 @@ To get up and running quickly for local development with a persisted JWK key, us
 
 > stack run -- -- --database Memory --safeAuth False --jwtKey key.jwk
 
+This allows for an in-memory database with no existing users, no requirement for HTTPs,
+and a persisted key, for resumption of sessions between server restarts.
+
 
 If you want to run using postgres, you can pass
 

@@ -104,9 +104,10 @@ function logout() {
     app.choice  = null;
     app.errors  = [];
     app.user    = null;
-    router.replace("/");
+    router.push("/");
     // app.errors.push("Logged Out");
   }
+  // TODO: Currently the response is an error, but we should change that on the backend...
   postLogout(
     function(res) { resetApp(); },
     function(err) { resetApp(); }

@@ -12,9 +12,9 @@ module DB.StateDB
   , viewState
   , registerState
   , loginState
-  , emptyAppState
   , tryMaybe
   , LocalState(..)
+  , emptyAppState
   )
   where
 
@@ -179,3 +179,6 @@ loginState fn ln = do
   u     <- tryMaybe "Couldn't log-in" $ find (\x -> userFirstName x == fn && userLastName x == ln) us
 
   tryMaybe "No ID for user... Weird." $ userId u
+
+emptyAppState :: AppState
+emptyAppState = AS [] [] [] []

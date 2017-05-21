@@ -38,15 +38,16 @@ connectFreewill = connectPostgreSQL "dbname='freewill'"
 
 -- DB.Class Instances
 
-instance MonadIO m => View     (PostgresConnection (m x)) m where view     (PGC db) uid cid       = liftIO $ postgresView     db uid cid
-instance MonadIO m => Name     (PostgresConnection (m x)) m where name     (PGC db) uid cdata     = liftIO $ postgresName     db uid cdata
-instance MonadIO m => Add      (PostgresConnection (m x)) m where add      (PGC db) uid cid odata = liftIO $ postgresAdd      db uid cid odata
-instance MonadIO m => Choose   (PostgresConnection (m x)) m where choose   (PGC db) uid cid oid   = liftIO $ postgresChoose   db uid cid oid
-instance MonadIO m => List     (PostgresConnection (m x)) m where list     (PGC db) uid           = liftIO $ postgresList     db uid
-instance MonadIO m => Register (PostgresConnection (m x)) m where register (PGC db)     fn ln     = liftIO $ postgresRegister db fn ln
-instance MonadIO m => Login    (PostgresConnection (m x)) m where login    (PGC db)     fn ln     = liftIO $ postgresLogin    db fn ln
+type PC x = PostgresConnection x -- Shorthand
 
-instance MonadIO m => Database (PostgresConnection (m x)) m
+instance MonadIO m => View     (PC (m x)) m where view     (PGC db) uid cid       = liftIO $ postgresView     db uid cid
+instance MonadIO m => Name     (PC (m x)) m where name     (PGC db) uid cdata     = liftIO $ postgresName     db uid cdata
+instance MonadIO m => Add      (PC (m x)) m where add      (PGC db) uid cid odata = liftIO $ postgresAdd      db uid cid odata
+instance MonadIO m => Choose   (PC (m x)) m where choose   (PGC db) uid cid oid   = liftIO $ postgresChoose   db uid cid oid
+instance MonadIO m => List     (PC (m x)) m where list     (PGC db) uid           = liftIO $ postgresList     db uid
+instance MonadIO m => Register (PC (m x)) m where register (PGC db)     fn ln     = liftIO $ postgresRegister db fn ln
+instance MonadIO m => Login    (PC (m x)) m where login    (PGC db)     fn ln     = liftIO $ postgresLogin    db fn ln
+instance MonadIO m => Database (PC (m x)) m
 
 -- Helpers
 

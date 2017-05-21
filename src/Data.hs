@@ -29,22 +29,17 @@ import Database.PostgreSQL.Simple.ToField
 import qualified Data.ByteString.Char8 as BC
 import Database.PostgreSQL.Simple.TypeInfo.Static (typoid, uuid)
 
+
+-- ID Wrappers
+
 newtype UUID       = UUID       String deriving (Eq, Show, Generic, FromHttpApiData)
 newtype UserID     = UserID     UUID   deriving (Eq, Show, Generic, FromField, ToField)
 newtype ChoiceID   = ChoiceID   UUID   deriving (Eq, Show, Generic, FromField, ToField)
 newtype OptionID   = OptionID   UUID   deriving (Eq, Show, Generic, FromField, ToField)
 newtype DecisionID = DecisionID UUID   deriving (Eq, Show, Generic, FromField, ToField)
 
-instance FromField UUID where
-  fromField f mdata =
-    if typeOid f /= typoid uuid
-      then returnError Incompatible f ""
-      else case BC.unpack <$> mdata of
-       Nothing  -> returnError UnexpectedNull f ""
-       Just dat -> return (UUID dat)
 
-instance ToField UUID where
-  toField (UUID s) = Escape (BC.pack s)
+-- Domain Data Types
 
 data User = User
   { userId        :: Maybe UserID
@@ -83,6 +78,27 @@ data LoginDetails = LoginDetails
   , password :: String
   } deriving (Eq, Show, Generic)
 
+data AppState = AS {
+    options   :: [ Option ]
+  , choices   :: [ Choice ]
+  , decisions :: [ Decision ]
+  , users     :: [ User ]
+  } deriving (Eq, Show, Generic)
+
+
+-- Instances
+
+instance FromField UUID where
+  fromField f mdata =
+    if typeOid f /= typoid uuid
+      then returnError Incompatible f ""
+      else case BC.unpack <$> mdata of
+       Nothing  -> returnError UnexpectedNull f ""
+       Just dat -> return (UUID dat)
+
+instance ToField UUID where
+  toField (UUID s) = Escape (BC.pack s)
+
 instance ToSchema UUID
 instance ToSchema UserID
 instance ToSchema User
@@ -106,6 +122,17 @@ instance ToParamSchema OptionID
 instance ToJWT   UserID
 instance FromJWT UserID
 
+instance FromHttpApiData UserID where
+  parseHeader     h = UserID <$> parseHeaderWithPrefix "UserID " h
+  parseQueryParam p = UserID <$> parseQueryParam p
+
+instance FromHttpApiData ChoiceID where
+  parseHeader     h = ChoiceID <$> parseHeaderWithPrefix "UserID " h
+  parseQueryParam p = ChoiceID <$> parseQueryParam p
+
+
+-- JSON Derivation
+
 deriveJSON defaultOptions ''UUID
 deriveJSON defaultOptions ''UserID
 deriveJSON defaultOptions ''User
@@ -117,21 +144,3 @@ deriveJSON defaultOptions ''DecisionID
 deriveJSON defaultOptions ''Decision
 deriveJSON defaultOptions ''ChoiceAPIData
 deriveJSON defaultOptions ''LoginDetails
-
-instance FromHttpApiData UserID where
-  parseHeader     h = UserID <$> parseHeaderWithPrefix "UserID " h
-  parseQueryParam p = UserID <$> parseQueryParam p
-
-instance FromHttpApiData ChoiceID where
-  parseHeader     h = ChoiceID <$> parseHeaderWithPrefix "UserID " h
-  parseQueryParam p = ChoiceID <$> parseQueryParam p
-
-data AppState = AS {
-    options   :: [ Option ]
-  , choices   :: [ Choice ]
-  , decisions :: [ Decision ]
-  , users     :: [ User ]
-  } deriving (Eq, Show, Generic)
-
-emptyAppState :: AppState
-emptyAppState = AS [] [] [] []
