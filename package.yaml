@@ -41,6 +41,7 @@ dependencies:
   - groom
   - directory
   - jose
+  - random
 
 library:
   source-dirs: src

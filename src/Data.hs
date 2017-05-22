@@ -26,26 +26,22 @@ import Database.PostgreSQL.Simple
 import Web.Internal.HttpApiData
 import Database.PostgreSQL.Simple.FromField
 import Database.PostgreSQL.Simple.ToField
-import qualified Data.ByteString.Char8 as BC
 import Database.PostgreSQL.Simple.TypeInfo.Static (typoid, uuid)
+
+import qualified Data.ByteString.Char8 as BC
 
 
 -- ID Wrappers
 
-newtype UUID       = UUID       String deriving (Eq, Show, Generic, FromHttpApiData)
-newtype UserID     = UserID     UUID   deriving (Eq, Show, Generic, FromField, ToField)
-newtype ChoiceID   = ChoiceID   UUID   deriving (Eq, Show, Generic, FromField, ToField)
-newtype OptionID   = OptionID   UUID   deriving (Eq, Show, Generic, FromField, ToField)
-newtype DecisionID = DecisionID UUID   deriving (Eq, Show, Generic, FromField, ToField)
+newtype UUID         = UUID         String deriving (Eq, Show, Generic, FromHttpApiData)
+newtype UserID       = UserID       UUID   deriving (Eq, Show, Generic, FromField, ToField)
+newtype ChoiceID     = ChoiceID     UUID   deriving (Eq, Show, Generic, FromField, ToField)
+newtype OptionID     = OptionID     UUID   deriving (Eq, Show, Generic, FromField, ToField)
+newtype DecisionID   = DecisionID   UUID   deriving (Eq, Show, Generic, FromField, ToField)
+newtype Password     = Password     String deriving (Eq, Show, Generic, FromField, ToField)
 
 
 -- Domain Data Types
-
-data User = User
-  { userId        :: Maybe UserID
-  , userFirstName :: String
-  , userLastName  :: String
-  } deriving (Eq, Show, Generic)
 
 data Choice = Choice
   { choiceId     :: Maybe ChoiceID
@@ -75,14 +71,7 @@ data ChoiceAPIData = CAD
 
 data LoginDetails = LoginDetails
   { username :: String
-  , password :: String
-  } deriving (Eq, Show, Generic)
-
-data AppState = AS {
-    options   :: [ Option ]
-  , choices   :: [ Choice ]
-  , decisions :: [ Decision ]
-  , users     :: [ User ]
+  , password :: Password
   } deriving (Eq, Show, Generic)
 
 
@@ -101,7 +90,6 @@ instance ToField UUID where
 
 instance ToSchema UUID
 instance ToSchema UserID
-instance ToSchema User
 instance ToSchema ChoiceID
 instance ToSchema Choice
 instance ToSchema OptionID
@@ -109,11 +97,13 @@ instance ToSchema Option
 instance ToSchema DecisionID
 instance ToSchema Decision
 instance ToSchema ChoiceAPIData
-instance ToSchema LoginDetails
+instance ToSchema LoginDetails -- TODO: Should this ever be sent back to the client?
+instance ToSchema Password
 
 instance FromRow Choice
 instance FromRow LoginDetails
 instance FromRow Option
+instance FromRow Password
 
 instance ToParamSchema UUID
 instance ToParamSchema ChoiceID
@@ -135,7 +125,6 @@ instance FromHttpApiData ChoiceID where
 
 deriveJSON defaultOptions ''UUID
 deriveJSON defaultOptions ''UserID
-deriveJSON defaultOptions ''User
 deriveJSON defaultOptions ''ChoiceID
 deriveJSON defaultOptions ''Choice
 deriveJSON defaultOptions ''OptionID
@@ -144,3 +133,4 @@ deriveJSON defaultOptions ''DecisionID
 deriveJSON defaultOptions ''Decision
 deriveJSON defaultOptions ''ChoiceAPIData
 deriveJSON defaultOptions ''LoginDetails
+deriveJSON defaultOptions ''Password

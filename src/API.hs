@@ -25,21 +25,20 @@ import Control.Monad.Except
 type M = ExceptT ServantErr IO
 
 type ChoiceCapture = Capture "choiceId" ChoiceID
-
-type ChoiceAPI = Get     '[JSON] [Choice]
-            :<|> ReqBody '[JSON] Choice    :> Post '[JSON] Choice
-            :<|> ChoiceCapture             :> Get  '[JSON] ChoiceAPIData
-            :<|> ChoiceCapture :> "add"    :> ReqBody '[JSON] Option   :> Post '[JSON] Option
-            :<|> ChoiceCapture :> "choose" :> ReqBody '[JSON] OptionID :> Post '[JSON] Decision
-
-type LoginHead   = Headers '[Header "Set-Cookie" SetCookie, Header "Set-Cookie" SetCookie] UserID
-type LoginAPI    = "login"     :>   ReqBody '[JSON] LoginDetails :> Post '[JSON] LoginHead
-type RegisterAPI = "register"  :>   ReqBody '[JSON] LoginDetails :> Post '[JSON] LoginHead
-type AuthAPI     = RegisterAPI :<|> LoginAPI
-type API         = AuthAPI
-              :<|> "me"      :> Auth '[JWT, Cookie] UserID :> Get  '[JSON] UserID
-              :<|> "logout"  :> Auth '[JWT, Cookie] UserID :> Post '[JSON] UserID -- TODO: Use empty response somehow
-              :<|> "choices" :> Auth '[JWT, Cookie] UserID :> ChoiceAPI
+type LoginHead     = Headers '[Header "Set-Cookie" SetCookie, Header "Set-Cookie" SetCookie] UserID
+type LoginAPI      = "login"     :>   ReqBody '[JSON] LoginDetails :> Post '[JSON] LoginHead
+type RegisterAPI   = "register"  :>   ReqBody '[JSON] LoginDetails :> Post '[JSON] LoginHead
+type ChoiceAPI     = Get     '[JSON] [Choice]
+                :<|> ReqBody '[JSON] Choice    :> Post '[JSON] Choice
+                :<|> ChoiceCapture             :> Get  '[JSON] ChoiceAPIData
+                :<|> ChoiceCapture :> "add"    :> ReqBody '[JSON] Option   :> Post '[JSON] Option
+                :<|> ChoiceCapture :> "choose" :> ReqBody '[JSON] OptionID :> Post '[JSON] Decision
+type AuthAPI       = RegisterAPI
+                :<|> LoginAPI
+type API           = AuthAPI
+                :<|> "me"      :> Auth '[JWT, Cookie] UserID :> Get  '[JSON] UserID
+                :<|> "logout"  :> Auth '[JWT, Cookie] UserID :> Post '[JSON] UserID -- TODO: Use empty response somehow
+                :<|> "choices" :> Auth '[JWT, Cookie] UserID :> ChoiceAPI
 
 -- Should be provided by a package soon?
 -- https://github.com/plow-technologies/servant-auth/issues/8

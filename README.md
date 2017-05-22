@@ -58,18 +58,11 @@ There is a small test-suite that will curl the application routes that lives in 
 * <https://github.com/valderman/selda>
 * <https://hackage.haskell.org/package/monad-persist-0.0.1.2/docs/Control-Monad-Persist.html>
 * <https://www.reddit.com/r/haskell/comments/68qzlr/freerpersistent_freereffects_wrapper_for/>
-* <https://hackage.haskell.org/package/servant-docs-0.10/docs/Servant-Docs.html>
+* <https://hackage.haskell.org/package/uuid-1.3.13/docs/Data-UUID.html>
 
-## Thoughts
 
-Is there ever a time when I'll need another natural-transformation besides runReaderTNat?
+## TODO
 
-Probably not, as we'll always want to fetch a value, then do something interesting with it,
-and the interesting effects can be captured on the constant-side of the Reader.
-
-For example:
-
-    type MemDBHandler    = ReaderT (T.TVar AppState)    Handler
-    type PostgresHandler = ReaderT (PostgresConnection) Handler
-
-etc...
+* Move all the orphans into special modules sepearating all the junk out
+* Supe up the user, have an email, etc.
+* Encrypt user password in the database

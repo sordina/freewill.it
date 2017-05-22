@@ -23,7 +23,7 @@ initialAppState = flip execState emptyAppState $ runExceptT $ makeInitialAppStat
 
 makeInitialAppState :: (Database db m, MonadError ServantErr m) => db -> m ()
 makeInitialAppState db = do
-  u   <- register db "hello" "world"
+  u   <- register db "hello" (Password "world")
   c   <- name db u (Choice Nothing "What size thing should I eat?" (Just u))
   cid <- tryMaybe "Can't find choice" $ choiceId c
   _   <- add db u cid (Option cid Nothing "Something bigger than my own head" (Just u))

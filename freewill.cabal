@@ -52,6 +52,7 @@ library
     , groom
     , directory
     , jose
+    , random
   exposed-modules:
       API
       Lib
@@ -105,6 +106,7 @@ executable freewill
     , groom
     , directory
     , jose
+    , random
     , freewill
     , optparse-generic
   default-language: Haskell2010

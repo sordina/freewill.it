@@ -1,19 +1,19 @@
 
-create table users(
+create table users (
 	userid    uuid primary key default md5(random()::text || clock_timestamp()::text)::uuid,
 	created   timestamp default now(),
-	firstname text,
-	lastname  text
+	email     text,
+	password  text
 );
 
-create table choices(
+create table choices (
 	choiceid   uuid primary key default md5(random()::text || clock_timestamp()::text)::uuid,
 	created    timestamp default now(),
 	userid     uuid references users (userid),
 	choicename text
 );
 
-create table options(
+create table options (
 	optionid       uuid primary key default md5(random()::text || clock_timestamp()::text)::uuid,
 	created        timestamp default now(),
 	userid         uuid references users (userid),
@@ -21,7 +21,7 @@ create table options(
 	optionname     text
 );
 
-create table decisions(
+create table decisions (
 	decisionid       uuid primary key default md5(random()::text || clock_timestamp()::text)::uuid,
 	created          timestamp default now(),
 	userid           uuid references users   (userid),

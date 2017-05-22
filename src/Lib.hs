@@ -64,8 +64,7 @@ loginAndSetCookies :: Database db M => db -> JWTSettings -> CookieSettings -> Se
 loginAndSetCookies db js cs d = checkLogin db d >>= setCookie js cs
 
 checkLogin :: (m ~ M, MonadError ServantErr m, Database db m) => db -> LoginDetails -> m UserID
-checkLogin _db (LoginDetails "Ali Baba" "Open Sesame") = return $ UserID (UUID "AliBabaXXX") -- TODO: Only use DB
-checkLogin db  (LoginDetails un         pw           ) = login db un pw
+checkLogin db (LoginDetails un pw) = login db un pw
 
 setCookie :: ( MonadError ServantErr m
              , AddHeader "Set-Cookie" SetCookie withOneCookie b

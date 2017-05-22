@@ -3,6 +3,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE InstanceSigs #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE DeriveGeneric #-}
 
 module DB.StateDB
   ( listState
@@ -15,6 +16,7 @@ module DB.StateDB
   , tryMaybe
   , LocalState(..)
   , emptyAppState
+  , AppState
   )
   where
 
@@ -25,6 +27,29 @@ import Servant
 import Control.Monad.Except
 import Control.Monad.State
 import Data.Maybe
+import System.Random
+import GHC.Generics
+
+
+-- Stateful store, re-exported type
+
+data AppState = AS {
+    options   :: [ Option ]
+  , choices   :: [ Choice ]
+  , decisions :: [ Decision ]
+  , users     :: [ User ]
+  , gen       :: StdGen
+  } deriving (Show, Generic)
+
+
+-- Internal User Datatype
+
+data User = User
+  { userId    :: Maybe UserID
+  , userEmail :: String
+  , userPass  :: Password
+  } deriving (Eq, Show, Generic)
+
 
 -- DB.Class Instance
 -- Local State Version of Database that cannot persist outside of local scope.
@@ -60,9 +85,6 @@ instance (MonadState AppState m, MonadError ServantErr m) => Database (LocalStat
 getThing :: Eq a => (x -> Maybe a) -> a -> [x] -> Maybe x
 getThing f oid = find ((== Just oid) . f)
 
-newId :: [x] -> UUID
-newId = UUID . show . length
-
 getChoiceById :: ChoiceID -> [Choice] -> Maybe Choice
 getChoiceById = getThing choiceId
 
@@ -94,11 +116,10 @@ tryBool s False = throwError (err404 {errReasonPhrase = "Not Found: " ++ s})
 
 nameState :: MonadState AppState m => UserID -> Choice -> m Choice
 nameState uid cdata = do
-  as     <- get
-  let cs  = choices as
-      cid = ChoiceID $ newId cs
-      c   = cdata { choiceId = Just cid, choiceUserId = Just uid }
-  put $ as { choices = c : cs }
+  cs   <- choices <$> get
+  cid  <- ChoiceID <$> newUUID
+  let c = cdata { choiceId = Just cid, choiceUserId = Just uid }
+  modify (\as -> as { choices = c : cs })
   return c
 
 viewState :: (MonadError ServantErr m, MonadState AppState m) => UserID -> ChoiceID -> m ChoiceAPIData
@@ -118,36 +139,38 @@ addState uid cid' odata = do
 
   -- Verify that choice referenced exists
   -- And that only one ID is referenced
-  as     <- get
-  _      <- tryMaybe ("Couldn't find choice " ++ show cid) $ getChoiceById cid $ choices as
+  cs     <- choices <$> get
+  _      <- tryMaybe ("Couldn't find choice " ++ show cid) $ getChoiceById cid cs
   _      <- tryBool msg (cid == cid')
+  oid    <- OptionID  <$> newUUID
+  ds     <- decisions <$> get
+  os     <- options   <$> get
 
-  let exD = getDecisionByChoiceId uid cid $ decisions as
-      os  = options as
-      oid = OptionID $ newId os
+  let exD = getDecisionByChoiceId uid cid ds
       o   = odata { optionId = Just oid, optionUserId = Just uid }
 
   -- Can't deliberate after choice
   when (isJust exD) $ throwError (err403 {errReasonPhrase = "Already made a decision for this choice!"})
 
-  put $ as { options = o : os }
+  modify (\as -> as { options = o : os })
   return o
 
 chooseState :: (MonadError ServantErr m, MonadState AppState m) => UserID -> ChoiceID -> OptionID -> m Decision
 chooseState uid cid oid = do
-  as     <- get
-  _      <- tryMaybe ("Couldn't find choice " ++ show cid) $ getChoiceById cid $ choices as
-  o      <- tryMaybe ("Couldn't find option " ++ show oid) $ getOptionById oid $ options as
+  cs     <- choices <$> get
+  _      <- tryMaybe ("Couldn't find choice " ++ show cid) $ getChoiceById cid cs
+  os     <- options <$> get
+  o      <- tryMaybe ("Couldn't find option " ++ show oid) $ getOptionById oid os
+  did    <- DecisionID <$> newUUID
+  ds     <- decisions  <$> get
 
-  let exD = getDecisionByChoiceId uid cid $ decisions as
-      ds  = decisions as
-      did = DecisionID $ newId ds
+  let exD = getDecisionByChoiceId uid cid ds
       d   = Decision cid (Just did) o (Just uid)
 
   -- Can't rechoose
   when (isJust exD) $ throwError (err403 {errReasonPhrase = "Already made a decision for this choice!"})
 
-  put $ as { decisions = d : ds }
+  modify (\as -> as { decisions = d : ds })
   return d
 
 listState :: MonadState AppState m => UserID -> m [Choice]
@@ -155,30 +178,35 @@ listState uid = filter test . choices <$> get
   where
   test x = choiceUserId x == Just uid
 
-registerState :: (MonadError ServantErr m, MonadState AppState m) => String -> String -> m UserID
-registerState fn ln = do
-  as    <- get
-  let us = users as
-      u  = find (\x -> userFirstName x == fn && userLastName x == ln) us
+registerState :: (MonadError ServantErr m, MonadState AppState m) => String -> Password -> m UserID
+registerState email pass = do
+  us   <- users <$> get
+  let u = find (\x -> userEmail x == email) us
 
-  when (isJust u) $ throwError (err401 {errReasonPhrase = "Can't create user"})
+  when (isJust u) $ throwError (err401 {errReasonPhrase = "User already registered..."})
 
-  -- TODO: Fix this silly "UUID" nonsense, use a hash or something
-  --
-  let uid = UserID (UUID (fn ++ "~~" ++ ln))
-      n   = User (Just uid) fn ln
+  uid <- UserID <$> newUUID
+  n   <- return $ User (Just uid) email pass
 
-  put $ as { users = n : us }
+  modify (\as -> as { users = n : us })
 
   return uid
 
-loginState :: (MonadError ServantErr m, MonadState AppState m) => String -> String -> m UserID
-loginState fn ln = do
-  as    <- get
-  let us = users as
-  u     <- tryMaybe "Couldn't log-in" $ find (\x -> userFirstName x == fn && userLastName x == ln) us
+loginState :: (MonadError ServantErr m, MonadState AppState m) => String -> Password -> m UserID
+loginState email pass = do
+  us <- users <$> get
+  u  <- tryMaybe "Couldn't log-in" $ find (\x -> userEmail x == email && userPass x == pass) us -- TODO: Password check
 
   tryMaybe "No ID for user... Weird." $ userId u
 
+-- TODO: Use a real UUID
+--
+newUUID :: MonadState AppState m => m UUID
+newUUID = do
+  g1 <- gen <$> get
+  let (u :: Integer, g2) = random g1
+  modify (\as -> as { gen = g2 })
+  return (UUID (show (abs u)))
+
 emptyAppState :: AppState
-emptyAppState = AS [] [] [] []
+emptyAppState = AS [] [] [] [] (mkStdGen 293874928374)

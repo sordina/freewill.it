@@ -121,20 +121,22 @@ postgresList conn uid = query conn selectionquery (Only uid)
                          where userid = ?
                          order by created desc |]
 
-postgresRegister :: Connection -> String -> String -> IO UserID
-postgresRegister conn fn ln = do
-  x@[ ]         <- query conn lookupQuery    (fn, ln) -- Expect no users with matching names
-  [Only uid ]   <- query conn insertionQuery (fn, ln)
-  types x uid
+postgresRegister :: Connection -> String -> Password -> IO UserID
+postgresRegister conn email (Password pass) = do
+  x@[ ]        <- query   conn lookupQuery    (Only email)
+  [Only uid]   <- query   conn insertionQuery (Only email)
+  _            <- execute conn updateQuery    (pass, uid)
+  types x >> return uid
   where
-  types :: [Only UserID] -> UserID -> IO UserID
-  types _us      = return
-  lookupQuery    = [sql| select userid from users where firstname = ? and lastname = ? |]
-  insertionQuery = [sql| insert into users (firstname, lastname) values (?, ?) returning userid |]
+  types :: [Only UserID] -> IO ()
+  types _x       = return ()
+  lookupQuery    = [sql| select userid from users where email = ? |]
+  insertionQuery = [sql| insert into users (email) values (?) returning userid |]
+  updateQuery    = [sql| update users set password = md5(userid || '~' || ?) where userid = ? |]
 
-postgresLogin :: Connection -> String -> String -> IO UserID
-postgresLogin conn fn ln = do
-  [Only uid] <- query conn lookupQuery (fn, ln)
+postgresLogin :: Connection -> String -> Password -> IO UserID
+postgresLogin conn email (Password pass) = do
+  [Only uid] <- query conn lookupQuery (email, pass)
   return uid
   where
-  lookupQuery = [sql| select userid from users where firstname = ? and lastname = ? |]
+  lookupQuery = [sql| select userid from users where email = ? and password = md5(userid || '~' || ?) |]

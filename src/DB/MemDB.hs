@@ -63,7 +63,7 @@ instance ( MonadIO m, MonadError ServantErr m ) => Database (MemDBConnection (m 
 test :: IO (Either ServantErr ())
 test = runExceptT $ do
   d <- liftIO $ MDBC <$> T.newTVarIO emptyAppState :: ExceptT ServantErr IO (MemDBConnection (M ()))
-  u <- register d "hello" "world"
+  u <- register d "hello" (Password "world")
   c <- name d u (Choice Nothing "TestChoice" (Just u))
   i <- tryMaybe "Can't find choice" $ choiceId c
   o <- add  d u i (Option i Nothing "TestOption" (Just u))
