@@ -93,4 +93,9 @@ curl -s --fail -H "$auth" http://localhost:8080/api-vanilla.js > /dev/null && ec
 echo "JQuery JS"
 curl -s --fail -H "$auth" http://localhost:8080/api-jquery.js > /dev/null && echo Success
 
+echo "Logout"
+curl -v --fail -H "$auth" -X POST -H "Content-Type: application/json" \
+  http://localhost:8080/logout 2>&1 \
+  | grep 'Set-Cookie: JWT-Cookie=deleted; path=/'
+
 echo "Test-Suite Completed"

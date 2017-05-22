@@ -50,6 +50,7 @@ userInfo :: (ThrowAll (m a), Monad m) => AuthResult a -> m a
 userInfo (Authenticated u) = return u
 userInfo _                 = throwAll err401
 
+-- TODO: Use better header technique
 logout :: (ThrowAll (m a)) => AuthResult t -> m a
 logout (Authenticated _) = throwAll $ err302 { errHeaders = [ ("Location", "/")
                                                             , ("Set-Cookie", "JWT-Cookie=deleted; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT" ) ] }
