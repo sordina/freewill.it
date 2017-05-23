@@ -25,9 +25,9 @@ import Control.Monad.Except
 type M = ExceptT ServantErr IO
 
 type ChoiceCapture = Capture "choiceId" ChoiceID
-type LoginHead     = Headers '[Header "Set-Cookie" SetCookie, Header "Set-Cookie" SetCookie] UserID
-type LoginAPI      = "login"     :>   ReqBody '[JSON] LoginDetails :> Post '[JSON] LoginHead
-type RegisterAPI   = "register"  :>   ReqBody '[JSON] LoginDetails :> Post '[JSON] LoginHead
+type LoginHead     = Headers '[Header "Set-Cookie" SetCookie, Header "Set-Cookie" SetCookie] User
+type LoginAPI      = "login"    :> ReqBody '[JSON] LoginDetails :> Post '[JSON] LoginHead
+type RegisterAPI   = "register" :> ReqBody '[JSON] LoginDetails :> Post '[JSON] LoginHead
 type ChoiceAPI     = Get     '[JSON] [Choice]
                 :<|> ReqBody '[JSON] Choice    :> Post '[JSON] Choice
                 :<|> ChoiceCapture             :> Get  '[JSON] ChoiceAPIData
@@ -36,7 +36,7 @@ type ChoiceAPI     = Get     '[JSON] [Choice]
 type AuthAPI       = RegisterAPI
                 :<|> LoginAPI
 type API           = AuthAPI
-                :<|> "me"      :> Auth '[JWT, Cookie] UserID :> Get  '[JSON] UserID
+                :<|> "me"      :> Auth '[JWT, Cookie] UserID :> Get  '[JSON] User
                 :<|> "logout"  :> Auth '[JWT, Cookie] UserID :> Post '[JSON] UserID -- TODO: Use empty response somehow
                 :<|> "choices" :> Auth '[JWT, Cookie] UserID :> ChoiceAPI
 

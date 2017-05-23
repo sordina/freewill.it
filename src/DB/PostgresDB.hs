@@ -45,6 +45,7 @@ instance MonadIO m => Name     (PC (m x)) m where name     (PGC db) uid cdata   
 instance MonadIO m => Add      (PC (m x)) m where add      (PGC db) uid cid odata = liftIO $ postgresAdd      db uid cid odata
 instance MonadIO m => Choose   (PC (m x)) m where choose   (PGC db) uid cid oid   = liftIO $ postgresChoose   db uid cid oid
 instance MonadIO m => List     (PC (m x)) m where list     (PGC db) uid           = liftIO $ postgresList     db uid
+instance MonadIO m => Me       (PC (m x)) m where me       (PGC db) uid           = liftIO $ postgresMe       db uid
 instance MonadIO m => Register (PC (m x)) m where register (PGC db)     fn ln     = liftIO $ postgresRegister db fn ln
 instance MonadIO m => Login    (PC (m x)) m where login    (PGC db)     fn ln     = liftIO $ postgresLogin    db fn ln
 instance MonadIO m => Database (PC (m x)) m
@@ -121,12 +122,19 @@ postgresList conn uid = query conn selectionquery (Only uid)
                          where userid = ?
                          order by created desc |]
 
-postgresRegister :: Connection -> String -> Password -> IO UserID
-postgresRegister conn email (Password pass) = do
-  x@[ ]        <- query   conn lookupQuery    (Only email)
-  [Only uid]   <- query   conn insertionQuery (Only email)
+postgresMe :: Connection -> UserID -> IO User
+postgresMe conn uid = do
+  [Only rEmail] <- query conn lookupQuery (Only uid)
+  return (User uid rEmail)
+  where
+  lookupQuery = [sql| select email from users where uid = ? |]
+
+postgresRegister :: Connection -> String -> Password -> IO User
+postgresRegister conn rEmail (Password pass) = do
+  x@[ ]        <- query   conn lookupQuery    (Only rEmail)
+  [Only uid]   <- query   conn insertionQuery (Only rEmail)
   _            <- execute conn updateQuery    (pass, uid)
-  types x >> return uid
+  types x >> return (User uid rEmail)
   where
   types :: [Only UserID] -> IO ()
   types _x       = return ()
@@ -134,9 +142,9 @@ postgresRegister conn email (Password pass) = do
   insertionQuery = [sql| insert into users (email) values (?) returning userid |]
   updateQuery    = [sql| update users set password = md5(userid || '~' || ?) where userid = ? |]
 
-postgresLogin :: Connection -> String -> Password -> IO UserID
-postgresLogin conn email (Password pass) = do
-  [Only uid] <- query conn lookupQuery (email, pass)
-  return uid
+postgresLogin :: Connection -> String -> Password -> IO User
+postgresLogin conn rEmail (Password pass) = do
+  [Only uid] <- query conn lookupQuery (rEmail, pass)
+  return (User uid rEmail)
   where
   lookupQuery = [sql| select userid from users where email = ? and password = md5(userid || '~' || ?) |]

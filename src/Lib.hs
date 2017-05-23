@@ -27,8 +27,8 @@ api :: Proxy API
 api = Proxy
 
 server :: Database db M => db -> JWTSettings -> CookieSettings -> Server API
-server db js cs = authAPI      db js cs
-             :<|> userInfo
+server db js cs = authAPI db js cs
+             :<|> userInfo db
              :<|> logout
              :<|> choiceServer db
 
@@ -46,9 +46,9 @@ choiceServer db (Authenticated u)
 
 choiceServer _db _authFail = throwAll err401
 
-userInfo :: (ThrowAll (m a), Monad m) => AuthResult a -> m a
-userInfo (Authenticated u) = return u
-userInfo _                 = throwAll err401
+userInfo :: (ThrowAll (m User), Me db m) => db -> AuthResult UserID -> m User
+userInfo db (Authenticated u) = me db u
+userInfo _db _                = throwAll err401
 
 -- TODO: Use better header technique
 logout :: (ThrowAll (m a)) => AuthResult t -> m a
@@ -58,27 +58,25 @@ logout _                 = throwAll err401
 
 
 registerAndSetCookies :: Database db M => db -> JWTSettings -> CookieSettings -> Server RegisterAPI
-registerAndSetCookies db js cs (LoginDetails un pw) = register db un pw >>= setCookie js cs
+registerAndSetCookies db js cs (LoginDetails un pw) = register db un pw >>= setCookie userId js cs
 
 loginAndSetCookies :: Database db M => db -> JWTSettings -> CookieSettings -> Server LoginAPI
-loginAndSetCookies db js cs d = checkLogin db d >>= setCookie js cs
+loginAndSetCookies db js cs d = checkLogin db d >>= setCookie userId js cs
 
-checkLogin :: (m ~ M, MonadError ServantErr m, Database db m) => db -> LoginDetails -> m UserID
+checkLogin :: (m ~ M, MonadError ServantErr m, Database db m) => db -> LoginDetails -> m User
 checkLogin db (LoginDetails un pw) = login db un pw
 
 setCookie :: ( MonadError ServantErr m
              , AddHeader "Set-Cookie" SetCookie withOneCookie b
              , AddHeader "Set-Cookie" SetCookie response withOneCookie
-             , ToJWT response
-             , MonadIO m
-             )
-            => JWTSettings
-            -> CookieSettings
-            -> response
-            -> m b
-
-setCookie js cs x = do
-   mApplyCookies <- liftIO $ acceptLogin cs js x
+             , ToJWT session, MonadIO m
+             ) => (response -> session)
+               -> JWTSettings
+               -> CookieSettings
+               -> response
+               -> m b
+setCookie f js cs x = do
+   mApplyCookies <- liftIO $ acceptLogin cs js (f x)
    case mApplyCookies of
      Nothing           -> throwError err401
      Just applyCookies -> return $ applyCookies x

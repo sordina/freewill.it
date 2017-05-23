@@ -74,6 +74,11 @@ data LoginDetails = LoginDetails
   , password :: Password
   } deriving (Eq, Show, Generic)
 
+data User = User
+  { userId :: UserID
+  , email  :: String
+  } deriving (Eq, Show, Generic)
+
 
 -- Instances
 
@@ -88,6 +93,7 @@ instance FromField UUID where
 instance ToField UUID where
   toField (UUID s) = Escape (BC.pack s)
 
+instance ToSchema User
 instance ToSchema UUID
 instance ToSchema UserID
 instance ToSchema ChoiceID
@@ -134,3 +140,4 @@ deriveJSON defaultOptions ''Decision
 deriveJSON defaultOptions ''ChoiceAPIData
 deriveJSON defaultOptions ''LoginDetails
 deriveJSON defaultOptions ''Password
+deriveJSON defaultOptions ''User

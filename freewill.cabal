@@ -64,6 +64,7 @@ library
       Data
       DB.MockDB
       DB.StateDB
+      DB.StateUser
       Network.Wai.Middleware.Debugging
       RedirectTo
       Util

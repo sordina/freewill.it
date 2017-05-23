@@ -55,6 +55,10 @@ instance (MonadIO m, MonadError ServantErr m)
       => Register (MemDBConnection (m x)) m where
   register db fn ln = runDB db (registerState fn ln)
 
+instance (MonadIO m, MonadError ServantErr m)
+      => Me (MemDBConnection (m x)) m where
+  me db uid = runDB db (meState uid)
+
 instance ( MonadIO m, MonadError ServantErr m ) => Database (MemDBConnection (m x)) m
 
 
@@ -63,7 +67,7 @@ instance ( MonadIO m, MonadError ServantErr m ) => Database (MemDBConnection (m 
 test :: IO (Either ServantErr ())
 test = runExceptT $ do
   d <- liftIO $ MDBC <$> T.newTVarIO emptyAppState :: ExceptT ServantErr IO (MemDBConnection (M ()))
-  u <- register d "hello" (Password "world")
+  u <- userId <$> register d "hello" (Password "world")
   c <- name d u (Choice Nothing "TestChoice" (Just u))
   i <- tryMaybe "Can't find choice" $ choiceId c
   o <- add  d u i (Option i Nothing "TestOption" (Just u))

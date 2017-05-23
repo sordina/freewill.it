@@ -12,6 +12,7 @@ module DB.StateDB
   , chooseState
   , viewState
   , registerState
+  , meState
   , loginState
   , tryMaybe
   , LocalState(..)
@@ -20,8 +21,10 @@ module DB.StateDB
   )
   where
 
+import qualified DB.StateUser as U -- Internal Stateful UserInfo
 import DB.Class
 import Data
+
 import Data.List
 import Servant
 import Control.Monad.Except
@@ -33,22 +36,13 @@ import GHC.Generics
 
 -- Stateful store, re-exported type
 
-data AppState = AS {
-    options   :: [ Option ]
+data AppState = AS
+  { options   :: [ Option ]
   , choices   :: [ Choice ]
   , decisions :: [ Decision ]
-  , users     :: [ User ]
+  , users     :: [ U.UserInfo ]
   , gen       :: StdGen
   } deriving (Show, Generic)
-
-
--- Internal User Datatype
-
-data User = User
-  { userId    :: Maybe UserID
-  , userEmail :: String
-  , userPass  :: Password
-  } deriving (Eq, Show, Generic)
 
 
 -- DB.Class Instance
@@ -76,6 +70,9 @@ instance (MonadError ServantErr m, MonadState AppState m) => Register (LocalStat
 
 instance (MonadError ServantErr m, MonadState AppState m) => Login (LocalState (m x)) m where
   login LS un pw = loginState un pw
+
+instance (MonadError ServantErr m, MonadState AppState m) => Me (LocalState (m x)) m where
+  me LS uid = meState uid
 
 instance (MonadState AppState m, MonadError ServantErr m) => Database (LocalState (m x)) m where
 
@@ -178,26 +175,37 @@ listState uid = filter test . choices <$> get
   where
   test x = choiceUserId x == Just uid
 
-registerState :: (MonadError ServantErr m, MonadState AppState m) => String -> Password -> m UserID
-registerState email pass = do
+meState :: (MonadState AppState m, MonadError ServantErr m) => UserID -> m User
+meState uid = do
+  us <- users <$> get
+  let u = userInfoToUser <$> find (\x -> U.userId x == uid) us
+  tryMaybe "No user... Weird." u
+
+registerState :: (MonadError ServantErr m, MonadState AppState m) => String -> Password -> m User
+registerState rEmail pass = do
   us   <- users <$> get
-  let u = find (\x -> userEmail x == email) us
+  let u = find (\x -> U.userEmail x == rEmail) us
 
   when (isJust u) $ throwError (err401 {errReasonPhrase = "User already registered..."})
 
   uid <- UserID <$> newUUID
-  n   <- return $ User (Just uid) email pass
+  n   <- return $ U.UserInfo uid rEmail pass
 
   modify (\as -> as { users = n : us })
 
-  return uid
+  return $ userInfoToUser n
 
-loginState :: (MonadError ServantErr m, MonadState AppState m) => String -> Password -> m UserID
-loginState email pass = do
+loginState :: (MonadError ServantErr m, MonadState AppState m) => String -> Password -> m User
+loginState rEmail pass = do
   us <- users <$> get
-  u  <- tryMaybe "Couldn't log-in" $ find (\x -> userEmail x == email && userPass x == pass) us -- TODO: Password check
+  u  <- tryMaybe "Couldn't log-in" $ find (\x -> U.userEmail x == rEmail && U.userPass x == pass) us -- TODO: Password check
+  return $ userInfoToUser u
 
-  tryMaybe "No ID for user... Weird." $ userId u
+userInfoToUser :: U.UserInfo -> User
+userInfoToUser ui = User
+  { userId = U.userId ui
+  , email  = U.userEmail ui
+  }
 
 -- TODO: Use a real UUID
 --
