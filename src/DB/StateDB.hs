@@ -32,6 +32,7 @@ import Control.Monad.State
 import Data.Maybe
 import System.Random
 import GHC.Generics
+import Data.UUID
 
 
 -- Stateful store, re-exported type
@@ -212,9 +213,9 @@ userInfoToUser ui = User
 newUUID :: MonadState AppState m => m UUID
 newUUID = do
   g1 <- gen <$> get
-  let (u :: Integer, g2) = random g1
+  let (u, g2) = random g1
   modify (\as -> as { gen = g2 })
-  return (UUID (show (abs u)))
+  return u
 
 emptyAppState :: AppState
 emptyAppState = AS [] [] [] [] (mkStdGen 293874928374)

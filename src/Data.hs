@@ -26,14 +26,11 @@ import Database.PostgreSQL.Simple
 import Web.Internal.HttpApiData
 import Database.PostgreSQL.Simple.FromField
 import Database.PostgreSQL.Simple.ToField
-import Database.PostgreSQL.Simple.TypeInfo.Static (typoid, uuid)
-
-import qualified Data.ByteString.Char8 as BC
+import Data.UUID
 
 
 -- ID Wrappers
 
-newtype UUID         = UUID         String deriving (Eq, Show, Generic, FromHttpApiData)
 newtype UserID       = UserID       UUID   deriving (Eq, Show, Generic, FromField, ToField)
 newtype ChoiceID     = ChoiceID     UUID   deriving (Eq, Show, Generic, FromField, ToField)
 newtype OptionID     = OptionID     UUID   deriving (Eq, Show, Generic, FromField, ToField)
@@ -82,19 +79,7 @@ data User = User
 
 -- Instances
 
-instance FromField UUID where
-  fromField f mdata =
-    if typeOid f /= typoid uuid
-      then returnError Incompatible f ""
-      else case BC.unpack <$> mdata of
-       Nothing  -> returnError UnexpectedNull f ""
-       Just dat -> return (UUID dat)
-
-instance ToField UUID where
-  toField (UUID s) = Escape (BC.pack s)
-
 instance ToSchema User
-instance ToSchema UUID
 instance ToSchema UserID
 instance ToSchema ChoiceID
 instance ToSchema Choice
@@ -111,7 +96,6 @@ instance FromRow LoginDetails
 instance FromRow Option
 instance FromRow Password
 
-instance ToParamSchema UUID
 instance ToParamSchema ChoiceID
 instance ToParamSchema OptionID
 
@@ -129,7 +113,16 @@ instance FromHttpApiData ChoiceID where
 
 -- JSON Derivation
 
-deriveJSON defaultOptions ''UUID
+instance ToJSON UUID where
+  toJSON u = String (toText u)
+
+instance FromJSON UUID where
+  parseJSON (String s) = case fromText s of
+                              Just u  -> return u
+                              Nothing -> fail "Couldn't decode UUID String"
+  parseJSON _          = fail "Expecting JSON String"
+
+-- deriveJSON defaultOptions ''UUID
 deriveJSON defaultOptions ''UserID
 deriveJSON defaultOptions ''ChoiceID
 deriveJSON defaultOptions ''Choice

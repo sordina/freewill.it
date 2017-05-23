@@ -42,6 +42,7 @@ dependencies:
   - directory
   - jose
   - random
+  - uuid
 
 library:
   source-dirs: src
