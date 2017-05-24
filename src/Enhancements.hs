@@ -33,11 +33,11 @@ type App       = VanillaJS
             :<|> Redirect "index.html"
 
 app :: (HasContextEntry x JWTSettings, HasContextEntry x CookieSettings, Database db M)
-    => Context x -> db -> Application
-app context db = logStdoutDev
-               $ cors (const $ Just policy) -- simpleCors
-               $ provideOptions api
-               $ serveWithContext apiWithEnhancements context (serverWithSpec db js cs)
+    => Context x -> db -> CommonGeneratorOptions -> Application
+app context db jsOptions = logStdoutDev
+                   $ cors (const $ Just policy) -- simpleCors
+                   $ provideOptions api
+                   $ serveWithContext apiWithEnhancements context (serverWithSpec db js jsOptions cs)
   where
   js     = getContextEntry context :: JWTSettings
   cs     = getContextEntry context :: CookieSettings
@@ -46,11 +46,8 @@ app context db = logStdoutDev
 apiWithEnhancements :: Proxy App
 apiWithEnhancements = Proxy
 
-jsOptions :: CommonGeneratorOptions
-jsOptions = defCommonGeneratorOptions -- { urlPrefix = "http://localhost:8080" }
-
-serverWithSpec :: Database db M => db -> JWTSettings -> CookieSettings -> Server App
-serverWithSpec db js cs
+serverWithSpec :: Database db M => db -> JWTSettings -> CommonGeneratorOptions -> CookieSettings -> Server App
+serverWithSpec db js jsOptions cs
      = return (jsForAPI api (vanillaJSWith jsOptions))
   :<|> return (jsForAPI api (jqueryWith    jsOptions))
   :<|> return (toSwagger api)

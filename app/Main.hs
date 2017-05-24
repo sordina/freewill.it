@@ -20,6 +20,7 @@ import qualified DB.PostgresDB        as PostgresDB
 import qualified Servant.Auth.Server  as Auth
 import qualified Crypto.JOSE.JWK      as J
 import qualified Data.ByteString.Lazy as BL
+import qualified Servant.JS           as SJ
 
 data Database = Memory | Postgres
   deriving (Eq, Show, Read, Generic)
@@ -28,6 +29,7 @@ data Options = Options { port     :: Maybe Int
                        , database :: Maybe Database <?> "Memory | Postgres (Default)"
                        , jwtKey   :: Maybe FilePath <?> "JWT Key FilePath"
                        , safeAuth :: Maybe Bool     <?> "False | True (Default) - Mandate HTTPS for Auth"
+                       , jsURL    :: Maybe Text     <?> "URL that Javascript points to"
                        }
   deriving (Show, Generic)
 
@@ -40,9 +42,11 @@ main = do
   ctx  <- getContext opts
   let thePort = fromMaybe 8080     $             port     opts
       theDB   = fromMaybe Postgres $ unHelpful $ database opts
+      theJSU  = fromMaybe ""       $ unHelpful $ jsURL    opts
+      theJSO  = SJ.defCommonGeneratorOptions { SJ.urlPrefix = theJSU }
   putStrLn $ "Using " ++ show theDB ++ " database driver"
   putStrLn $ "Running on http://localhost:" ++ show thePort ++ "/"
-  go ctx thePort theDB
+  go ctx thePort theJSO theDB
 
 type CTX = Context '[Auth.CookieSettings, Auth.JWTSettings]
 
@@ -76,12 +80,12 @@ newMemDBConnection = MemDB.newMemDBConnection
 newPostgresDBConnection :: IO (PostgresDB.PostgresConnection (A.M a))
 newPostgresDBConnection = PostgresDB.newPostgresDBConnection
 
-go :: CTX -> Int -> Database -> IO ()
+go :: CTX -> Int -> SJ.CommonGeneratorOptions -> Database -> IO ()
 
-go c p Memory = do
+go c p jso Memory = do
   db <- newMemDBConnection
-  run p (E.app c db)
+  run p (E.app c db jso)
 
-go c p Postgres = do
+go c p jso Postgres = do
   db <- newPostgresDBConnection
-  run p (E.app c db)
+  run p (E.app c db jso)

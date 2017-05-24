@@ -10,17 +10,21 @@
     <title>Free Will as a Service</title>
   </head>
   <body>
-    <h1> <a href="/"><em>freewill.ai</em></a> </h1>
     <div id="app">
-      <user-info :user="user"></user-info>
+      <div id="header">
+        <div id="header-inner">
+          <h1> <a href="/"><em>freewill.ai</em></a> </h1>
+          <user-info :user="user" />
+        </div>
+      </div>
       <table v-if="user">
         <tr>
-          <td><choices-list :choices="choices"></choices-list></td>
-          <td><router-view :choice="choice"></router-view></td>
+          <td><choices-list :choices="choices" /></td>
+          <td><router-view :choice="choice" /></td>
         </tr>
       </table>
-      <div id="login" v-else> <login-dialog></login-dialog> </div>
-      <errors :errors="errors"></errors>
+      <div id="login" v-else> <login-dialog /> </div>
+      <errors :errors="errors" />
     </div>
 
     <script type="text/x-template" id="login-dialog">
@@ -90,7 +94,7 @@
 
     <script type="text/x-template" id="user-info">
       <div class="user-info" v-if="user" >
-        <p> User: {{user.email}} </p>
+        <p> {{user.email}} </p>
         <p @click="logout" class="link"> <strong> Logout </strong> </p>
       </div>
     </script>

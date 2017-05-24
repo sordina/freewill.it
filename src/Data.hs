@@ -110,9 +110,8 @@ instance FromHttpApiData ChoiceID where
   parseHeader     h = ChoiceID <$> parseHeaderWithPrefix "UserID " h
   parseQueryParam p = ChoiceID <$> parseQueryParam p
 
-
--- JSON Derivation
-
+-- Need manual instances for UUIDs to match with URL Format, or there will be 404s
+--
 instance ToJSON UUID where
   toJSON u = String (toText u)
 
@@ -122,7 +121,11 @@ instance FromJSON UUID where
                               Nothing -> fail "Couldn't decode UUID String"
   parseJSON _          = fail "Expecting JSON String"
 
--- deriveJSON defaultOptions ''UUID
+prop_uuid_json :: UUID -> Bool
+prop_uuid_json u = Success u == fromJSON (toJSON u)
+
+-- Automatic JSON Derivation
+--
 deriveJSON defaultOptions ''UserID
 deriveJSON defaultOptions ''ChoiceID
 deriveJSON defaultOptions ''Choice
