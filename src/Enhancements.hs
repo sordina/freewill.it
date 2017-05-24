@@ -20,17 +20,11 @@ import Data.Swagger (Swagger(..) )
 import Network.Wai
 import Network.Wai.Middleware.Cors
 import Network.Wai.Middleware.Servant.Options
--- import qualified Network.Wai.Middleware.Debugging as L
 
-type VanillaJS = "api-vanilla.js"   :> Get  '[PlainText] Text
-type JQueryJS  = "api-jquery.js"    :> Get  '[PlainText] Text
-type Swag      = "swagger.json" :> Get  '[JSON]      Swagger
-type App       = VanillaJS
-            :<|> JQueryJS
-            :<|> Swag
-            :<|> API
-            :<|> Raw
-            :<|> Redirect "index.html"
+-- Top Level App
+
+apiWithEnhancements :: Proxy App
+apiWithEnhancements = Proxy
 
 app :: (HasContextEntry x JWTSettings, HasContextEntry x CookieSettings, Database db M)
     => Context x -> db -> CommonGeneratorOptions -> Middleware -> Application
@@ -44,8 +38,19 @@ app context db jsOptions logging
   cs     = getContextEntry context :: CookieSettings
   policy = simpleCorsResourcePolicy { corsRequestHeaders = [ "content-type" ] }
 
-apiWithEnhancements :: Proxy App
-apiWithEnhancements = Proxy
+-- Enhanced API
+
+type VanillaJS = "api-vanilla.js" :> Get '[PlainText] Text
+type JQueryJS  = "api-jquery.js"  :> Get '[PlainText] Text
+type Swag      = "swagger.json"   :> Get '[JSON]      Swagger
+type App       = VanillaJS
+            :<|> JQueryJS
+            :<|> Swag
+            :<|> API
+            :<|> Raw
+            :<|> Redirect "index.html"
+
+-- Server
 
 serverWithSpec :: Database db M => db -> JWTSettings -> CommonGeneratorOptions -> CookieSettings -> Server App
 serverWithSpec db js jsOptions cs
