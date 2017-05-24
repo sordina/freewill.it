@@ -55,6 +55,7 @@ library
     , random
     , uuid
   exposed-modules:
+      Network.Wai.Middleware.Debugging
       Context
       API
       Lib
@@ -67,7 +68,6 @@ library
       DB.MockDB
       DB.StateDB
       DB.StateUser
-      Network.Wai.Middleware.Debugging
       RedirectTo
       Util
       Paths_freewill
