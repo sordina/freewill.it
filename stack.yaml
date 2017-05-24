@@ -2,7 +2,7 @@ resolver: lts-8.13
 packages:
   - '.'
   - location:
-      git: git@github.com:sordina/servant-auth.git
+      git: https://github.com/sordina/servant-auth.git
       commit: 52f8436
     subdirs: ["servant-auth-swagger", "servant-auth-server"]
     extra-dep: true
