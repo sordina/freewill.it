@@ -127,7 +127,7 @@ postgresMe conn uid = do
   [Only rEmail] <- query conn lookupQuery (Only uid)
   return (User uid rEmail)
   where
-  lookupQuery = [sql| select email from users where uid = ? |]
+  lookupQuery = [sql| select email from users where userid = ? |]
 
 postgresRegister :: Connection -> String -> Password -> IO User
 postgresRegister conn rEmail (Password pass) = do

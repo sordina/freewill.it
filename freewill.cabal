@@ -55,6 +55,7 @@ library
     , random
     , uuid
   exposed-modules:
+      Context
       API
       Lib
       Enhancements

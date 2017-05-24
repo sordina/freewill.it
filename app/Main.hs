@@ -8,19 +8,13 @@ module Main where
 import Network.Wai.Handler.Warp
 import Options.Generic
 import Data.Maybe
-import Servant ( Context( (:.) ) )
-import Data.Aeson (encode, decode)
-import System.Directory (doesFileExist)
 
-import qualified Servant
-import qualified Enhancements         as E
-import qualified API                  as A
-import qualified DB.MemDB             as MemDB
-import qualified DB.PostgresDB        as PostgresDB
-import qualified Servant.Auth.Server  as Auth
-import qualified Crypto.JOSE.JWK      as J
-import qualified Data.ByteString.Lazy as BL
-import qualified Servant.JS           as SJ
+import qualified Enhancements  as E
+import qualified API           as A
+import qualified DB.MemDB      as MemDB
+import qualified DB.PostgresDB as PostgresDB
+import qualified Servant.JS    as SJ
+import qualified Context       as C
 
 data Database = Memory | Postgres
   deriving (Eq, Show, Read, Generic)
@@ -38,41 +32,18 @@ instance ParseRecord Options
 
 main :: IO ()
 main = do
-  opts <- getRecord "freewill.ai"
-  ctx  <- getContext opts
-  let thePort = fromMaybe 8080     $             port     opts
-      theDB   = fromMaybe Postgres $ unHelpful $ database opts
-      theJSU  = fromMaybe ""       $ unHelpful $ jsURL    opts
-      theJSO  = SJ.defCommonGeneratorOptions { SJ.urlPrefix = theJSU }
-  putStrLn $ "Using " ++ show theDB ++ " database driver"
-  putStrLn $ "Running on http://localhost:" ++ show thePort ++ "/"
-  go ctx thePort theJSO theDB
+  opts     <- getRecord "freewill.ai"
+  let oPort = fromMaybe 8080     $             port     opts
+      oDB   = fromMaybe Postgres $ unHelpful $ database opts
+      oJSU  = fromMaybe ""       $ unHelpful $ jsURL    opts
+      oJKO  =                      unHelpful $ jwtKey   opts
+      oSAO  =                      unHelpful $ safeAuth opts
+      oJSO  = SJ.defCommonGeneratorOptions { SJ.urlPrefix = oJSU }
+  ctx      <- C.getContext oJKO oSAO
 
-type CTX = Context '[Auth.CookieSettings, Auth.JWTSettings]
-
-loadOrGenerateAndSaveKey :: Maybe FilePath -> IO J.JWK
-loadOrGenerateAndSaveKey Nothing   = Auth.generateKey
-loadOrGenerateAndSaveKey (Just fp) = do
-  fe <- doesFileExist fp
-  if fe then fromJust . decode <$> BL.readFile fp
-        else generateAndSaveKey fp
-
-generateAndSaveKey :: FilePath -> IO J.JWK
-generateAndSaveKey fp = do
-  k <- Auth.generateKey
-  putStrLn $ "Writing JWK to " ++ fp
-  BL.writeFile fp (encode k)
-  return k
-
-getContext :: Options -> IO CTX
-getContext o = do
-  k <- loadOrGenerateAndSaveKey (unHelpful (jwtKey o))
-  return $ cs :. Auth.defaultJWTSettings k :. Servant.EmptyContext
-  where
-  cs       = Auth.defaultCookieSettings { Auth.cookieIsSecure = security }
-  sa       = unHelpful (safeAuth o)
-  security | sa == Just False = Auth.NotSecure
-           | otherwise        = Auth.Secure
+  putStrLn $ "Using " ++ show oDB ++ " database driver"
+  putStrLn $ "Running on http://localhost:" ++ show oPort ++ "/"
+  go ctx oPort oJSO oDB
 
 newMemDBConnection :: IO (MemDB.MemDBConnection (A.M a))
 newMemDBConnection = MemDB.newMemDBConnection
@@ -80,7 +51,7 @@ newMemDBConnection = MemDB.newMemDBConnection
 newPostgresDBConnection :: IO (PostgresDB.PostgresConnection (A.M a))
 newPostgresDBConnection = PostgresDB.newPostgresDBConnection
 
-go :: CTX -> Int -> SJ.CommonGeneratorOptions -> Database -> IO ()
+go :: C.CTX -> Int -> SJ.CommonGeneratorOptions -> Database -> IO ()
 
 go c p jso Memory = do
   db <- newMemDBConnection
