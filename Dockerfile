@@ -8,4 +8,4 @@ COPY . /freewill
 WORKDIR /freewill
 RUN stack build --resolver=lts-8.15
 
-RUN stack run
+RUN echo done

@@ -208,8 +208,6 @@ userInfoToUser ui = User
   , email  = U.userEmail ui
   }
 
--- TODO: Use a real UUID
---
 newUUID :: MonadState AppState m => m UUID
 newUUID = do
   g1 <- gen <$> get
