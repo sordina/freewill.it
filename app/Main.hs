@@ -49,7 +49,7 @@ main = do
   ctx      <- C.getContext oJKO oSAO
 
   putStrLn $ "Using " ++ show oLog' ++ " logging middleware"
-  putStrLn $ "Using " ++ show oDB ++ " database driver"
+  putStrLn $ "Using " ++ show oDB   ++ " database driver"
   putStrLn $ "Running on http://localhost:" ++ show oPort ++ "/"
   go ctx oPort oJSO oLog oDB
 
