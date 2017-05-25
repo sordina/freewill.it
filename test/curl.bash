@@ -79,6 +79,9 @@ fi
 echo "Choices"
 curl -s --fail -H "$auth" http://localhost:8080/choices | jq .
 
+echo "Me"
+curl -s --fail -H "$auth" http://localhost:8080/me | jq .
+
 echo "Choice Info"
 curl -s --fail -H "$auth" http://localhost:8080/choices/$choiceId | jq .
 
