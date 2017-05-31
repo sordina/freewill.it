@@ -77,6 +77,10 @@ function getUser_() {
 }
 
 function register(a) {
+  if(! this.username.match(/@/)) {
+    push_error("Username must be an email address.");
+    return;
+  }
   postRegister(
     { username: this.username, password: this.password },
     function(res) { console.log(res); app.user = res; getChoices_(); },
