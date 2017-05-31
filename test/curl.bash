@@ -2,13 +2,29 @@
 
 set -euf -o pipefail
 
+echo "Invalid Username Registration"
+failure=$(
+  curl -s --fail -XPOST -H "Content-Type: application/json" \
+  --data "{\"username\":\"noemail\", \"password\": \"password\"}" \
+  http://localhost:8080/register || echo failed
+)
+
+if [[ "$failure" != failed ]]
+then
+  echo "Expected failure did not occur..."
+  exit 1
+fi
+
+echo "Failed as expected"
+
+echo "User Registration"
+
 un="user_$$@email.com"
 pw="pw_$$"
 
 echo "User: $un"
 echo "Password: $pw"
 
-echo "Register"
 token=$(
   curl -v --fail -XPOST -H "Content-Type: application/json" \
   --data "{\"username\":\"$un\", \"password\": \"$pw\"}" \
