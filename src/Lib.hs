@@ -18,6 +18,9 @@ import Servant hiding (Secure, NotSecure)
 import Servant.Auth.Server
 import Control.Monad.IO.Class
 import Control.Monad.Error.Class
+import Control.Monad
+import Data.Maybe
+import Data.List (find)
 
 import API
 import Data
@@ -58,7 +61,10 @@ logout _                 = throwAll err401
 
 
 registerAndSetCookies :: Database db M => db -> JWTSettings -> CookieSettings -> Server RegisterAPI
-registerAndSetCookies db js cs (LoginDetails un pw) = register db un pw >>= setCookie userId js cs
+registerAndSetCookies db js cs (LoginDetails un pw) = do
+  when (not $ isEmail un) $ throwError err401 {errReasonPhrase = "Username must be an email address..."}
+  u <- register db un pw
+  setCookie userId js cs u
 
 loginAndSetCookies :: Database db M => db -> JWTSettings -> CookieSettings -> Server LoginAPI
 loginAndSetCookies db js cs d = checkLogin db d >>= setCookie userId js cs
@@ -80,3 +86,6 @@ setCookie f js cs x = do
    case mApplyCookies of
      Nothing           -> throwError err401
      Just applyCookies -> return $ applyCookies x
+
+isEmail :: Foldable t => t Char -> Bool
+isEmail = isJust . find (== '@')

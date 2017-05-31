@@ -2,8 +2,11 @@
 
 set -euf -o pipefail
 
-un="user_$$"
+un="user_$$@email.com"
 pw="pw_$$"
+
+echo "User: $un"
+echo "Password: $pw"
 
 echo "Register"
 token=$(

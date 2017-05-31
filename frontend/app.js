@@ -88,13 +88,15 @@ function register(a) {
   }
 
 function login(a) {
+  if(! this.username.match(/@/)) {
+    push_error("Username must be an email address.");
+    return;
+  }
   postLogin(
     { username: this.username, password: this.password },
     function(res) { console.log(res); app.user = res; getChoices_(); },
     function(err) { console.log(err); push_error("Could not log in "); }
   )
-  console.log("Caught post login event");
-  console.log(a);
   a.preventDefault();
   }
 
