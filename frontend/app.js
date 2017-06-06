@@ -77,6 +77,7 @@ function getUser_() {
 }
 
 function register(a) {
+  a.preventDefault();
   if(! this.username.match(/@/)) {
     push_error("Username must be an email address.");
     return;
@@ -88,10 +89,10 @@ function register(a) {
   )
   console.log("Caught post register event");
   console.log(a);
-  a.preventDefault();
   }
 
 function login(a) {
+  a.preventDefault();
   if(! this.username.match(/@/)) {
     push_error("Username must be an email address.");
     return;
@@ -101,7 +102,6 @@ function login(a) {
     function(res) { console.log(res); app.user = res; getChoices_(); },
     function(err) { console.log(err); push_error("Could not log in "); }
   )
-  a.preventDefault();
   }
 
 function logout() {
