@@ -86,7 +86,7 @@ postgresView conn uid cid = do
   let d         = makeDecision uid os ds
   return $ CAD myChoice os d
   where
-  choiceQuery   = [sql| select choiceid, choicename, userid
+  choiceQuery   = [sql| select choiceid, choicename, userid, shared
                         from choices where choiceid = ? and userid = ?  |]
   optionQuery   = [sql| select optionChoiceId, optionid, optionName, userid
                         from options where optionChoiceId = ? and userid = ?
@@ -106,7 +106,7 @@ postgresAdd conn uid cid o = do
   let ocid      = optionChoiceId o
   x@[ ]        <- query conn priorDecisions (Only cid)
   [ Only oid ] <- query conn insertionQuery (optionName o, ocid, uid)
-  types x
+  _            <- return (x :: [Only UserID])
   return $ o { optionId = Just oid, optionUserId = Just uid }
   where
   insertionQuery = [sql| insert into options (optionname, optionchoiceid, userid)
@@ -115,11 +115,10 @@ postgresAdd conn uid cid o = do
 postgresChoose :: Connection -> UserID -> ChoiceID -> OptionID -> IO Decision
 postgresChoose conn uid cid oid = do
   x@[ ]          <- query conn priorDecisions   (Only cid)
+  _              <- return                      (x :: [Only UserID])
   [ Only did   ] <- query conn insertionQuery   (cid, oid, uid)
   [ Only oName ] <- query conn optionQuery      (oid, uid)
-  liftIO $ print cid
   let o           = Option cid (Just oid) oName (Just uid)
-  types x
   return Decision { decisionId = did, decisionChoiceId = cid, decision = o, decisionUserId = Just uid }
   where
   insertionQuery = [sql| insert into decisions (decisionchoiceid, decision, userid) values (?,?,?) returning decisionid |]
@@ -147,7 +146,8 @@ postgresRegister conn rEmail (Password pass) = do
   x@[ ]        <- query   conn lookupQuery    (Only rEmail)
   [Only uid]   <- query   conn insertionQuery (Only rEmail)
   _            <- execute conn updateQuery    (pass, uid)
-  types x >> return (User uid rEmail)
+  _            <- return                      (x :: [Only UserID])
+  return (User uid rEmail)
   where
   lookupQuery    = [sql| select userid from users where email = ? |]
   insertionQuery = [sql| insert into users (email) values (?) returning userid |]
@@ -159,8 +159,3 @@ postgresLogin conn rEmail (Password pass) = do
   return (User uid rEmail)
   where
   lookupQuery = [sql| select userid from users where email = ? and password = md5(userid || '~' || ?) |]
-
--- Helper for empty queries
---
-types :: [Only UserID] -> IO ()
-types _x       = return ()

@@ -10,7 +10,8 @@ create table choices (
 	choiceid   uuid primary key default md5(random()::text || clock_timestamp()::text)::uuid,
 	created    timestamp default now(),
 	userid     uuid references users (userid),
-	choicename text
+	choicename text,
+	shared     boolean
 );
 
 create table options (
