@@ -95,6 +95,8 @@ then
   exit 1
 fi
 
+# TODO: Test sharing
+
 echo "Choices"
 curl -s --fail -H "$auth" http://localhost:8080/choices | jq .
 
