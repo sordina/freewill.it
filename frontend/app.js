@@ -131,9 +131,20 @@ comp('choices-list', { props:    ['choices', 'choiceName'],
 comp('choice-item',  { props:    ['choice'],
                        methods:  { clickChoice: getChoice } });
 
-comp('choice-info',  { props:    ['choice', 'options', 'decision', 'optionName'],
+comp('choice-info',  { props:    ['choice', 'options', 'decision', 'optionName', 'shared'],
                        methods:  { newOption: newOption },
-                       computed: { revOptions: function() { return this.options.reverse() } } });
+                       computed: {
+                         revOptions: function() { return this.options.reverse() },
+                         shared: {
+                           get: function () { return this.choice._shared; },
+                           set: function (x) {
+                             this.choice._shared = x;
+                             if(x) {
+                               postChoicesByChoiceIdShare(this.choice.choiceId);
+                             } else {
+                               postChoicesByChoiceIdHide(this.choice.choiceId);
+                             }
+                       } } } });
 
 comp('option-item',  { props:    ['option'],
                        methods:  { clickOption: decide } });

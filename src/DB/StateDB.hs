@@ -35,6 +35,8 @@ import Data.Maybe
 import System.Random
 import GHC.Generics
 import Data.UUID
+import Control.Lens (set, traversed)
+import Control.Lens.Fold
 
 
 -- Stateful store, re-exported type
@@ -44,14 +46,9 @@ data AppState = AS
   , choices   :: [ Choice ]
   , decisions :: [ Decision ]
   , users     :: [ U.UserInfo ]
-  , shares    :: [ ShareData ]
   , gen       :: StdGen
   } deriving (Show, Generic)
 
-data ShareData = SD
-  { shareUserID   :: UserID
-  , shareChoiceID :: ChoiceID
-  } deriving (Eq, Show, Generic)
 
 -- DB.Class Instance
 -- Local State Version of Database that cannot persist outside of local scope.
@@ -140,21 +137,23 @@ viewState uid cid = do
 
 shareState :: (MonadError ServantErr m, MonadState AppState m) => UserID -> ChoiceID -> m Choice
 shareState uid cid = do
-  as    <- get
-  c     <- tryMaybe ("Couldn't find choice " ++ show cid) $ getChoiceById cid $ choices as
-  let ps = shares as
-      ns = SD uid cid : ps
-      na = as { shares = ns }
+  as     <- get
+  c      <- tryMaybe ("Couldn't find choice " ++ show cid) $ getChoiceById cid $ choices as
+  let p x = choiceId x == Just cid && choiceUserId x == Just uid
+      t   = traversed . filtered p . shared
+      nc  = set t (Just True) (choices as)
+      na  = as { choices = nc }
   put na
   return c
 
 hideState :: (MonadError ServantErr m, MonadState AppState m) => UserID -> ChoiceID -> m Choice
 hideState uid cid = do
-  as    <- get
-  c     <- tryMaybe ("Couldn't find choice " ++ show cid) $ getChoiceById cid $ choices as
-  let ps = shares as
-      ns = filter (not . (== (SD uid cid))) ps
-      na = as { shares = ns }
+  as     <- get
+  c      <- tryMaybe ("Couldn't find choice " ++ show cid) $ getChoiceById cid $ choices as
+  let p x = choiceId x == Just cid && choiceUserId x == Just uid
+      t   = traversed . filtered p . shared
+      nc  = set t (Just False) (choices as)
+      na  = as { choices = nc }
   put na
   return c
 
@@ -203,15 +202,9 @@ chooseState uid cid oid = do
 
 listState :: MonadState AppState m => UserID -> m [Choice]
 listState uid = do
-  as <- get
-  let test x = choiceUserId x == Just uid || hasShare (shares as) x
+  let test x = choiceUserId x == Just uid || fromMaybe False (_shared x)
+  as        <- get
   return $ filter test $ choices as
-
-hasShare :: Foldable t => t ShareData -> Choice -> Bool
-hasShare ss c = any (isShared c) ss
-
-isShared :: Choice -> ShareData -> Bool
-isShared c s = choiceId c == Just (shareChoiceID s)
 
 meState :: (MonadState AppState m, MonadError ServantErr m) => UserID -> m User
 meState uid = do
@@ -253,4 +246,4 @@ newUUID = do
   return u
 
 emptyAppState :: AppState
-emptyAppState = AS [] [] [] [] [] (mkStdGen 293874928374)
+emptyAppState = AS [] [] [] [] (mkStdGen 293874928374)

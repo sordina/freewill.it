@@ -33,6 +33,8 @@ type ChoiceAPI     = Get     '[JSON] [Choice]
                 :<|> ChoiceCapture             :> Get  '[JSON] ChoiceAPIData
                 :<|> ChoiceCapture :> "add"    :> ReqBody '[JSON] Option   :> Post '[JSON] Option
                 :<|> ChoiceCapture :> "choose" :> ReqBody '[JSON] OptionID :> Post '[JSON] Decision
+                :<|> ChoiceCapture :> "share"                              :> Post '[JSON] Choice
+                :<|> ChoiceCapture :> "hide"                               :> Post '[JSON] Choice
 type AuthAPI       = RegisterAPI
                 :<|> LoginAPI
 type API           = AuthAPI

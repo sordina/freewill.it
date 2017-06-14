@@ -62,6 +62,7 @@
     <script type="text/x-template" id="choice-info">
       <div>
         <h2>{{choice.choiceName}}</h2>
+        <h3>Share: <input type="checkbox" id="checkbox" v-model="shared" /></h3>
         <div v-if="decision">
           <h3>Options</h3>
           <ul>

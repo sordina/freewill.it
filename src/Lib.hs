@@ -46,6 +46,8 @@ choiceServer db (Authenticated u)
   :<|> view   db u
   :<|> add    db u
   :<|> choose db u
+  :<|> share  db u
+  :<|> hide   db u
 
 choiceServer _db _authFail = throwAll err401
 
