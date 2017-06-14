@@ -130,7 +130,8 @@ priorDecisions = [sql| select userid from decisions where decisionChoiceId = ? |
 postgresList :: Connection -> UserID -> IO [Choice]
 postgresList conn uid = query conn selectionquery (Only uid)
   where
-  selectionquery = [sql| select choiceid, choicename, userid from choices
+  selectionquery = [sql| select choiceid, choicename, userid, shared
+                         from choices
                          where userid = ?
                          order by created desc |]
 
