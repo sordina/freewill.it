@@ -11,6 +11,8 @@ module DB.StateDB
   , nameState
   , chooseState
   , viewState
+  , shareState
+  , hideState
   , registerState
   , meState
   , loginState
@@ -42,9 +44,14 @@ data AppState = AS
   , choices   :: [ Choice ]
   , decisions :: [ Decision ]
   , users     :: [ U.UserInfo ]
+  , shares    :: [ ShareData ]
   , gen       :: StdGen
   } deriving (Show, Generic)
 
+data ShareData = SD
+  { shareUserID   :: UserID
+  , shareChoiceID :: ChoiceID
+  } deriving (Eq, Show, Generic)
 
 -- DB.Class Instance
 -- Local State Version of Database that cannot persist outside of local scope.
@@ -59,6 +66,10 @@ instance (MonadError ServantErr m, MonadState AppState m) => Add (LocalState (m 
 
 instance (MonadError ServantErr m, MonadState AppState m) => View (LocalState (m x)) m where
   view LS uid cid = viewState uid cid
+
+instance (MonadError ServantErr m, MonadState AppState m) => Share (LocalState (m x)) m where
+  share LS uid cid = shareState uid cid
+  hide  LS uid cid = hideState  uid cid
 
 instance (MonadError ServantErr m, MonadState AppState m) => Choose (LocalState (m x)) m where
   choose LS uid cid oid = chooseState uid cid oid
@@ -95,7 +106,6 @@ getOptionsByChoiceId uid cid = filter test
   test x = optionChoiceId x == cid
         && optionUserId   x == Just uid
 
-
 getDecisionByChoiceId :: UserID -> ChoiceID -> [Decision] -> Maybe Decision
 getDecisionByChoiceId uid cid ds = find test ds
   where
@@ -127,6 +137,26 @@ viewState uid cid = do
   let os = getOptionsByChoiceId uid cid $ options as
       d  = getDecisionByChoiceId uid cid $ decisions as
   return $ CAD c os d
+
+shareState :: (MonadError ServantErr m, MonadState AppState m) => UserID -> ChoiceID -> m Choice
+shareState uid cid = do
+  as    <- get
+  c     <- tryMaybe ("Couldn't find choice " ++ show cid) $ getChoiceById cid $ choices as
+  let ps = shares as
+      ns = SD uid cid : ps
+      na = as { shares = ns }
+  put na
+  return c
+
+hideState :: (MonadError ServantErr m, MonadState AppState m) => UserID -> ChoiceID -> m Choice
+hideState uid cid = do
+  as    <- get
+  c     <- tryMaybe ("Couldn't find choice " ++ show cid) $ getChoiceById cid $ choices as
+  let ps = shares as
+      ns = filter (not . (== (SD uid cid))) ps
+      na = as { shares = ns }
+  put na
+  return c
 
 addState :: (MonadError ServantErr m, MonadState AppState m) => UserID -> ChoiceID -> Option -> m Option
 addState uid cid' odata = do
@@ -172,9 +202,16 @@ chooseState uid cid oid = do
   return d
 
 listState :: MonadState AppState m => UserID -> m [Choice]
-listState uid = filter test . choices <$> get
-  where
-  test x = choiceUserId x == Just uid
+listState uid = do
+  as <- get
+  let test x = choiceUserId x == Just uid || hasShare (shares as) x
+  return $ filter test $ choices as
+
+hasShare :: Foldable t => t ShareData -> Choice -> Bool
+hasShare ss c = any (isShared c) ss
+
+isShared :: Choice -> ShareData -> Bool
+isShared c s = choiceId c == Just (shareChoiceID s)
 
 meState :: (MonadState AppState m, MonadError ServantErr m) => UserID -> m User
 meState uid = do
@@ -216,4 +253,4 @@ newUUID = do
   return u
 
 emptyAppState :: AppState
-emptyAppState = AS [] [] [] [] (mkStdGen 293874928374)
+emptyAppState = AS [] [] [] [] [] (mkStdGen 293874928374)

@@ -15,16 +15,19 @@ There are options defined with optparse-generic that you can access by using
 
 > stack run -- -- --help
 
+
     freewill.ai
 
     Usage: freewill [--port INT] [--database DATABASE] [--jwtKey STRING]
-                    [--safeAuth BOOL]
+                    [--safeAuth BOOL] [--jsURL TEXT] [--logLevel LOGLEVEL]
 
     Available options:
       -h,--help                Show this help text
       --database DATABASE      Memory | Postgres (Default)
       --jwtKey STRING          JWT Key FilePath
       --safeAuth BOOL          False | True (Default) - Mandate HTTPS for Auth
+      --jsURL TEXT             URL that Javascript points to
+      --logLevel LOGLEVEL      Prod | Dev (Default) | Debug
 
 
 To get up and running quickly for local development with a persisted JWK key, use

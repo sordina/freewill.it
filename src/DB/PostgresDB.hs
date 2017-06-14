@@ -46,6 +46,8 @@ instance MonadIO m => Add      (PC (m x)) m where add      (PGC db) uid cid odat
 instance MonadIO m => Choose   (PC (m x)) m where choose   (PGC db) uid cid oid   = liftIO $ postgresChoose   db uid cid oid
 instance MonadIO m => List     (PC (m x)) m where list     (PGC db) uid           = liftIO $ postgresList     db uid
 instance MonadIO m => Me       (PC (m x)) m where me       (PGC db) uid           = liftIO $ postgresMe       db uid
+instance MonadIO m => Share    (PC (m x)) m where share    (PGC db) uid cid       = liftIO $ postgresShare    db uid cid
+                                                  hide     (PGC db) uid cid       = liftIO $ postgresHide     db uid cid
 instance MonadIO m => Register (PC (m x)) m where register (PGC db)     fn ln     = liftIO $ postgresRegister db fn ln
 instance MonadIO m => Login    (PC (m x)) m where login    (PGC db)     fn ln     = liftIO $ postgresLogin    db fn ln
 instance MonadIO m => Database (PC (m x)) m
@@ -61,6 +63,9 @@ data DecisionRow = DR {
 instance FromRow DecisionRow
 
 -- Implementation
+
+postgresShare = error "postgresShare not yet defined"
+postgresHide  = error "postgresHide not yet defined"
 
 makeDecision :: UserID -> [Option] -> [DecisionRow] -> Maybe Decision
 makeDecision _uid _os []   = Nothing

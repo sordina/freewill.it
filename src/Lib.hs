@@ -59,7 +59,6 @@ logout (Authenticated _) = throwAll $ err302 { errHeaders = [ ("Location", "/")
                                                             , ("Set-Cookie", "JWT-Cookie=deleted; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT" ) ] }
 logout _                 = throwAll err401
 
-
 registerAndSetCookies :: Database db M => db -> JWTSettings -> CookieSettings -> Server RegisterAPI
 registerAndSetCookies db js cs (LoginDetails un pw) = do
   when (not $ isEmail un) $ throwError err401 {errReasonPhrase = "Username must be an email address..."}
