@@ -35,7 +35,7 @@ import Data.Maybe
 import System.Random
 import GHC.Generics
 import Data.UUID
-import Control.Lens (set, traversed)
+import Control.Lens (set, traversed, Indexable)
 import Control.Lens.Fold
 
 
@@ -135,25 +135,26 @@ viewState uid cid = do
       d  = getDecisionByChoiceId uid cid $ decisions as
   return $ CAD c os d
 
+select :: (Applicative f1, Traversable f, Indexable Int p) => (b -> Bool) -> p b (f1 b) -> f b -> f1 (f b)
+select p = traversed . filtered p
+
 shareState :: (MonadError ServantErr m, MonadState AppState m) => UserID -> ChoiceID -> m Choice
 shareState uid cid = do
   as     <- get
-  c      <- tryMaybe ("Couldn't find choice " ++ show cid) $ getChoiceById cid $ choices as
   let p x = choiceId x == Just cid && choiceUserId x == Just uid
-      t   = traversed . filtered p . shared
-      nc  = set t (Just True) (choices as)
+      nc  = set (select p . shared) (Just True) (choices as)
       na  = as { choices = nc }
+  c      <- tryMaybe ("Couldn't find choice " ++ show cid) $ firstOf (select p) nc
   put na
   return c
 
 hideState :: (MonadError ServantErr m, MonadState AppState m) => UserID -> ChoiceID -> m Choice
 hideState uid cid = do
   as     <- get
-  c      <- tryMaybe ("Couldn't find choice " ++ show cid) $ getChoiceById cid $ choices as
   let p x = choiceId x == Just cid && choiceUserId x == Just uid
-      t   = traversed . filtered p . shared
-      nc  = set t (Just False) (choices as)
+      nc  = set (select p . shared) (Just False) (choices as)
       na  = as { choices = nc }
+  c      <- tryMaybe ("Couldn't find choice " ++ show cid) $ firstOf (select p) nc
   put na
   return c
 
