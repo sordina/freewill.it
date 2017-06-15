@@ -139,6 +139,7 @@ comp('choice-info',  { props:    ['choice', 'options', 'decision', 'optionName',
                            get: function () { return this.choice._shared; },
                            set: function (x) {
                              this.choice._shared = x;
+                             // TODO: Use success and error callbacks when setting shared property
                              if(x) {
                                postChoicesByChoiceIdShare(this.choice.choiceId);
                              } else {
