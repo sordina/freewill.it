@@ -68,7 +68,6 @@ library
       Data
       DB.MockDB
       DB.StateDB
-      DB.StateUser
       RedirectTo
       Util
       Paths_freewill

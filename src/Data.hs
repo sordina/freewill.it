@@ -73,8 +73,8 @@ data LoginDetails = LoginDetails
   } deriving (Eq, Show, Generic)
 
 data User = User
-  { userId :: UserID
-  , email  :: String
+  { userId     :: UserID
+  , userEmail  :: String
   } deriving (Eq, Show, Generic)
 
 
