@@ -54,6 +54,7 @@ library
     , jose
     , random
     , uuid
+    , generic-lens
   exposed-modules:
       Network.Wai.Middleware.Debugging
       Context
@@ -111,6 +112,7 @@ executable freewill
     , jose
     , random
     , uuid
+    , generic-lens
     , freewill
     , optparse-generic
   default-language: Haskell2010

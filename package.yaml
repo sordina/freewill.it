@@ -43,6 +43,7 @@ dependencies:
   - jose
   - random
   - uuid
+  - generic-lens
 
 library:
   source-dirs: src

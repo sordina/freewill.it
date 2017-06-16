@@ -1,4 +1,4 @@
-resolver: lts-8.13
+resolver: lts-8.18
 packages:
   - '.'
   - location:
@@ -16,3 +16,4 @@ extra-deps:
   - http-accept-0.2
   - servant-options-0.1.0.0
   - servant-auth-0.2.7.0
+  - generic-lens-0.2.0.0

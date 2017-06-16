@@ -27,7 +27,6 @@ import Web.Internal.HttpApiData
 import Database.PostgreSQL.Simple.FromField
 import Database.PostgreSQL.Simple.ToField
 import Data.UUID
-import Control.Lens.TH
 
 
 -- ID Wrappers
@@ -45,7 +44,7 @@ data Choice = Choice
   { choiceId     :: Maybe ChoiceID
   , choiceName   :: String
   , choiceUserId :: Maybe UserID
-  , _shared      :: Maybe Bool
+  , shared       :: Maybe Bool
   } deriving (Eq, Show, Generic)
 
 data Option = Option
@@ -77,10 +76,6 @@ data User = User
   { userId :: UserID
   , email  :: String
   } deriving (Eq, Show, Generic)
-
--- Lenses
-
-makeLenses ''Choice
 
 
 -- Instances

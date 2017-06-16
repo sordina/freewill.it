@@ -1,9 +1,13 @@
-{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE InstanceSigs #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DataKinds             #-}
+{-# LANGUAGE DeriveGeneric         #-}
+{-# LANGUAGE DuplicateRecordFields #-}
+{-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE TypeApplications      #-}
+{-# LANGUAGE UndecidableInstances  #-}
 
 module DB.StateDB
   ( listState
@@ -12,7 +16,6 @@ module DB.StateDB
   , chooseState
   , viewState
   , shareState
-  , hideState
   , registerState
   , meState
   , loginState
@@ -37,6 +40,7 @@ import GHC.Generics
 import Data.UUID
 import Control.Lens (set, traversed, Indexable)
 import Control.Lens.Fold
+import Data.Generics.Record
 
 
 -- Stateful store, re-exported type
@@ -55,33 +59,16 @@ data AppState = AS
 
 data LocalState m = LS
 
-instance MonadState AppState m => Name (LocalState (m x)) m where
-  name LS uid = nameState uid
-
-instance (MonadError ServantErr m, MonadState AppState m) => Add (LocalState (m x)) m where
-  add LS uid cid o = addState uid cid o
-
-instance (MonadError ServantErr m, MonadState AppState m) => View (LocalState (m x)) m where
-  view LS uid cid = viewState uid cid
-
-instance (MonadError ServantErr m, MonadState AppState m) => Share (LocalState (m x)) m where
-  share LS uid cid = shareState uid cid
-  hide  LS uid cid = hideState  uid cid
-
-instance (MonadError ServantErr m, MonadState AppState m) => Choose (LocalState (m x)) m where
-  choose LS uid cid oid = chooseState uid cid oid
-
-instance MonadState AppState m => List (LocalState (m x)) m where
-  list LS uid = listState uid
-
-instance (MonadError ServantErr m, MonadState AppState m) => Register (LocalState (m x)) m where
-  register LS un pw = registerState un pw
-
-instance (MonadError ServantErr m, MonadState AppState m) => Login (LocalState (m x)) m where
-  login LS un pw = loginState un pw
-
-instance (MonadError ServantErr m, MonadState AppState m) => Me (LocalState (m x)) m where
-  me LS uid = meState uid
+instance MonadState AppState m                            => Name     (LocalState (m x)) m where name     LS = nameState
+instance MonadState AppState m                            => List     (LocalState (m x)) m where list     LS = listState
+instance (MonadError ServantErr m, MonadState AppState m) => Add      (LocalState (m x)) m where add      LS = addState
+instance (MonadError ServantErr m, MonadState AppState m) => View     (LocalState (m x)) m where view     LS = viewState
+instance (MonadError ServantErr m, MonadState AppState m) => Choose   (LocalState (m x)) m where choose   LS = chooseState
+instance (MonadError ServantErr m, MonadState AppState m) => Register (LocalState (m x)) m where register LS = registerState
+instance (MonadError ServantErr m, MonadState AppState m) => Login    (LocalState (m x)) m where login    LS = loginState
+instance (MonadError ServantErr m, MonadState AppState m) => Me       (LocalState (m x)) m where me       LS = meState
+instance (MonadError ServantErr m, MonadState AppState m) => Share    (LocalState (m x)) m where share    LS = shareState True
+                                                                                                 hide     LS = shareState False
 
 instance (MonadState AppState m, MonadError ServantErr m) => Database (LocalState (m x)) m where
 
@@ -104,7 +91,7 @@ getOptionsByChoiceId uid cid = filter test
         && optionUserId   x == Just uid
 
 getDecisionByChoiceId :: UserID -> ChoiceID -> [Decision] -> Maybe Decision
-getDecisionByChoiceId uid cid ds = find test ds
+getDecisionByChoiceId uid cid = find test
   where
   test x = decisionChoiceId x == cid
         && decisionUserId   x == Just uid
@@ -138,21 +125,11 @@ viewState uid cid = do
 select :: (Applicative f1, Traversable f, Indexable Int p) => (b -> Bool) -> p b (f1 b) -> f b -> f1 (f b)
 select p = traversed . filtered p
 
-shareState :: (MonadError ServantErr m, MonadState AppState m) => UserID -> ChoiceID -> m Choice
-shareState uid cid = do
+shareState :: (MonadError ServantErr m, MonadState AppState m) => Bool -> UserID -> ChoiceID -> m Choice
+shareState s uid cid = do
   as     <- get
   let p x = choiceId x == Just cid && choiceUserId x == Just uid
-      nc  = set (select p . shared) (Just True) (choices as)
-      na  = as { choices = nc }
-  c      <- tryMaybe ("Couldn't find choice " ++ show cid) $ firstOf (select p) nc
-  put na
-  return c
-
-hideState :: (MonadError ServantErr m, MonadState AppState m) => UserID -> ChoiceID -> m Choice
-hideState uid cid = do
-  as     <- get
-  let p x = choiceId x == Just cid && choiceUserId x == Just uid
-      nc  = set (select p . shared) (Just False) (choices as)
+      nc  = set (select p . label @"shared") (Just s) (choices as)
       na  = as { choices = nc }
   c      <- tryMaybe ("Couldn't find choice " ++ show cid) $ firstOf (select p) nc
   put na
@@ -203,7 +180,7 @@ chooseState uid cid oid = do
 
 listState :: MonadState AppState m => UserID -> m [Choice]
 listState uid = do
-  let test x = choiceUserId x == Just uid || fromMaybe False (_shared x)
+  let test x = choiceUserId x == Just uid || fromMaybe False (shared x)
   as        <- get
   return $ filter test $ choices as
 
@@ -220,8 +197,8 @@ registerState rEmail pass = do
 
   when (isJust u) $ throwError (err401 {errReasonPhrase = "User already registered..."})
 
-  uid <- UserID <$> newUUID
-  n   <- return $ U.UserInfo uid rEmail pass
+  uid  <- UserID <$> newUUID
+  let n = U.UserInfo uid rEmail pass
 
   modify (\as -> as { users = n : us })
 

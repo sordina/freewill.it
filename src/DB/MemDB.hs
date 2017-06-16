@@ -38,8 +38,8 @@ instance (MonadIO m, MonadError ServantErr m)
 
 instance (MonadIO m, MonadError ServantErr m)
       => Share (MemDBConnection (m x)) m where
-  share db uid cid = runDB db (shareState uid cid)
-  hide  db uid cid = runDB db (hideState  uid cid)
+  share db uid cid = runDB db (shareState True  uid cid)
+  hide  db uid cid = runDB db (shareState False uid cid)
 
 instance (MonadIO m, MonadError ServantErr m)
       => Add (MemDBConnection (m x)) m where
