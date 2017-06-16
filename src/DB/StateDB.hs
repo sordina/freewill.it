@@ -83,26 +83,27 @@ instance (MonadState AppState m, MonadError ServantErr m) => Database (LocalStat
 
 -- Pure Implementations
 
-getThing :: Eq a => (x -> Maybe a) -> a -> [x] -> Maybe x
-getThing f oid = find ((== Just oid) . f)
-
-getChoiceById :: ChoiceID -> [Choice] -> Maybe Choice
-getChoiceById = getThing choiceId
+getChoice :: (MonadError ServantErr m, MonadState AppState m) => UserID -> ChoiceID -> m Choice
+getChoice uid cid = do
+  as        <- get
+  let cs     = firstOf (select test) $ choices as
+      test c = choiceId     c == Just cid
+          && ( choiceUserId c == Just uid
+            || shared       c == Just True )
+  tryMaybe ("Couldn't find choice " ++ show cid) cs
 
 getOptionById :: OptionID -> [Option] -> Maybe Option
-getOptionById = getThing optionId
+getOptionById oid = firstOf (select (\o -> optionId o == Just oid))
 
 getOptionsByChoiceId :: UserID -> ChoiceID -> [Option] -> [Option]
 getOptionsByChoiceId uid cid = filter test
   where
   test x = optionChoiceId x == cid
-        && optionUserId   x == Just uid
 
 getDecisionByChoiceId :: UserID -> ChoiceID -> [Decision] -> Maybe Decision
 getDecisionByChoiceId uid cid = find test
   where
   test x = decisionChoiceId x == cid
-        && decisionUserId   x == Just uid
 
 tryMaybe :: MonadError ServantErr m => String -> Maybe a -> m a
 tryMaybe _ (Just x) = return x
@@ -116,7 +117,7 @@ tryBool s False = throwError (err404 {errReasonPhrase = "Not Found: " ++ s})
 
 nameState :: MonadState AppState m => UserID -> Choice -> m Choice
 nameState uid cdata = do
-  cs   <- choices <$> get
+  cs   <- choices  <$> get
   cid  <- ChoiceID <$> newUUID
   let c = cdata { choiceId = Just cid, choiceUserId = Just uid }
   modify (\as -> as { choices = c : cs })
@@ -125,7 +126,7 @@ nameState uid cdata = do
 viewState :: (MonadError ServantErr m, MonadState AppState m) => UserID -> ChoiceID -> m ChoiceAPIData
 viewState uid cid = do
   as    <- get
-  c     <- tryMaybe ("Couldn't find choice " ++ show cid) $ getChoiceById cid $ choices as
+  c     <- getChoice uid cid
   let os = getOptionsByChoiceId uid cid $ options as
       d  = getDecisionByChoiceId uid cid $ decisions as
   return $ CAD c os d
@@ -139,7 +140,8 @@ shareState s uid cid = do
   let p x = choiceId x == Just cid && choiceUserId x == Just uid
       nc  = set (select p . label @"shared") (Just s) (choices as)
       na  = as { choices = nc }
-  c      <- tryMaybe ("Couldn't find choice " ++ show cid) $ firstOf (select p) nc
+  c      <- getChoice uid cid
+  _      <- tryBool "Choice Not Owned by User" (choiceUserId c == Just uid)
   put na
   return c
 
@@ -150,10 +152,8 @@ addState uid cid' odata = do
          ++ " doesn't match choiceId " ++ show cid'
          ++ "... Try checking the JSON and route."
 
-  -- Verify that choice referenced exists
-  -- And that only one ID is referenced
-  cs     <- choices <$> get
-  _      <- tryMaybe ("Couldn't find choice " ++ show cid) $ getChoiceById cid cs
+  c      <- getChoice uid cid
+  _      <- tryBool "Choice Not Owned by User" (choiceUserId c == Just uid)
   _      <- tryBool msg (cid == cid')
   oid    <- OptionID  <$> newUUID
   ds     <- decisions <$> get
@@ -170,8 +170,8 @@ addState uid cid' odata = do
 
 chooseState :: (MonadError ServantErr m, MonadState AppState m) => UserID -> ChoiceID -> OptionID -> m Decision
 chooseState uid cid oid = do
-  cs     <- choices <$> get
-  _      <- tryMaybe ("Couldn't find choice " ++ show cid) $ getChoiceById cid cs
+  c      <- getChoice uid cid
+  _      <- tryBool "Choice is not owned by user" (choiceUserId c == Just uid)
   os     <- options <$> get
   o      <- tryMaybe ("Couldn't find option " ++ show oid) $ getOptionById oid os
   did    <- DecisionID <$> newUUID
