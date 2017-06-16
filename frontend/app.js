@@ -124,9 +124,24 @@ function push_error(err) {
   app.errors.push(err);
 }
 
+// TODO: Improve this crap!
+function myChoices() {
+  return this.choices.filter(
+    function(c) {
+      return c.choiceUserId == app.user.userId;
+    }).reverse();
+}
+
+function otherChoices() {
+  return this.choices.filter(
+    function(c) {
+      return c.choiceUserId != app.user.userId;
+    }).reverse();
+}
+
 comp('choices-list', { props:    ['choices', 'choiceName'],
                        methods:  { newChoice: newChoice },
-                       computed: { revChoices: function() { return this.choices.reverse() } }});
+                       computed: { myChoices: myChoices, otherChoices: otherChoices }});
 
 comp('choice-item',  { props:    ['choice'],
                        methods:  { clickChoice: getChoice } });

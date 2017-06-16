@@ -229,4 +229,4 @@ newUUID = do
   return u
 
 emptyAppState :: AppState
-emptyAppState = AS [] [] [] [] (mkStdGen 293874928374)
+emptyAppState = AS [] [] [] [] (mkStdGen 293874928374) -- Mmmm yesss. That seems like a good number.

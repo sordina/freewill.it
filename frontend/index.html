@@ -44,13 +44,17 @@
 
     <script type="text/x-template" id="choices-list">
       <div>
-        <h2>My Choices <!-- <em class="small">(* Decided)</em> --></h2>
+        <h2>My Choices</h2>
         <ul>
-          <choice-item v-for="choice in revChoices" :choice="choice"></choice-item>
+          <choice-item v-for="choice in myChoices" :choice="choice"></choice-item>
           <li>
             <input placeholder="New Choice..."
                    v-model="choiceName"
                    @keyup.enter="newChoice" /> </li>
+        </ul>
+        <h2>Community</h2>
+        <ul>
+          <choice-item v-for="choice in otherChoices" :choice="choice"></choice-item>
         </ul>
       </div>
     </script>
