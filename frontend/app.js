@@ -25,9 +25,10 @@ function getChoice_(o,i) {
     function(x){ push_error("Couldn't fetch choice " + i); }
   ); }
 
-function newChoice() {
-  postChoices( {choiceName: this.choiceName},
-    function(choiceResponse) { getChoices_() },
+function newChoice(e) {
+  var i = e.srcElement;
+  postChoices( {choiceName: i.value},
+    function(choiceResponse) { i.value = ''; getChoices_() },
     function(x) { console.log(x); push_error("Could not create choice due to error "); }
   ) }
 
@@ -143,7 +144,7 @@ function otherChoices() {
     }).reverse();
 }
 
-comp('choices-list', { props:    ['choices', 'choiceName'],
+comp('choices-list', { props:    ['choices' ],
                        methods:  { newChoice: newChoice },
                        computed: { myChoices: myChoices, otherChoices: otherChoices }});
 
@@ -210,3 +211,5 @@ var app = new Vue({
 });
 
 getUser_();
+
+setInterval(function(){ if(app.user) { getChoices_(); }}, 30000);
