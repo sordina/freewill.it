@@ -46,8 +46,8 @@ instance MonadIO m => Add      (PC (m x)) m where add      (PGC db) uid cid odat
 instance MonadIO m => Choose   (PC (m x)) m where choose   (PGC db) uid cid oid   = liftIO $ postgresChoose   db uid cid oid
 instance MonadIO m => List     (PC (m x)) m where list     (PGC db) uid           = liftIO $ postgresList     db uid
 instance MonadIO m => Me       (PC (m x)) m where me       (PGC db) uid           = liftIO $ postgresMe       db uid
-instance MonadIO m => Share    (PC (m x)) m where share    (PGC db) uid cid       = liftIO $ postgresShare    db uid cid
-                                                  hide     (PGC db) uid cid       = liftIO $ postgresHide     db uid cid
+instance MonadIO m => Share    (PC (m x)) m where share    (PGC db) uid cid       = liftIO $ postgresShare    db uid cid True
+                                                  hide     (PGC db) uid cid       = liftIO $ postgresShare    db uid cid False
 instance MonadIO m => Register (PC (m x)) m where register (PGC db)     fn ln     = liftIO $ postgresRegister db fn ln
 instance MonadIO m => Login    (PC (m x)) m where login    (PGC db)     fn ln     = liftIO $ postgresLogin    db fn ln
 instance MonadIO m => Database (PC (m x)) m
@@ -64,8 +64,6 @@ instance FromRow DecisionRow
 
 -- Implementation
 
-postgresShare = error "postgresShare not yet defined"
-postgresHide  = error "postgresHide not yet defined"
 
 makeDecision :: UserID -> [Option] -> [DecisionRow] -> Maybe Decision
 makeDecision _uid _os []   = Nothing
@@ -80,19 +78,19 @@ makeDecision uid  os (d:_) = case o of Just o' -> Just $ Decision cid did o' (Ju
 
 postgresView  :: Connection -> UserID -> ChoiceID -> IO ChoiceAPIData
 postgresView conn uid cid = do
-  [ myChoice ] <- query conn choiceQuery   (cid, uid) -- TODO: Introduce failure context
-  os           <- query conn optionQuery   (cid, uid)
-  ds           <- query conn decisionQuery (cid, uid)
+  [ myChoice ] <- query conn choiceQuery   (cid, uid)
+  os           <- query conn optionQuery   (cid, uid, shared myChoice)
+  ds           <- query conn decisionQuery (cid, uid, shared myChoice)
   let d         = makeDecision uid os ds
   return $ CAD myChoice os d
   where
   choiceQuery   = [sql| select choiceid, choicename, userid, shared
-                        from choices where choiceid = ? and userid = ?  |]
+                        from choices where choiceid = ? and (userid = ? or shared = True)  |]
   optionQuery   = [sql| select optionChoiceId, optionid, optionName, userid
-                        from options where optionChoiceId = ? and userid = ?
+                        from options where optionChoiceId = ? and (userid = ? or ?)
                         order by created desc |]
   decisionQuery = [sql| select decisionChoiceId, decisionid, decision
-                        from decisions where decisionChoiceId = ? and userid = ? |]
+                        from decisions where decisionChoiceId = ? and (userid = ? or ?) |]
 
 postgresName :: Connection -> UserID -> Choice -> IO Choice
 postgresName conn uid c = do
@@ -101,21 +99,40 @@ postgresName conn uid c = do
   where
   insertionQuery = [sql| insert into choices (choicename, userid) values (?,?) returning choiceid |]
 
+verifyChoice :: Connection -> UserID -> ChoiceID -> IO Choice
+verifyChoice conn uid cid = do
+  [c] <- query conn selectionquery (uid, cid)
+  return c
+  where
+  selectionquery = [sql| select choiceid, choicename, userid, shared
+                         from choices where userid = ? and choiceid = ?  |]
+
+
 postgresAdd :: Connection -> UserID -> ChoiceID -> Option -> IO Option
 postgresAdd conn uid cid o = do
+  _            <- verifyChoice conn uid cid
   let ocid      = optionChoiceId o
-  x@[ ]        <- query conn priorDecisions (Only cid)
+      ouid      = optionUserId   o
+  True         <- return $ ocid ==      cid
+  [ ]          <- priorDecisions conn cid
   [ Only oid ] <- query conn insertionQuery (optionName o, ocid, uid)
-  _            <- return (x :: [Only UserID])
   return $ o { optionId = Just oid, optionUserId = Just uid }
   where
   insertionQuery = [sql| insert into options (optionname, optionchoiceid, userid)
                          values (?,?,?) returning optionid |]
 
+postgresShare :: Connection -> UserID -> ChoiceID -> Bool -> IO Choice
+postgresShare conn uid cid s = do
+  [c] <- query conn shareQuery (s, uid, cid)
+  return c
+  where
+  shareQuery = [sql| update    choices set shared = ?
+                     where     userid = ? and choiceid = ?
+                     returning choiceid, choicename, userid, shared |]
+
 postgresChoose :: Connection -> UserID -> ChoiceID -> OptionID -> IO Decision
 postgresChoose conn uid cid oid = do
-  x@[ ]          <- query conn priorDecisions   (Only cid)
-  _              <- return                      (x :: [Only UserID])
+  []             <- priorDecisions conn cid
   [ Only did   ] <- query conn insertionQuery   (cid, oid, uid)
   [ Only oName ] <- query conn optionQuery      (oid, uid)
   let o           = Option cid (Just oid) oName (Just uid)
@@ -124,15 +141,17 @@ postgresChoose conn uid cid oid = do
   insertionQuery = [sql| insert into decisions (decisionchoiceid, decision, userid) values (?,?,?) returning decisionid |]
   optionQuery    = [sql| select optionname from options where optionid = ? and userid = ? |]
 
-priorDecisions :: Query
-priorDecisions = [sql| select userid from decisions where decisionChoiceId = ? |]
+priorDecisions :: Connection -> ChoiceID -> IO [ DecisionRow ]
+priorDecisions conn cid = query conn [sql| select decisionchoiceid, decisionid, decision
+                                           from decisions
+                                           where decisionChoiceId = ? |] (Only cid)
 
 postgresList :: Connection -> UserID -> IO [Choice]
 postgresList conn uid = query conn selectionquery (Only uid)
   where
   selectionquery = [sql| select choiceid, choicename, userid, shared
                          from choices
-                         where userid = ?
+                         where userid = ? or shared = True
                          order by created desc |]
 
 postgresMe :: Connection -> UserID -> IO User

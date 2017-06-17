@@ -66,25 +66,28 @@
     <script type="text/x-template" id="choice-info">
       <div>
         <h2>{{choice.choiceName}}</h2>
-        <h3>Share: <input type="checkbox" id="checkbox" v-model="shared" /></h3>
+        <h3 v-if="ownedbyme">Shared: <input type="checkbox" id="checkbox" v-model="shared" /></h3>
         <div v-if="decision">
           <h3>Options</h3>
           <ul>
             <li v-for="option in revOptions">{{option.optionName}}</li>
           </ul>
           <h3>Decision</h3>
-          <p>{{decision.decision.optionName}}</p>
-        </div>
-        <div v-else>
+          <p>{{decision.decision.optionName}}</p> </div>
+
+        <div v-else-if="ownedbyme">
           <h3>Options <em class="small">(Click to Choose)</em></h3>
           <ul>
             <option-item v-for="option in revOptions" :option="option"></option-item>
             <li>
               <input placeholder="New Option..."
                      v-model="optionName"
-                     @keyup.enter="newOption" /> </li>
-          </ul>
-        </div>
+                     @keyup.enter="newOption" /> </li> </ul> </div>
+
+        <div v-else>
+          <h3>Options</h3>
+          <ul>
+            <li v-for="option in revOptions">{{option.optionName}} </li> </ul> </div>
       </div>
     </script>
 

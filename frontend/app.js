@@ -45,6 +45,10 @@ function newOption() {
     function(err)            { console.log(err); push_error("Error adding option to choice "); }
   )}
 
+function ownedbyme() {
+  return this.choice.choiceUserId == app.user.userId; // TODO: Shouldn't reference app explicitly
+  }
+
 function decide() {
   var choiceId = this.option.optionChoiceId;
   var option   = this.option;
@@ -150,15 +154,22 @@ comp('choice-info',  { props:    ['choice', 'options', 'decision', 'optionName',
                        methods:  { newOption: newOption },
                        computed: {
                          revOptions: function() { return this.options.reverse() },
+                         ownedbyme: ownedbyme,
                          shared: {
                            get: function () { return this.choice.shared; },
                            set: function (x) {
-                             this.choice.shared = x;
+                             var c = this.choice;
+                             var previousshared = c.shared;
+                             c.shared = x;
                              // TODO: Use success and error callbacks when setting shared property
                              if(x) {
-                               postChoicesByChoiceIdShare(this.choice.choiceId);
+                               postChoicesByChoiceIdShare(c.choiceId,
+                                 function(){ console.log("Shared"); },
+                                 function(){ push_error("Couldn't share choice"); c.shared = previousshared; });
                              } else {
-                               postChoicesByChoiceIdHide(this.choice.choiceId);
+                               postChoicesByChoiceIdHide(c.choiceId,
+                                 function(){ console.log("hidden"); },
+                                 function(){ push_error("Couldn't hide choice"); c.shared = previousshared; });
                              }
                        } } } });
 
