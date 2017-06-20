@@ -139,9 +139,7 @@ function myChoices() {
 
 function otherChoices() {
   return this.choices.filter(
-    function(c) {
-      return c.choiceUserId != app.user.userId;
-    }).reverse();
+    function(c) { return c.shared; }).reverse();
 }
 
 comp('choices-list', { props:    ['choices' ],
