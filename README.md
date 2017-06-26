@@ -64,16 +64,22 @@ There is a small test-suite that will curl the application routes that lives in 
 * <https://hackage.haskell.org/package/uuid-1.3.13/docs/Data-UUID.html>
 
 
+## Deployment
+
+Two Remotes:
+
+    heroku	https://git.heroku.com/freewill.git (fetch)
+    heroku	https://git.heroku.com/freewill.git (push)
+    origin	git@github.com:sordina/freewill.it.git (fetch)
+    origin	git@github.com:sordina/freewill.it.git (push)
+
+The heroku remote actually ignores most of the app and simply pulls and runs
+the url listed in `heroku_binary_location`.
+
 ## TODO
 
 * Move all the orphans into special modules sepearating all the junk out
 * Supe up the user, have an email, etc.
-* Encrypt user password in the database
-
-
-
-
-
-
-
+* Host on Heroku
+* Build with CI
 
