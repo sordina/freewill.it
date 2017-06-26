@@ -69,3 +69,5 @@ There is a small test-suite that will curl the application routes that lives in 
 * Move all the orphans into special modules sepearating all the junk out
 * Supe up the user, have an email, etc.
 * Encrypt user password in the database
+
+
