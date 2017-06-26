@@ -92,8 +92,6 @@ function register(a) {
     function(res) { console.log(res); app.user = res; getChoices_(); },
     function(err) { console.log(err); push_error("Could not register"); }
   )
-  console.log("Caught post register event");
-  console.log(a);
   }
 
 function login(a) {
