@@ -82,4 +82,4 @@ the url listed in `heroku_binary_location`.
 * Supe up the user, have an email, etc.
 * Host on Heroku
 * Build with CI
-
+* Comparative tests between in-memory and postgres databases
