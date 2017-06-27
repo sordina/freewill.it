@@ -13,12 +13,12 @@ module DB.PostgresDB
   )
   where
 
--- https://hackage.haskell.org/package/postgresql-simple-0.5.2.1/docs/Database-PostgreSQL-Simple.html
 import Database.PostgreSQL.Simple
 import Database.PostgreSQL.Simple.SqlQQ
 import Data.List
 import GHC.Generics
 import Control.Monad.IO.Class
+import qualified Data.ByteString.Char8 as BSC
 
 import Data
 import DB.Class
@@ -26,13 +26,10 @@ import DB.Class
 newtype PostgresConnection m = PGC Connection
 
 newPostgresDBConnection :: String -> IO (PostgresConnection m)
-newPostgresDBConnection dbc = PGC <$> connectFreewill
+newPostgresDBConnection dbc = PGC <$> connectFreewill dbc
 
--- TODO: Possibly tunnel through PGDATABASE env variable somehow...
---       Maybe this is automatic, maybe it isn't!
---       https://www.postgresql.org/docs/9.1/static/libpq-envars.html
-connectFreewill :: IO Connection
-connectFreewill = connectPostgreSQL "dbname='freewill'"
+connectFreewill :: String -> IO Connection
+connectFreewill dbc = connectPostgreSQL (BSC.pack dbc)
 
 -- DB.Class Instances
 

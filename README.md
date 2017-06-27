@@ -15,15 +15,15 @@ There are options defined with optparse-generic that you can access by using
 
 > stack run -- -- --help
 
-
     freewill.ai
 
-    Usage: freewill [--port INT] [--database DATABASE] [--jwtKey STRING]
+    Usage: freewill [--port INT] [--database STRING] [--jwtKey STRING]
                     [--safeAuth BOOL] [--jsURL TEXT] [--logLevel LOGLEVEL]
 
     Available options:
       -h,--help                Show this help text
-      --database DATABASE      Memory | Postgres (Default)
+      --database STRING        memory:// (Default) | postgres://... (see
+                               https://www.postgresql.org/docs/9.5/static/libpq-connect.html#LIBPQ-CONNSTRING)
       --jwtKey STRING          JWT Key FilePath
       --safeAuth BOOL          False | True (Default) - Mandate HTTPS for Auth
       --jsURL TEXT             URL that Javascript points to
@@ -32,7 +32,7 @@ There are options defined with optparse-generic that you can access by using
 
 To get up and running quickly for local development with a persisted JWK key, use
 
-> stack run -- -- --database Memory --safeAuth False --jwtKey key.jwk
+> stack run -- -- --database memory:// --safeAuth False --jwtKey key.jwk
 
 This allows for an in-memory database with no existing users, no requirement for HTTPs,
 and a persisted key, for resumption of sessions between server restarts.
@@ -40,18 +40,21 @@ and a persisted key, for resumption of sessions between server restarts.
 
 If you want to run using postgres, you can pass
 
-> --database Postgres
+> --database postgres://...
 
-This currently expects that you have a running, migrated database called freewill.
+The database string is specified by the
+[LIBPQ-CONNSTRING documentation](https://www.postgresql.org/docs/9.5/static/libpq-connect.html#LIBPQ-CONNSTRING).
 
-There is an open task to make this configurable.
+Migrations live in the db/ folder, and can be run with the help of the scripts that reside there.
 
-Migrations live in the db/ folder.
+If you get an error saying "couldn't find migrate.sh" you may need to add "db/" to your $PATH.
 
 
 ## Testing
 
 There is a small test-suite that will curl the application routes that lives in test/curl.bash.
+
+This should pass for both in-memory and postgres databases.
 
 
 ## Ideas
@@ -76,10 +79,12 @@ Two Remotes:
 The heroku remote actually ignores most of the app and simply pulls and runs
 the url listed in `heroku_binary_location`.
 
+
 ## TODO
 
 * Move all the orphans into special modules sepearating all the junk out
 * Supe up the user, have an email, etc.
+* Email validataion
 * Host on Heroku
 * Build with CI
 * Comparative tests between in-memory and postgres databases
