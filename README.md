@@ -49,6 +49,12 @@ Migrations live in the db/ folder, and can be run with the help of the scripts t
 
 If you get an error saying "couldn't find migrate.sh" you may need to add "db/" to your $PATH.
 
+Migration process for Heroku:
+
+    $ heroku run bash
+    ~ $ cd db/
+    ~/db $ ./migrate.sh $DATABASE_URL
+
 
 ## Testing
 
