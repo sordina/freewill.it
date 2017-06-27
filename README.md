@@ -94,3 +94,4 @@ the url listed in `heroku_binary_location`.
 * Host on Heroku
 * Build with CI
 * Comparative tests between in-memory and postgres databases
+* Github link in footer
