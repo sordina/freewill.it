@@ -7,7 +7,7 @@ Feeling limited to deciding to do things as an individual? Now you can decide to
 
 ![](https://github.com/sordina/freewill.it/blob/master/frontend/images/freewill.png?raw=true)
 
-(Will move to freewill.ai at some point...)
+[Currently running on Heroku at freewill.herokuapp.com!](https://freewill.herokuapp.com)
 
 ## Running
 
