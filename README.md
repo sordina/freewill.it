@@ -95,3 +95,4 @@ the url listed in `heroku_binary_location`.
 * Build with CI
 * Comparative tests between in-memory and postgres databases
 * Github link in footer
+* Dev/Prod Javascript resources flag
