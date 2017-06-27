@@ -1,1 +1,1 @@
-web: /app/vendor/scripts/heroku_start.sh
+web: /app/scripts/heroku_start.sh
