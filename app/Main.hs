@@ -9,6 +9,7 @@ import Network.Wai.Handler.Warp
 import Options.Generic
 import Data.Maybe
 import Control.Monad (when)
+import Data.List     (isPrefixOf)
 
 import qualified Enhancements                         as E
 import qualified API                                  as A
@@ -21,11 +22,10 @@ import qualified Network.Wai.Middleware.RequestLogger as WL
 import qualified Network.Wai.Middleware.Debugging     as WL
 import qualified Network.Wai.Middleware.ForceSSL      as WS
 
-data Database = Memory | Postgres    deriving (Eq, Show, Read, Generic)
 data LogLevel = Prod   | Dev | Debug deriving (Eq, Show, Read, Generic)
 
 data Options = Options { port     :: Maybe Int
-                       , database :: Maybe Database <?> "Memory | Postgres (Default)"
+                       , database :: Maybe String   <?> "memory:// (Default) | postgres://CONNECTION_STRING"
                        , jwtKey   :: Maybe FilePath <?> "JWT Key FilePath"
                        , safeAuth :: Maybe Bool     <?> "False | True (Default) - Mandate HTTPS for Auth"
                        , jsURL    :: Maybe Text     <?> "URL that Javascript points to"
@@ -33,19 +33,18 @@ data Options = Options { port     :: Maybe Int
                        }
   deriving (Show, Generic)
 
-instance ParseField  Database
 instance ParseField  LogLevel
 instance ParseRecord Options
 
 main :: IO ()
 main = do
   opts     <- getRecord "freewill.ai"
-  let oPort = fromMaybe 8080     $             port     opts
-      oDB   = fromMaybe Postgres $ unHelpful $ database opts
-      oJSU  = fromMaybe ""       $ unHelpful $ jsURL    opts
-      oJKO  =                      unHelpful $ jwtKey   opts
-      oSec  = fromMaybe True     $ unHelpful $ safeAuth opts
-      oLog' = fromMaybe Dev      $ unHelpful $ logLevel opts
+  let oPort = fromMaybe 8080        $             port     opts
+      oDB   = fromMaybe "memory://" $ unHelpful $ database opts
+      oJSU  = fromMaybe ""          $ unHelpful $ jsURL    opts
+      oJKO  =                         unHelpful $ jwtKey   opts
+      oSec  = fromMaybe True        $ unHelpful $ safeAuth opts
+      oLog' = fromMaybe Dev         $ unHelpful $ logLevel opts
       oJSO  = SJ.defCommonGeneratorOptions { SJ.urlPrefix = oJSU }
       oLog  = getLogger oLog'
       oSSL  = getHttpsRedirect oSec
@@ -60,8 +59,8 @@ main = do
 newMemDBConnection :: IO (MemDB.MemDBConnection (A.M a))
 newMemDBConnection = MemDB.newMemDBConnection
 
-newPostgresDBConnection :: IO (PostgresDB.PostgresConnection (A.M a))
-newPostgresDBConnection = PostgresDB.newPostgresDBConnection
+newPostgresDBConnection :: String -> IO (PostgresDB.PostgresConnection (A.M a))
+newPostgresDBConnection dbc = PostgresDB.newPostgresDBConnection dbc
 
 getHttpsRedirect :: Bool -> W.Middleware
 getHttpsRedirect False = id
@@ -72,12 +71,14 @@ getLogger Prod  = WL.logStdout
 getLogger Dev   = WL.logStdoutDev
 getLogger Debug = WL.debug . WL.logStdoutDev
 
-go :: C.CTX -> Int -> SJ.CommonGeneratorOptions -> W.Middleware -> W.Middleware -> Database -> IO ()
+go :: C.CTX -> Int -> SJ.CommonGeneratorOptions -> W.Middleware -> W.Middleware -> String -> IO ()
 
-go c p jso logger ssl Memory = do
+go c p jso logger ssl dbc | "memory://" `isPrefixOf` dbc = do
   db <- newMemDBConnection
   run p (logger (ssl (E.app c db jso)))
 
-go c p jso logger ssl Postgres = do
-  db <- newPostgresDBConnection
+go c p jso logger ssl dbc | "postgres://" `isPrefixOf` dbc = do
+  db <- newPostgresDBConnection dbc
   run p (logger (ssl (E.app c db jso)))
+
+go _c _p _jso _logger _ssl dbc = error ("Invalid database connection string: " ++ dbc)

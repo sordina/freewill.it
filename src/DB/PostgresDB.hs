@@ -23,12 +23,10 @@ import Control.Monad.IO.Class
 import Data
 import DB.Class
 
--- FUNDAMENTAL DATATYPE!!!!
---
 newtype PostgresConnection m = PGC Connection
 
-newPostgresDBConnection :: IO (PostgresConnection m)
-newPostgresDBConnection = PGC <$> connectFreewill
+newPostgresDBConnection :: String -> IO (PostgresConnection m)
+newPostgresDBConnection dbc = PGC <$> connectFreewill
 
 -- TODO: Possibly tunnel through PGDATABASE env variable somehow...
 --       Maybe this is automatic, maybe it isn't!
