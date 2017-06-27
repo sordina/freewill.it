@@ -112,7 +112,7 @@ postgresAdd :: Connection -> UserID -> ChoiceID -> Option -> IO Option
 postgresAdd conn uid cid o = do
   _            <- verifyChoice conn uid cid
   let ocid      = optionChoiceId o
-      ouid      = optionUserId   o
+      _ouid     = optionUserId   o
   True         <- return $ ocid ==      cid
   [ ]          <- priorDecisions conn cid
   [ Only oid ] <- query conn insertionQuery (optionName o, ocid, uid)

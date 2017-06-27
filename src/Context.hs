@@ -32,11 +32,11 @@ generateAndSaveKey fp = do
   BL.writeFile fp (Data.Aeson.encode k)
   return k
 
-getContext :: Maybe FilePath -> Maybe Bool -> IO CTX
+getContext :: Maybe FilePath -> Bool -> IO CTX
 getContext keyFile safeAuth = do
   k <- loadOrGenerateAndSaveKey keyFile -- (unHelpful (jwtKey o))
   return $ cs :. Auth.defaultJWTSettings k :. Servant.EmptyContext
   where
   cs       = Auth.defaultCookieSettings { Auth.cookieIsSecure = security }
-  security | safeAuth == Just False = Auth.NotSecure
-           | otherwise              = Auth.Secure
+  security | safeAuth  = Auth.Secure
+           | otherwise = Auth.NotSecure

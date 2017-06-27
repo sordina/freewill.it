@@ -8,6 +8,7 @@ module Main where
 import Network.Wai.Handler.Warp
 import Options.Generic
 import Data.Maybe
+import Control.Monad (when)
 
 import qualified Enhancements                         as E
 import qualified API                                  as A
@@ -18,6 +19,7 @@ import qualified Context                              as C
 import qualified Network.Wai                          as W
 import qualified Network.Wai.Middleware.RequestLogger as WL
 import qualified Network.Wai.Middleware.Debugging     as WL
+import qualified Network.Wai.Middleware.ForceSSL      as WS
 
 data Database = Memory | Postgres    deriving (Eq, Show, Read, Generic)
 data LogLevel = Prod   | Dev | Debug deriving (Eq, Show, Read, Generic)
@@ -42,16 +44,18 @@ main = do
       oDB   = fromMaybe Postgres $ unHelpful $ database opts
       oJSU  = fromMaybe ""       $ unHelpful $ jsURL    opts
       oJKO  =                      unHelpful $ jwtKey   opts
-      oSAO  =                      unHelpful $ safeAuth opts
+      oSec  = fromMaybe True     $ unHelpful $ safeAuth opts
       oLog' = fromMaybe Dev      $ unHelpful $ logLevel opts
       oJSO  = SJ.defCommonGeneratorOptions { SJ.urlPrefix = oJSU }
       oLog  = getLogger oLog'
-  ctx      <- C.getContext oJKO oSAO
+      oSSL  = getHttpsRedirect oSec
+  ctx      <- C.getContext oJKO oSec
 
-  putStrLn $ "Using " ++ show oLog' ++ " logging middleware"
-  putStrLn $ "Using " ++ show oDB   ++ " database driver"
-  putStrLn $ "Running on http://localhost:" ++ show oPort ++ "/"
-  go ctx oPort oJSO oLog oDB
+  putStrLn  $ "Using " ++ show oLog' ++ " logging middleware"
+  putStrLn  $ "Using " ++ show oDB   ++ " database driver"
+  putStrLn  $ "Running on http://localhost:" ++ show oPort ++ "/"
+  when oSec $ putStrLn $ "Mandating SSL"
+  go ctx oPort oJSO oLog oSSL oDB
 
 newMemDBConnection :: IO (MemDB.MemDBConnection (A.M a))
 newMemDBConnection = MemDB.newMemDBConnection
@@ -59,17 +63,21 @@ newMemDBConnection = MemDB.newMemDBConnection
 newPostgresDBConnection :: IO (PostgresDB.PostgresConnection (A.M a))
 newPostgresDBConnection = PostgresDB.newPostgresDBConnection
 
+getHttpsRedirect :: Bool -> W.Middleware
+getHttpsRedirect False = id
+getHttpsRedirect True  = WS.forceSSL
+
 getLogger :: LogLevel -> W.Middleware
 getLogger Prod  = WL.logStdout
 getLogger Dev   = WL.logStdoutDev
 getLogger Debug = WL.debug . WL.logStdoutDev
 
-go :: C.CTX -> Int -> SJ.CommonGeneratorOptions -> W.Middleware -> Database -> IO ()
+go :: C.CTX -> Int -> SJ.CommonGeneratorOptions -> W.Middleware -> W.Middleware -> Database -> IO ()
 
-go c p jso logger Memory = do
+go c p jso logger ssl Memory = do
   db <- newMemDBConnection
-  run p (E.app c db jso logger)
+  run p (logger (ssl (E.app c db jso)))
 
-go c p jso logger Postgres = do
+go c p jso logger ssl Postgres = do
   db <- newPostgresDBConnection
-  run p (E.app c db jso logger)
+  run p (logger (ssl (E.app c db jso)))

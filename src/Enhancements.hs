@@ -17,7 +17,6 @@ import Servant.Auth.Server
 import Servant.JS hiding (requestBody)
 import Data.Text
 import Data.Swagger (Swagger(..) )
-import Network.Wai
 import Network.Wai.Middleware.Cors
 import Network.Wai.Middleware.Servant.Options
 
@@ -27,10 +26,9 @@ apiWithEnhancements :: Proxy App
 apiWithEnhancements = Proxy
 
 app :: (HasContextEntry x JWTSettings, HasContextEntry x CookieSettings, Database db M)
-    => Context x -> db -> CommonGeneratorOptions -> Middleware -> Application
-app context db jsOptions logging
-    = logging
-    $ cors (const $ Just policy) -- simpleCors
+    => Context x -> db -> CommonGeneratorOptions -> Application
+app context db jsOptions
+    = cors (const $ Just policy) -- simpleCors
     $ provideOptions api
     $ serveWithContext apiWithEnhancements context (serverWithSpec db js jsOptions cs)
   where

@@ -9,6 +9,8 @@
 {-# LANGUAGE TypeApplications      #-}
 {-# LANGUAGE UndecidableInstances  #-}
 
+{-# OPTIONS_GHC -fno-warn-unused-binds #-} -- Used to suppress UserInfo warnings
+
 module DB.StateDB
   ( listState
   , addState
@@ -95,13 +97,13 @@ getChoice uid cid = do
 getOptionById :: OptionID -> [Option] -> Maybe Option
 getOptionById oid = firstOf (select (\o -> optionId o == Just oid))
 
-getOptionsByChoiceId :: UserID -> ChoiceID -> [Option] -> [Option]
-getOptionsByChoiceId uid cid = filter test
+getOptionsByChoiceId :: ChoiceID -> [Option] -> [Option]
+getOptionsByChoiceId cid = filter test
   where
   test x = optionChoiceId x == cid
 
-getDecisionByChoiceId :: UserID -> ChoiceID -> [Decision] -> Maybe Decision
-getDecisionByChoiceId uid cid = find test
+getDecisionByChoiceId :: ChoiceID -> [Decision] -> Maybe Decision
+getDecisionByChoiceId cid = find test
   where
   test x = decisionChoiceId x == cid
 
@@ -127,8 +129,8 @@ viewState :: (MonadError ServantErr m, MonadState AppState m) => UserID -> Choic
 viewState uid cid = do
   as    <- get
   c     <- getChoice uid cid
-  let os = getOptionsByChoiceId uid cid $ options as
-      d  = getDecisionByChoiceId uid cid $ decisions as
+  let os = getOptionsByChoiceId cid $ options as
+      d  = getDecisionByChoiceId cid $ decisions as
   return $ CAD c os d
 
 select :: (Applicative f1, Traversable f, Indexable Int p) => (b -> Bool) -> p b (f1 b) -> f b -> f1 (f b)
@@ -159,7 +161,7 @@ addState uid cid' odata = do
   ds     <- decisions <$> get
   os     <- options   <$> get
 
-  let exD = getDecisionByChoiceId uid cid ds
+  let exD = getDecisionByChoiceId cid ds
       o   = odata { optionId = Just oid, optionUserId = Just uid }
 
   -- Can't deliberate after choice
@@ -177,7 +179,7 @@ chooseState uid cid oid = do
   did    <- DecisionID <$> newUUID
   ds     <- decisions  <$> get
 
-  let exD = getDecisionByChoiceId uid cid ds
+  let exD = getDecisionByChoiceId cid ds
       d   = Decision cid (Just did) o (Just uid)
 
   -- Can't rechoose
