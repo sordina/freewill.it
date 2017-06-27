@@ -2,6 +2,7 @@
 
 if [ "" != "$JWT_KEY" ]
 then
+	echo "Using JWT Key from Env variable JWT_KEY"
 	echo "$JWT_KEY" > /tmp/key.jwk
 fi
 
