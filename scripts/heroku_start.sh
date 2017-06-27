@@ -4,9 +4,9 @@ set -e
 
 if [ "" != "$JWT_KEY" ]
 then
-	echo "Using JWT Key from Env variable JWT_KEY"
-	echo "$JWT_KEY" > /app/key.jwk
-	echo "Key set."
+	echo Using JWT_KEY from env
+	/app/vendor/heroku_binaries/latest_heroku_binary --database "$DATABASE_URL" --safeAuth True --jwtKey <(echo "$JWT_KEY") --logLevel Prod --port $PORT
+else
+	echo Using random JWT_KEY
+	/app/vendor/heroku_binaries/latest_heroku_binary --database "$DATABASE_URL" --safeAuth True --logLevel Prod --port $PORT
 fi
-
-/app/vendor/heroku_binaries/latest_heroku_binary --database "$DATABASE_URL" --safeAuth True --jwtKey /app/key.jwk --logLevel Prod --port $PORT
