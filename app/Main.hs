@@ -26,7 +26,7 @@ data LogLevel = Prod   | Dev | Debug deriving (Eq, Show, Read, Generic)
 
 data Options = Options { port     :: Maybe Int
                        , database :: Maybe String   <?> "memory:// (Default) | postgres://... (see https://www.postgresql.org/docs/9.5/static/libpq-connect.html#LIBPQ-CONNSTRING)"
-                       , jwtKey   :: Maybe FilePath <?> "JWT Key FilePath"
+                       , jwtKey   :: Maybe FilePath <?> "JWT Key FilePath - Defaults to randomized, writes file if not present"
                        , safeAuth :: Maybe Bool     <?> "False | True (Default) - Mandate HTTPS for Auth"
                        , jsURL    :: Maybe Text     <?> "URL that Javascript points to"
                        , logLevel :: Maybe LogLevel <?> "Prod | Dev (Default) | Debug"
