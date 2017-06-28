@@ -89,11 +89,7 @@ are served from the frontend/ directory.
 
 ## TODO
 
-* Move all the orphans into special modules sepearating all the junk out
-* Supe up the user, have an email, etc.
 * Email validataion
-* Host on Heroku
 * Build with CI
 * Comparative tests between in-memory and postgres databases
-* Github link in footer
-* Dev/Prod Javascript resources flag
+* Add version URL
