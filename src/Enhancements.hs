@@ -57,6 +57,6 @@ serverWithSpec minify db js jsOptions cs
   :<|> return (jsForAPI api (jqueryWith    jsOptions))
   :<|> return (toSwagger api)
   :<|> Lib.server db js cs
-  :<|> serveDirectory (ifThenElse minify "frontend/assets/minified" "frontend/assets/development")
+  :<|> serveDirectory (ifThenElse minify "frontend/assets" "frontend/assets_development")
   :<|> serveDirectory ("frontend" :: String)
   :<|> redirectTo
