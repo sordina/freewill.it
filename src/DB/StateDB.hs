@@ -145,7 +145,8 @@ shareState s uid cid = do
   c      <- getChoice uid cid
   _      <- tryBool "Choice Not Owned by User" (choiceUserId c == Just uid)
   put na
-  return c
+  c2     <- getChoice uid cid
+  return c2
 
 addState :: (MonadError ServantErr m, MonadState AppState m) => UserID -> ChoiceID -> Option -> m Option
 addState uid cid' odata = do

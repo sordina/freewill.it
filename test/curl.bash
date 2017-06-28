@@ -95,7 +95,55 @@ then
   exit 1
 fi
 
-# TODO: Test sharing
+echo "Testing Sharing"
+un2="user_2_$$@email.com"
+pw2="pw_2_$$"
+
+echo "User: $un2"
+echo "Password: $pw2"
+
+token2=$(
+  curl -v --fail -XPOST -H "Content-Type: application/json" \
+  --data "{\"username\":\"$un2\", \"password\": \"$pw2\"}" \
+  http://localhost:8080/register 2>&1 \
+  | grep 'Set-Cookie: JWT-Cookie' | sed 's/[^=]*=//; s/;.*//'
+)
+
+echo "Login Token: $token"
+auth2="Authorization: Bearer $token2"
+
+echo "Attempting to view unshared choice"
+failure=$(
+  curl -s --fail -H "$auth2" http://localhost:8080/choices/$choiceId || echo failed
+  )
+
+if [[ "$failure" != failed ]]
+then
+  echo "Expected failure to view unshared choice did not occur..."
+  exit 1
+fi
+
+echo "Sharing Choice"
+curl -s --fail -H "$auth" -X POST -H "Content-Type: application/json" \
+  http://localhost:8080/choices/$choiceId/share | jq .
+
+echo "Choice should now be visible to other users"
+curl -s --fail -H "$auth2" http://localhost:8080/choices/$choiceId | jq .
+
+echo "Hiding Choice"
+curl -s --fail -H "$auth" -X POST -H "Content-Type: application/json" \
+  http://localhost:8080/choices/$choiceId/hide | jq .
+
+echo "Attempting to view re-hidden choice"
+failure=$(
+  curl -s --fail -H "$auth2" http://localhost:8080/choices/$choiceId || echo failed
+  )
+
+if [[ "$failure" != failed ]]
+then
+  echo "Expected failure to view re-hidden choice did not occur..."
+  exit 1
+fi
 
 echo "Choices"
 curl -s --fail -H "$auth" http://localhost:8080/choices | jq .
