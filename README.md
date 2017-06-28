@@ -82,8 +82,9 @@ Two Remotes:
     origin	git@github.com:sordina/freewill.it.git (fetch)
     origin	git@github.com:sordina/freewill.it.git (push)
 
-The heroku remote actually ignores most of the app and simply pulls and runs
-the url listed in `heroku_binary_location`.
+The heroku remote actually ignores most of the Haskell source for the app and
+simply pulls and runs the url listed in `heroku_binary_location`. Static assets
+are served from the frontend/ directory.
 
 
 ## TODO

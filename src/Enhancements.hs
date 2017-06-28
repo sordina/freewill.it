@@ -26,11 +26,11 @@ apiWithEnhancements :: Proxy App
 apiWithEnhancements = Proxy
 
 app :: (HasContextEntry x JWTSettings, HasContextEntry x CookieSettings, Database db M)
-    => Context x -> db -> CommonGeneratorOptions -> Application
-app context db jsOptions
+    => Context x -> Bool -> db -> CommonGeneratorOptions -> Application
+app context minify db jsOptions
     = cors (const $ Just policy) -- simpleCors
     $ provideOptions api
-    $ serveWithContext apiWithEnhancements context (serverWithSpec db js jsOptions cs)
+    $ serveWithContext apiWithEnhancements context (serverWithSpec minify db js jsOptions cs)
   where
   js     = getContextEntry context :: JWTSettings
   cs     = getContextEntry context :: CookieSettings
@@ -45,16 +45,18 @@ type App       = VanillaJS
             :<|> JQueryJS
             :<|> Swag
             :<|> API
+            :<|> "assets" :> Raw
             :<|> Raw
             :<|> Redirect "index.html"
 
 -- Server
 
-serverWithSpec :: Database db M => db -> JWTSettings -> CommonGeneratorOptions -> CookieSettings -> Server App
-serverWithSpec db js jsOptions cs
+serverWithSpec :: Database db M => Bool -> db -> JWTSettings -> CommonGeneratorOptions -> CookieSettings -> Server App
+serverWithSpec minify db js jsOptions cs
      = return (jsForAPI api (vanillaJSWith jsOptions))
   :<|> return (jsForAPI api (jqueryWith    jsOptions))
   :<|> return (toSwagger api)
   :<|> Lib.server db js cs
+  :<|> serveDirectory (ifThenElse minify "frontend/assets/minified" "frontend/assets/development")
   :<|> serveDirectory ("frontend" :: String)
   :<|> redirectTo

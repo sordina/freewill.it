@@ -27,6 +27,10 @@ function getChoice_(o,i) {
 
 function newChoice(e) {
   var i = e.srcElement;
+  if(! i.value || i.value == "") {
+    push_error("Please fill in the choice name ");
+    return
+  }
   postChoices( {choiceName: i.value},
     function(choiceResponse) { i.value = ''; getChoices_() },
     function(x) { console.log(x); push_error("Could not create choice due to error "); }

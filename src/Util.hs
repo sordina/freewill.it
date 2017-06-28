@@ -36,3 +36,7 @@ lkup inputs input_label =
   case (lookup input_label >=> readMay . T.unpack) inputs of
     Nothing -> Left $ "label " ++ T.unpack input_label ++ " not found"
     Just v  -> Right v
+
+ifThenElse :: Bool -> a -> a -> a
+ifThenElse True  a _ = a
+ifThenElse False _ b = b

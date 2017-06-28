@@ -30,6 +30,7 @@ data Options = Options { port     :: Maybe Int
                        , safeAuth :: Maybe Bool     <?> "False | True (Default) - Mandate HTTPS for Auth"
                        , jsURL    :: Maybe Text     <?> "URL that Javascript points to"
                        , logLevel :: Maybe LogLevel <?> "Prod | Dev (Default) | Debug"
+                       , minified :: Bool           <?> "False (Default) | True - Serve minified JS, etc."
                        }
   deriving (Show, Generic)
 
@@ -43,6 +44,7 @@ main = do
       oDB   = fromMaybe "memory://" $ unHelpful $ database opts
       oJSU  = fromMaybe ""          $ unHelpful $ jsURL    opts
       oJKO  =                         unHelpful $ jwtKey   opts
+      oMin  =                         unHelpful $ minified opts
       oSec  = fromMaybe True        $ unHelpful $ safeAuth opts
       oLog' = fromMaybe Dev         $ unHelpful $ logLevel opts
       oJSO  = SJ.defCommonGeneratorOptions { SJ.urlPrefix = oJSU }
@@ -54,7 +56,7 @@ main = do
   putStrLn  $ "Using " ++ show oDB   ++ " database driver"
   putStrLn  $ "Running on http://localhost:" ++ show oPort ++ "/"
   when oSec $ putStrLn $ "Mandating SSL"
-  go ctx oPort oJSO oLog oSSL oDB
+  go ctx oPort oJSO oLog oSSL oMin oDB
 
 newMemDBConnection :: IO (MemDB.MemDBConnection (A.M a))
 newMemDBConnection = MemDB.newMemDBConnection
@@ -71,14 +73,14 @@ getLogger Prod  = WL.logStdout
 getLogger Dev   = WL.logStdoutDev
 getLogger Debug = WL.debug . WL.logStdoutDev
 
-go :: C.CTX -> Int -> SJ.CommonGeneratorOptions -> W.Middleware -> W.Middleware -> String -> IO ()
+go :: C.CTX -> Int -> SJ.CommonGeneratorOptions -> W.Middleware -> W.Middleware -> Bool -> String -> IO ()
 
-go c p jso logger ssl dbc | "memory://" `isPrefixOf` dbc = do
+go c p jso logger ssl minify dbc | "memory://" `isPrefixOf` dbc = do
   db <- newMemDBConnection
-  run p (logger (ssl (E.app c db jso)))
+  run p (logger (ssl (E.app c minify db jso)))
 
-go c p jso logger ssl dbc | "postgres://" `isPrefixOf` dbc = do
+go c p jso logger ssl minify dbc | "postgres://" `isPrefixOf` dbc = do
   db <- newPostgresDBConnection dbc
-  run p (logger (ssl (E.app c db jso)))
+  run p (logger (ssl (E.app c minify db jso)))
 
-go _c _p _jso _logger _ssl dbc = error ("Invalid database connection string: " ++ dbc)
+go _c _p _jso _logger _ssl _min dbc = error ("Invalid database connection string: " ++ dbc)
