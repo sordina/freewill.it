@@ -10,6 +10,25 @@ $.ajaxPrefilter(function(opts, origOpts, xhr) {
   }
 })
 
+// Timeout Hack to operate on loaded SVG
+setTimeout(setupLoadingBar, 1000)
+
+function setupLoadingBar() {
+  var svgPath = document.getElementById('heart-path');
+  var path = new ProgressBar.Path(svgPath, {
+      duration: 300
+  });
+
+  $( document ).ajaxStart(function() {
+    path.set(0);
+    path.animate(0.5);
+  });
+
+  $( document ).ajaxSuccess(function() {
+    path.animate(1.0);
+  });
+}
+
 function comp(name, props) {
   props.template = '#' + name;
   Vue.component(name, props);
