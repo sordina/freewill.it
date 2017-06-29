@@ -10,8 +10,6 @@ $.ajaxPrefilter(function(opts, origOpts, xhr) {
   }
 })
 
-// Timeout Hack to operate on loaded SVG
-setTimeout(setupLoadingBar, 1000)
 
 function setupLoadingBar() {
   var svgPath = document.getElementById('heart-path');
@@ -28,6 +26,8 @@ function setupLoadingBar() {
     path.animate(1.0);
   });
 }
+
+setupLoadingBar();
 
 function comp(name, props) {
   props.template = '#' + name;
