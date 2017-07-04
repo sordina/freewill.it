@@ -37,6 +37,10 @@ newtype OptionID     = OptionID     UUID   deriving (Eq, Show, Generic, FromFiel
 newtype DecisionID   = DecisionID   UUID   deriving (Eq, Show, Generic, FromField, ToField)
 newtype Password     = Password     String deriving (Eq, Show, Generic, FromField, ToField)
 
+-- Query Types
+
+data ChoiceQuery = SQ
+
 
 -- Domain Data Types
 

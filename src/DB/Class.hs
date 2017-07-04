@@ -15,7 +15,7 @@ class Share    db m | db -> m where share    :: db -> UserID -> ChoiceID        
 class Add      db m | db -> m where add      :: db -> UserID -> ChoiceID -> Option   -> m Option
 class Choose   db m | db -> m where choose   :: db -> UserID -> ChoiceID -> OptionID -> m Decision
 class List     db m | db -> m where list     :: db -> UserID                         -> m [Choice]
-class Search   db m | db -> m where search   :: db -> UserId -> ChoiceQuery          -> m [Choice]
+class Search   db m | db -> m where search   :: db -> UserID -> ChoiceQuery          -> m [Choice]
 class Me       db m | db -> m where me       :: db -> UserID                         -> m User
 class Register db m | db -> m where register :: db -> String -> Password             -> m User
 class Login    db m | db -> m where login    :: db -> String -> Password             -> m User
