@@ -65,6 +65,7 @@ data ChoiceAPIData = CAD
   { theChoice   :: Choice
   , theOptions  :: [Option]
   , theDecision :: Maybe Decision
+  -- , theUser     :: Maybe User -- How to keep private things private?
   } deriving (Eq, Show, Generic)
 
 data LoginDetails = LoginDetails

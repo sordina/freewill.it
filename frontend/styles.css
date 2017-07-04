@@ -112,3 +112,16 @@ input {
 	bottom: 0;
 	left: 0;
 }
+
+#high-five {
+	position: absolute;
+	bottom: 0;
+	left: 50%;
+	width: 70px;
+	height: 70px;
+}
+
+#high-five img {
+	width: 50px;
+	height: 50px;
+}

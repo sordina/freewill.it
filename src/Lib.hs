@@ -55,7 +55,7 @@ userInfo :: (ThrowAll (m User), Me db m) => db -> AuthResult UserID -> m User
 userInfo db (Authenticated u) = me db u
 userInfo _db _                = throwAll err401
 
--- TODO: Use better header technique
+-- TODO: Use the more idiomatic servant header technique
 logout :: (ThrowAll (m a)) => AuthResult t -> m a
 logout (Authenticated _) = throwAll $ err302 { errHeaders = [ ("Location", "/")
                                                             , ("Set-Cookie", "JWT-Cookie=deleted; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT" ) ] }
