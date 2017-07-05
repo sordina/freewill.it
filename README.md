@@ -93,3 +93,5 @@ are served from the frontend/ directory.
 * Build with CI
 * Comparative tests between in-memory and postgres databases
 * Add version URL
+* Responsive UI
+* CLI Interface
