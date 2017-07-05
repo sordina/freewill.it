@@ -14,7 +14,8 @@ $.ajaxPrefilter(function(opts, origOpts, xhr) {
 function setupLoadingBar() {
   var svgPath = document.getElementById('heart-path');
   var path = new ProgressBar.Path(svgPath, {
-      duration: 300
+      duration: 600,
+      easing: 'easeInOut'
   });
 
   $( document ).ajaxStart(function() {

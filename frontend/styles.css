@@ -116,7 +116,7 @@ input {
 #high-five {
 	position: absolute;
 	bottom: 0;
-	left: 50%;
+	left: 100px;
 	width: 70px;
 	height: 70px;
 }
