@@ -71,6 +71,7 @@ This should pass for both in-memory and postgres databases.
 * <https://hackage.haskell.org/package/monad-persist-0.0.1.2/docs/Control-Monad-Persist.html>
 * <https://www.reddit.com/r/haskell/comments/68qzlr/freerpersistent_freereffects_wrapper_for/>
 * <https://hackage.haskell.org/package/uuid-1.3.13/docs/Data-UUID.html>
+* <https://github.com/mfine/heroku-buildpack-stack>
 
 
 ## Deployment
