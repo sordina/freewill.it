@@ -1,6 +1,8 @@
--- This file has been generated from package.yaml by hpack version 0.17.0.
+-- This file has been generated from package.yaml by hpack version 0.28.2.
 --
 -- see: https://github.com/sol/hpack
+--
+-- hash: 60320c16a2184956c737150d24cb0f4fd1b1a7ca5c4a3e367881e04799ebcd07
 
 name:           freewill
 version:        0.1.0.0
@@ -13,7 +15,6 @@ license:        BSD3
 license-file:   LICENSE
 build-type:     Simple
 cabal-version:  >= 1.10
-
 extra-source-files:
     README.md
 
@@ -21,40 +22,40 @@ library
   hs-source-dirs:
       src
   build-depends:
-      base >= 4.7 && < 5
-    , aeson
-    , servant-server
-    , servant-swagger
-    , servant-foreign
-    , servant-js
-    , servant-auth
-    , wai
-    , wai-cors
-    , wai-util
-    , wai-extra
-    , warp
+      aeson
+    , base >=4.7 && <5
     , bytestring
-    , http-types
-    , mtl
+    , cookie
+    , directory
+    , generic-lens
     , ghc-prim
-    , swagger2
-    , text
-    , lens
-    , safe
-    , transformers
-    , stm
-    , postgresql-simple
-    , servant-options
+    , groom
     , http-api-data
+    , http-types
+    , jose
+    , lens
+    , mtl
+    , postgresql-simple
+    , random
+    , safe
+    , servant-auth
     , servant-auth-server
     , servant-auth-swagger
-    , cookie
-    , groom
-    , directory
-    , jose
-    , random
+    , servant-foreign
+    , servant-js
+    , servant-options
+    , servant-server
+    , servant-swagger
+    , stm
+    , swagger2
+    , text
+    , transformers
     , uuid
-    , generic-lens
+    , wai
+    , wai-cors
+    , wai-extra
+    , wai-util
+    , warp
   exposed-modules:
       Network.Wai.Middleware.Debugging
       Context
@@ -75,43 +76,45 @@ library
 
 executable freewill
   main-is: Main.hs
+  other-modules:
+      Paths_freewill
   hs-source-dirs:
       app
   build-depends:
-      base >= 4.7 && < 5
-    , aeson
-    , servant-server
-    , servant-swagger
-    , servant-foreign
-    , servant-js
-    , servant-auth
-    , wai
-    , wai-cors
-    , wai-util
-    , wai-extra
-    , warp
+      aeson
+    , base >=4.7 && <5
     , bytestring
-    , http-types
-    , mtl
+    , cookie
+    , directory
+    , freewill
+    , generic-lens
     , ghc-prim
-    , swagger2
-    , text
-    , lens
-    , safe
-    , transformers
-    , stm
-    , postgresql-simple
-    , servant-options
+    , groom
     , http-api-data
+    , http-types
+    , jose
+    , lens
+    , mtl
+    , optparse-generic
+    , postgresql-simple
+    , random
+    , safe
+    , servant-auth
     , servant-auth-server
     , servant-auth-swagger
-    , cookie
-    , groom
-    , directory
-    , jose
-    , random
+    , servant-foreign
+    , servant-js
+    , servant-options
+    , servant-server
+    , servant-swagger
+    , stm
+    , swagger2
+    , text
+    , transformers
     , uuid
-    , generic-lens
-    , freewill
-    , optparse-generic
+    , wai
+    , wai-cors
+    , wai-extra
+    , wai-util
+    , warp
   default-language: Haskell2010
